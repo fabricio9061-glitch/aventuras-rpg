@@ -1,0 +1,2763 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aventuras de Acero y Runas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    
+    <style>
+        :root {
+            --bg-dark: #0a0908;
+            --bg-panel: #1a1614;
+            --bg-panel-light: #2a2320;
+            --bg-input: #151210;
+            --gold: #d4a437;
+            --gold-dim: #a67c00;
+            --gold-bright: #ffd700;
+            --red: #8b0000;
+            --red-bright: #dc143c;
+            --green: #2d5a27;
+            --green-bright: #4caf50;
+            --blue: #1e3a5f;
+            --blue-bright: #4a9eff;
+            --purple: #4a1a6b;
+            --purple-bright: #9c27b0;
+            --orange: #ff6b35;
+            --text: #e8dcc4;
+            --text-dim: #8a8078;
+            --border: #3d3530;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Crimson Text', Georgia, serif;
+            background: var(--bg-dark);
+            color: var(--text);
+            min-height: 100vh;
+            background-image: radial-gradient(ellipse at top, rgba(42,35,32,0.4) 0%, transparent 50%);
+        }
+
+        /* Navigation */
+        .main-nav {
+            display: flex;
+            justify-content: center;
+            background: var(--bg-panel);
+            border-bottom: 2px solid var(--gold-dim);
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+            padding: 0.75rem 1.25rem;
+            background: transparent;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-btn:hover { color: var(--gold); background: rgba(212,164,55,0.1); }
+        .nav-btn.active { color: var(--gold-bright); background: rgba(212,164,55,0.15); }
+
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* Firebase Status */
+        .firebase-status {
+            position: fixed;
+            top: 0.5rem;
+            right: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.7rem;
+            background: var(--bg-panel);
+            padding: 0.2rem 0.5rem;
+            border-radius: 20px;
+            border: 1px solid var(--border);
+            z-index: 100;
+        }
+
+        .status-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--red);
+        }
+
+        .status-dot.connected {
+            background: var(--green-bright);
+            box-shadow: 0 0 6px var(--green-bright);
+        }
+
+        /* Game Layout */
+        .game-container {
+            display: grid;
+            grid-template-columns: 1fr 280px;
+            grid-template-rows: auto 1fr auto;
+            gap: 0.75rem;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0.75rem;
+            min-height: calc(100vh - 45px);
+        }
+
+        .panel {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 0.75rem;
+        }
+
+        .panel-title {
+            font-family: 'Cinzel', serif;
+            font-size: 0.8rem;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+            padding-bottom: 0.4rem;
+            border-bottom: 1px solid var(--border);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        /* ==================== COMBAT ARENA ==================== */
+        .combat-arena {
+            display: none;
+            grid-column: 1 / -1;
+            background: linear-gradient(180deg, rgba(139,0,0,0.2), rgba(139,0,0,0.05));
+            border: 2px solid var(--red);
+            border-radius: 6px;
+            padding: 1rem;
+        }
+
+        .combat-arena.active { display: block; }
+
+        .combat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.75rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--red);
+        }
+
+        .combat-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            color: var(--red-bright);
+        }
+
+        .turn-indicator {
+            background: var(--red);
+            color: white;
+            padding: 0.25rem 0.75rem;
+            border-radius: 3px;
+            font-family: 'Cinzel', serif;
+            font-size: 0.85rem;
+        }
+
+        .combat-main {
+            display: grid;
+            grid-template-columns: 1fr 300px;
+            gap: 1rem;
+        }
+
+        /* Combatants */
+        .combatants-row {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            gap: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .combatant {
+            background: var(--bg-dark);
+            border: 2px solid var(--border);
+            border-radius: 6px;
+            padding: 0.75rem;
+            text-align: center;
+            min-width: 140px;
+        }
+
+        .combatant.player { border-color: var(--gold-dim); }
+        .combatant.enemy { border-color: var(--red); }
+        .combatant.active-turn { box-shadow: 0 0 15px rgba(212,164,55,0.5); }
+
+        .combatant-sprite { font-size: 2.5rem; margin-bottom: 0.25rem; }
+
+        .combatant-name {
+            font-family: 'Cinzel', serif;
+            font-size: 0.9rem;
+            color: var(--text);
+            margin-bottom: 0.25rem;
+        }
+
+        .combatant-stats {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+            margin-bottom: 0.5rem;
+        }
+
+        .hp-bar-container {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            height: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hp-bar-fill {
+            height: 100%;
+            transition: width 0.4s, background 0.3s;
+        }
+
+        .hp-bar-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            font-size: 0.7rem;
+            color: white;
+            text-shadow: 1px 1px 1px black;
+            top: 50%;
+            transform: translateY(-50%);
+            font-family: 'Cinzel', serif;
+        }
+
+        .hp-high { background: linear-gradient(180deg, var(--green-bright), var(--green)); }
+        .hp-medium { background: linear-gradient(180deg, var(--gold-bright), var(--gold-dim)); }
+        .hp-low { background: linear-gradient(180deg, var(--orange), #cc4400); }
+        .hp-critical { background: linear-gradient(180deg, var(--red-bright), var(--red)); animation: pulse 1s infinite; }
+
+        @keyframes pulse { 50% { opacity: 0.7; } }
+
+        .vs-icon {
+            font-size: 1.5rem;
+            color: var(--gold);
+            font-family: 'Cinzel', serif;
+        }
+
+        .effects-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.25rem;
+            margin-top: 0.5rem;
+            min-height: 20px;
+        }
+
+        .effect-tag {
+            font-size: 0.65rem;
+            padding: 0.15rem 0.35rem;
+            border-radius: 2px;
+        }
+
+        .eff-bleed { background: rgba(139,0,0,0.6); border: 1px solid var(--red); }
+        .eff-poison { background: rgba(0,100,0,0.6); border: 1px solid var(--green-bright); }
+        .eff-fire { background: rgba(255,100,0,0.5); border: 1px solid orange; }
+        .eff-cold { background: rgba(0,150,255,0.5); border: 1px solid deepskyblue; }
+        .eff-electric { background: rgba(255,255,0,0.4); border: 1px solid yellow; color: #333; }
+
+        /* Combat Log */
+        .combat-log {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .combat-log-header {
+            background: var(--bg-panel-light);
+            padding: 0.5rem;
+            font-family: 'Cinzel', serif;
+            font-size: 0.8rem;
+            color: var(--gold);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .combat-log-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+            max-height: 250px;
+        }
+
+        .combat-log-content::-webkit-scrollbar { width: 4px; }
+        .combat-log-content::-webkit-scrollbar-thumb { background: var(--gold-dim); }
+
+        .log-turn-header {
+            background: var(--bg-panel-light);
+            color: var(--gold);
+            padding: 0.4rem 0.5rem;
+            margin: 0.5rem -0.5rem;
+            font-family: 'Cinzel', serif;
+            font-size: 0.75rem;
+            text-align: center;
+            border-top: 1px solid var(--border);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .log-turn-header:first-child {
+            margin-top: 0;
+        }
+
+        .log-entry {
+            padding: 0.3rem 0;
+            border-bottom: 1px dashed rgba(255,255,255,0.1);
+            line-height: 1.4;
+        }
+
+        .log-entry:last-child { border-bottom: none; }
+
+        .log-player { color: var(--gold-bright); }
+        .log-enemy { color: var(--red-bright); }
+        .log-damage { color: var(--orange); }
+        .log-heal { color: var(--green-bright); }
+        .log-effect { color: var(--purple-bright); }
+        .log-miss { color: var(--text-dim); font-style: italic; }
+        .log-crit { color: var(--gold-bright); font-weight: bold; text-shadow: 0 0 5px var(--gold); }
+        .log-dice { color: var(--blue-bright); font-family: monospace; }
+
+        .log-section {
+            margin: 0.25rem 0;
+            padding-left: 0.5rem;
+            border-left: 2px solid var(--border);
+        }
+
+        .log-section.player-action { border-left-color: var(--gold-dim); }
+        .log-section.enemy-action { border-left-color: var(--red); }
+        .log-section.effects-phase { border-left-color: var(--purple); }
+
+        /* Combat Actions */
+        .combat-actions {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            margin-top: 0.75rem;
+            padding-top: 0.75rem;
+            border-top: 1px solid var(--border);
+        }
+
+        /* ==================== STORY PANEL ==================== */
+        .story-panel {
+            grid-row: 2;
+            display: flex;
+            flex-direction: column;
+            max-height: 60vh;
+        }
+
+        .story-content {
+            flex: 1;
+            overflow-y: auto;
+            line-height: 1.6;
+            font-size: 0.95rem;
+            padding-right: 0.5rem;
+        }
+
+        .story-content::-webkit-scrollbar { width: 4px; }
+        .story-content::-webkit-scrollbar-thumb { background: var(--gold-dim); }
+
+        .story-entry {
+            margin-bottom: 0.6rem;
+            padding-bottom: 0.6rem;
+            border-bottom: 1px dashed var(--border);
+        }
+
+        .story-entry:last-child { border-bottom: none; }
+
+        .story-combat { 
+            color: var(--red-bright); 
+            background: rgba(139,0,0,0.1);
+            padding: 0.5rem;
+            border-radius: 3px;
+            border-left: 3px solid var(--red);
+        }
+
+        .story-loot { 
+            color: var(--gold-bright);
+            background: rgba(212,164,55,0.1);
+            padding: 0.5rem;
+            border-radius: 3px;
+            border-left: 3px solid var(--gold);
+        }
+
+        .story-system { 
+            color: var(--blue-bright); 
+            font-size: 0.85rem;
+            background: rgba(74,158,255,0.1);
+            padding: 0.4rem;
+            border-radius: 3px;
+        }
+
+        .story-event {
+            background: rgba(255,255,255,0.05);
+            padding: 0.5rem;
+            border-radius: 3px;
+        }
+
+        /* ==================== CHARACTER PANEL ==================== */
+        .char-panel {
+            grid-row: 2;
+            font-size: 0.85rem;
+        }
+
+        .char-section { margin-bottom: 0.6rem; }
+
+        .char-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .char-avatar {
+            font-size: 2rem;
+            width: 45px;
+            height: 45px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-dark);
+            border: 2px solid var(--gold-dim);
+            border-radius: 4px;
+        }
+
+        .char-info { flex: 1; }
+
+        .char-name {
+            font-family: 'Cinzel', serif;
+            font-size: 1rem;
+            color: var(--gold-bright);
+        }
+
+        .char-race {
+            font-size: 0.75rem;
+            color: var(--text-dim);
+        }
+
+        /* Health Bar */
+        .health-section .bar-outer {
+            height: 18px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 2px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .health-section .bar-inner {
+            height: 100%;
+            transition: width 0.4s, background 0.3s;
+        }
+
+        .health-section .bar-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            font-size: 0.7rem;
+            color: white;
+            text-shadow: 1px 1px 1px black;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        /* Stats */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.3rem;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 0.25rem 0.4rem;
+            background: var(--bg-panel-light);
+            border-radius: 2px;
+            font-size: 0.75rem;
+        }
+
+        .stat-label { color: var(--text-dim); }
+        .stat-value { color: var(--gold); }
+
+        /* Equipment */
+        .equip-slot {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.35rem;
+            background: var(--bg-panel-light);
+            border-radius: 3px;
+            margin-bottom: 0.3rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .equip-slot:hover {
+            border-color: var(--gold-dim);
+            background: var(--bg-dark);
+        }
+
+        .equip-icon {
+            font-size: 1.25rem;
+            width: 28px;
+            text-align: center;
+        }
+
+        .equip-info { flex: 1; }
+        .equip-name { font-size: 0.8rem; }
+        .equip-stats { font-size: 0.7rem; color: var(--text-dim); }
+
+        /* Currency */
+        .currency-row {
+            display: flex;
+            gap: 0.75rem;
+            font-size: 0.85rem;
+        }
+
+        .coin-gold { color: var(--gold-bright); }
+        .coin-silver { color: #c0c0c0; }
+
+        /* Pet */
+        .pet-card {
+            background: var(--bg-dark);
+            border: 1px solid var(--green);
+            border-radius: 3px;
+            padding: 0.4rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .pet-icon { font-size: 1.5rem; }
+
+        .pet-info { flex: 1; }
+        .pet-name { color: var(--green-bright); font-size: 0.85rem; }
+
+        .pet-hp-bar {
+            height: 8px;
+            background: var(--bg-panel);
+            border-radius: 2px;
+            overflow: hidden;
+            margin-top: 0.2rem;
+        }
+
+        /* ==================== ACTIONS ==================== */
+        .actions-panel {
+            grid-column: 1 / -1;
+        }
+
+        .actions-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .action-btn {
+            font-family: 'Cinzel', serif;
+            font-size: 0.8rem;
+            padding: 0.5rem 1rem;
+            background: var(--bg-panel-light);
+            border: 1px solid var(--gold-dim);
+            color: var(--gold);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-radius: 2px;
+        }
+
+        .action-btn:hover:not(:disabled) {
+            background: var(--gold-dim);
+            color: var(--bg-dark);
+            transform: translateY(-1px);
+        }
+
+        .action-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+        .action-btn.primary { background: var(--gold-dim); color: var(--bg-dark); }
+        .action-btn.danger { border-color: var(--red); color: var(--red-bright); }
+        .action-btn.danger:hover:not(:disabled) { background: var(--red); color: white; }
+
+        /* ==================== MODALS ==================== */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            z-index: 100;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--bg-panel);
+            border: 2px solid var(--gold-dim);
+            border-radius: 6px;
+            padding: 1.25rem;
+            max-width: 500px;
+            width: 95%;
+            max-height: 80vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        .modal-large {
+            max-width: 700px;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 0.5rem;
+            right: 0.75rem;
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            font-size: 1.25rem;
+            cursor: pointer;
+        }
+
+        .modal-close:hover { color: var(--gold); }
+
+        .modal-title {
+            font-family: 'Cinzel', serif;
+            font-size: 1.1rem;
+            color: var(--gold);
+            margin-bottom: 1rem;
+            text-align: center;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        /* Item Detail Modal */
+        .item-detail {
+            text-align: center;
+        }
+
+        .item-detail-icon {
+            font-size: 4rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .item-detail-name {
+            font-family: 'Cinzel', serif;
+            font-size: 1.3rem;
+            color: var(--gold-bright);
+            margin-bottom: 0.25rem;
+        }
+
+        .item-detail-type {
+            color: var(--text-dim);
+            font-size: 0.85rem;
+            margin-bottom: 1rem;
+        }
+
+        .item-detail-desc {
+            background: var(--bg-dark);
+            padding: 1rem;
+            border-radius: 4px;
+            margin-bottom: 1rem;
+            text-align: left;
+            line-height: 1.6;
+        }
+
+        .item-detail-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+        }
+
+        .item-stat {
+            background: var(--bg-panel-light);
+            padding: 0.5rem;
+            border-radius: 3px;
+        }
+
+        .item-stat-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .item-stat-value {
+            font-size: 1rem;
+            color: var(--gold);
+            font-family: 'Cinzel', serif;
+        }
+
+        .item-detail-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: center;
+        }
+
+        /* Inventory */
+        .inventory-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 0.4rem;
+        }
+
+        .inv-slot {
+            aspect-ratio: 1;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s;
+            padding: 0.2rem;
+        }
+
+        .inv-slot:hover {
+            border-color: var(--gold-dim);
+            background: var(--bg-panel-light);
+            transform: scale(1.05);
+        }
+
+        .inv-slot-icon { font-size: 1.5rem; }
+        .inv-slot-name { 
+            font-size: 0.55rem; 
+            text-align: center; 
+            color: var(--text-dim);
+            margin-top: 0.15rem;
+            line-height: 1.1;
+            max-height: 2em;
+            overflow: hidden;
+        }
+
+        .inv-slot-empty {
+            color: var(--text-dim);
+            font-size: 0.6rem;
+        }
+
+        /* Rarity colors */
+        .rarity-common { border-color: #808080; }
+        .rarity-rare { border-color: var(--blue-bright); }
+        .rarity-epic { border-color: var(--purple-bright); }
+        .rarity-legendary { border-color: var(--gold-bright); box-shadow: 0 0 5px var(--gold); }
+
+        /* ==================== DICE ==================== */
+        .dice-display {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.95);
+            padding: 1.5rem 2rem;
+            border-radius: 8px;
+            border: 2px solid var(--gold-dim);
+            text-align: center;
+            z-index: 150;
+        }
+
+        .dice-display.active { display: block; }
+
+        .dice-icon {
+            font-size: 3rem;
+            animation: roll 0.4s;
+        }
+
+        @keyframes roll {
+            0% { transform: rotate(0) scale(0.5); }
+            50% { transform: rotate(180deg) scale(1.2); }
+            100% { transform: rotate(360deg) scale(1); }
+        }
+
+        .dice-label {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-top: 0.25rem;
+        }
+
+        .dice-result {
+            font-family: 'Cinzel', serif;
+            font-size: 2rem;
+            color: var(--gold-bright);
+            margin-top: 0.25rem;
+        }
+
+        .dice-result.crit { 
+            color: var(--red-bright); 
+            text-shadow: 0 0 10px var(--red);
+            font-size: 2.5rem;
+        }
+
+        /* ==================== TOAST ==================== */
+        .toast-container {
+            position: fixed;
+            top: 3rem;
+            right: 1rem;
+            z-index: 200;
+        }
+
+        .toast {
+            padding: 0.5rem 1rem;
+            border-radius: 3px;
+            margin-bottom: 0.4rem;
+            animation: slideIn 0.3s, fadeOut 0.3s 2.5s forwards;
+            font-size: 0.85rem;
+        }
+
+        @keyframes slideIn { from { transform: translateX(100%); } }
+        @keyframes fadeOut { to { opacity: 0; } }
+
+        .toast.success { background: var(--green); }
+        .toast.error { background: var(--red); }
+        .toast.info { background: var(--blue); }
+
+        /* ==================== RULES PAGE ==================== */
+        .rules-container {
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .rules-section {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .rules-section h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            margin-bottom: 0.5rem;
+            font-size: 1rem;
+        }
+
+        .rules-section h4 {
+            color: var(--gold-dim);
+            margin: 0.5rem 0 0.25rem;
+            font-size: 0.9rem;
+        }
+
+        .rules-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 0.4rem 0;
+            font-size: 0.85rem;
+        }
+
+        .rules-table th, .rules-table td {
+            border: 1px solid var(--border);
+            padding: 0.4rem;
+            text-align: left;
+        }
+
+        .rules-table th {
+            background: var(--bg-panel-light);
+            color: var(--gold);
+        }
+
+        .highlight-box {
+            background: var(--bg-dark);
+            border-left: 3px solid var(--gold);
+            padding: 0.6rem;
+            margin: 0.4rem 0;
+            font-size: 0.9rem;
+        }
+
+        /* ==================== EDITOR ==================== */
+        .editor-container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 1rem;
+        }
+
+        .editor-tabs {
+            display: flex;
+            gap: 0.25rem;
+            flex-wrap: wrap;
+            background: var(--bg-panel);
+            padding: 0.4rem;
+            border-radius: 4px;
+            margin-bottom: 0.75rem;
+        }
+
+        .editor-tab {
+            padding: 0.4rem 0.8rem;
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            cursor: pointer;
+            font-family: 'Cinzel', serif;
+            font-size: 0.75rem;
+            border-radius: 2px;
+        }
+
+        .editor-tab:hover { border-color: var(--gold-dim); color: var(--gold); }
+        .editor-tab.active { background: var(--gold-dim); color: var(--bg-dark); }
+
+        .editor-section {
+            display: none;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            padding: 1rem;
+        }
+
+        .editor-section.active { display: block; }
+
+        .editor-section h3 {
+            font-family: 'Cinzel', serif;
+            color: var(--gold);
+            margin-bottom: 0.75rem;
+            font-size: 0.95rem;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 0.6rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .form-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.2rem;
+        }
+
+        .form-group label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            padding: 0.4rem;
+            color: var(--text);
+            font-size: 0.85rem;
+            border-radius: 3px;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: var(--gold-dim);
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+            padding-top: 0.5rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .items-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 0.4rem;
+            margin-top: 0.75rem;
+            max-height: 250px;
+            overflow-y: auto;
+        }
+
+        .item-card {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            padding: 0.4rem;
+            display: flex;
+            gap: 0.4rem;
+            align-items: center;
+            font-size: 0.8rem;
+        }
+
+        .item-card-icon { font-size: 1.25rem; }
+        .item-card-info { flex: 1; }
+        .item-card-name { color: var(--gold); }
+        .item-card-stats { color: var(--text-dim); font-size: 0.7rem; }
+
+        .delete-btn {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            padding: 0.15rem 0.3rem;
+            cursor: pointer;
+            font-size: 0.65rem;
+            border-radius: 2px;
+        }
+
+        .delete-btn:hover { border-color: var(--red); color: var(--red-bright); }
+
+        .multi-select {
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            padding: 0.4rem;
+            max-height: 100px;
+            overflow-y: auto;
+            font-size: 0.8rem;
+        }
+
+        .multi-select label {
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.15rem;
+            cursor: pointer;
+        }
+
+        /* Responsive */
+        @media (max-width: 800px) {
+            .game-container { grid-template-columns: 1fr; }
+            .combat-main { grid-template-columns: 1fr; }
+            .combatants-row { flex-direction: column; }
+            .vs-icon { display: none; }
+            .inventory-grid { grid-template-columns: repeat(4, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="firebase-status">
+        <div class="status-dot" id="fbDot"></div>
+        <span id="fbText">...</span>
+    </div>
+
+    <nav class="main-nav">
+        <button class="nav-btn active" onclick="switchTab('game')">⚔️ Juego</button>
+        <button class="nav-btn" onclick="switchTab('rules')">📜 Reglas</button>
+        <button class="nav-btn" onclick="switchTab('editor')">🛠️ Editor</button>
+    </nav>
+
+    <!-- ==================== GAME TAB ==================== -->
+    <div class="tab-content active" id="gameTab">
+        <div class="game-container">
+            <!-- Combat Arena -->
+            <div class="combat-arena" id="combatArena">
+                <div class="combat-header">
+                    <div class="combat-title">⚔️ COMBATE</div>
+                    <div class="turn-indicator">Turno <span id="turnNumber">1</span></div>
+                </div>
+                
+                <div class="combat-main">
+                    <div>
+                        <div class="combatants-row">
+                            <div class="combatant player" id="playerCombatant">
+                                <div class="combatant-sprite" id="pSprite">🧙</div>
+                                <div class="combatant-name" id="pCombatName">Jugador</div>
+                                <div class="combatant-stats">
+                                    ⚔️ <span id="pCombatDmg">1d4</span> | 🛡️ <span id="pCombatDef">0</span>
+                                </div>
+                                <div class="hp-bar-container">
+                                    <div class="hp-bar-text" id="pHpText">20/20</div>
+                                    <div class="hp-bar-fill hp-high" id="pHpBar" style="width:100%"></div>
+                                </div>
+                                <div class="effects-row" id="pEffects"></div>
+                            </div>
+                            
+                            <div class="vs-icon">⚔</div>
+                            
+                            <div class="combatant enemy" id="enemyCombatant">
+                                <div class="combatant-sprite" id="eSprite">👹</div>
+                                <div class="combatant-name" id="eCombatName">Enemigo</div>
+                                <div class="combatant-stats">
+                                    ⚔️ <span id="eCombatDmg">1d6</span> | Dif: <span id="eCombatDiff">10</span>
+                                </div>
+                                <div class="hp-bar-container">
+                                    <div class="hp-bar-text" id="eHpText">30/30</div>
+                                    <div class="hp-bar-fill hp-high" id="eHpBar" style="width:100%"></div>
+                                </div>
+                                <div class="effects-row" id="eEffects"></div>
+                            </div>
+                        </div>
+                        
+                        <div class="combat-actions" id="combatActions"></div>
+                    </div>
+                    
+                    <div class="combat-log">
+                        <div class="combat-log-header">📜 Registro de Batalla</div>
+                        <div class="combat-log-content" id="combatLogContent"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Story Panel -->
+            <main class="story-panel panel">
+                <h2 class="panel-title">📖 Crónica</h2>
+                <div class="story-content" id="storyContent"></div>
+            </main>
+
+            <!-- Character Panel -->
+            <aside class="char-panel panel">
+                <h2 class="panel-title">Personaje</h2>
+                
+                <div class="char-section">
+                    <div class="char-header">
+                        <div class="char-avatar" id="charAvatar">🧙</div>
+                        <div class="char-info">
+                            <div class="char-name" id="charName">---</div>
+                            <div class="char-race" id="charRace">---</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="char-section health-section">
+                    <div class="bar-outer">
+                        <div class="bar-text" id="hpDisplay">0/0</div>
+                        <div class="bar-inner hp-high" id="hpBar" style="width:100%"></div>
+                    </div>
+                </div>
+
+                <div class="char-section">
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-label">Armadura</span>
+                            <span class="stat-value" id="statArm">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Evasión</span>
+                            <span class="stat-value" id="statEva">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Precisión</span>
+                            <span class="stat-value" id="statPrec">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Daño+</span>
+                            <span class="stat-value" id="statDmg">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="char-section">
+                    <div class="equip-slot" onclick="showItemDetail(game.player.weapon, 'weapon')">
+                        <div class="equip-icon" id="weaponIcon">⚔️</div>
+                        <div class="equip-info">
+                            <div class="equip-name" id="weaponName">---</div>
+                            <div class="equip-stats" id="weaponStats">---</div>
+                        </div>
+                    </div>
+                    <div class="equip-slot" onclick="showItemDetail(game.player.armor, 'armor')">
+                        <div class="equip-icon" id="armorIcon">🛡️</div>
+                        <div class="equip-info">
+                            <div class="equip-name" id="armorName">---</div>
+                            <div class="equip-stats" id="armorStats">---</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="char-section">
+                    <div class="currency-row">
+                        <span><span class="coin-gold">●</span> <span id="goldAmt">0</span> MO</span>
+                        <span><span class="coin-silver">●</span> <span id="silverAmt">0</span> MP</span>
+                    </div>
+                </div>
+
+                <div class="char-section" id="effectsSection" style="display:none;">
+                    <div class="panel-title" style="font-size:0.7rem;">Estados Activos</div>
+                    <div class="effects-row" id="playerEffectsPanel"></div>
+                </div>
+
+                <div class="char-section" id="petSection" style="display:none;">
+                    <div class="panel-title" style="font-size:0.7rem;">Compañero</div>
+                    <div id="petDisplay"></div>
+                </div>
+            </aside>
+
+            <!-- Actions -->
+            <nav class="actions-panel panel">
+                <div class="actions-grid" id="actionsGrid"></div>
+            </nav>
+        </div>
+    </div>
+
+    <!-- ==================== RULES TAB ==================== -->
+    <div class="tab-content" id="rulesTab">
+        <div class="rules-container">
+            <div class="rules-section">
+                <h3>⚔️ Sistema de Combate</h3>
+                <div class="highlight-box">
+                    <strong>Atacar:</strong> Tiras D20. Si resultado ≥ dificultad del enemigo → ACIERTAS y haces daño.<br>
+                    <strong>Crítico:</strong> Si sacas 20 natural → daño ×2<br>
+                    <strong>Esquivar:</strong> Cuando te atacan, tiras D20. Si sacas 12+ → esquivas.
+                </div>
+                
+                <h4>Dificultad por tipo de enemigo:</h4>
+                <table class="rules-table">
+                    <tr><th>Tipo</th><th>Dificultad</th></tr>
+                    <tr><td>Débil</td><td>6-8</td></tr>
+                    <tr><td>Moderado</td><td>9-12</td></tr>
+                    <tr><td>Fuerte</td><td>13-15</td></tr>
+                    <tr><td>Épico</td><td>16-18</td></tr>
+                    <tr><td>Legendario</td><td>19-20</td></tr>
+                </table>
+            </div>
+
+            <div class="rules-section">
+                <h3>🎲 Creación del Personaje</h3>
+                <table class="rules-table">
+                    <tr><th>Dado</th><th>Determina</th></tr>
+                    <tr><td>D5</td><td>Raza (Humano +1HP, Elfo +1Prec, Enano +1Arm, Orco +1Dmg, Mediano +1Eva)</td></tr>
+                    <tr><td>D4</td><td>Arma inicial</td></tr>
+                    <tr><td>D4</td><td>Armadura inicial</td></tr>
+                    <tr><td>D6</td><td>Item inicial</td></tr>
+                </table>
+            </div>
+
+            <div class="rules-section">
+                <h3>🩸 Efectos de Estado</h3>
+                <table class="rules-table">
+                    <tr><th>Efecto</th><th>Daño/turno</th><th>Duración</th><th>Acumula</th></tr>
+                    <tr><td>🩸 Sangrado</td><td>1</td><td>3 turnos</td><td>Hasta 3</td></tr>
+                    <tr><td>☠️ Veneno</td><td>2</td><td>2 turnos</td><td>Hasta 2</td></tr>
+                    <tr><td>🔥 Fuego</td><td>1d4</td><td>2 turnos</td><td>No</td></tr>
+                    <tr><td>❄️ Frío</td><td>-</td><td>2 turnos</td><td>No (reduce evasión)</td></tr>
+                    <tr><td>⚡ Eléctrico</td><td>1d6</td><td>1 turno</td><td>No (10% aturdir)</td></tr>
+                </table>
+            </div>
+
+            <div class="rules-section">
+                <h3>💰 Economía</h3>
+                <div class="highlight-box">
+                    <strong>99 MP (Plata) = 1 MO (Oro)</strong>
+                </div>
+                <p>Inventario inicial: 10 espacios | Monedas iniciales: 20 MP</p>
+            </div>
+
+            <div class="rules-section">
+                <h3>🐺 Domesticación</h3>
+                <table class="rules-table">
+                    <tr><th>Tipo</th><th>Dado</th><th>Éxito</th></tr>
+                    <tr><td>Común</td><td>D24</td><td>≥15 (60%)</td></tr>
+                    <tr><td>Raro</td><td>D30</td><td>≥18</td></tr>
+                    <tr><td>Épico</td><td>D60</td><td>≥36</td></tr>
+                    <tr><td>Legendario</td><td>D100</td><td>≥60</td></tr>
+                </table>
+                <p style="font-size:0.85rem;color:var(--text-dim);margin-top:0.5rem;">
+                    Necesitas carne. Solo un intento por criatura. Solo puedes tener una mascota.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== EDITOR TAB ==================== -->
+    <div class="tab-content" id="editorTab">
+        <div class="editor-container">
+            <div style="background:var(--bg-panel);padding:0.75rem;border-radius:4px;margin-bottom:0.75rem;font-size:0.85rem;">
+                <strong style="color:var(--gold);">⚙️ Firebase:</strong> 
+                Ve a <a href="https://console.firebase.google.com" target="_blank" style="color:var(--gold);">Firebase Console</a> → 
+                Build → Realtime Database → Create Database → Test mode
+            </div>
+
+            <div class="editor-tabs">
+                <button class="editor-tab active" onclick="switchEditorTab('weapons')">⚔️ Armas</button>
+                <button class="editor-tab" onclick="switchEditorTab('armors')">🛡️ Armaduras</button>
+                <button class="editor-tab" onclick="switchEditorTab('items')">🎒 Items</button>
+                <button class="editor-tab" onclick="switchEditorTab('enemies')">👹 Enemigos</button>
+                <button class="editor-tab" onclick="switchEditorTab('pets')">🐺 Mascotas</button>
+            </div>
+
+            <!-- Weapons Editor -->
+            <div class="editor-section active" id="weaponsEditor">
+                <h3>⚔️ Crear Arma</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="wName" placeholder="Espada del Destino">
+                    </div>
+                    <div class="form-group">
+                        <label>Daño</label>
+                        <input type="text" id="wDamage" placeholder="1d8">
+                    </div>
+                    <div class="form-group">
+                        <label>Icono</label>
+                        <input type="text" id="wIcon" placeholder="⚔️" maxlength="2">
+                    </div>
+                    <div class="form-group">
+                        <label>Rareza</label>
+                        <select id="wRarity">
+                            <option value="common">Común</option>
+                            <option value="rare">Raro</option>
+                            <option value="epic">Épico</option>
+                            <option value="legendary">Legendario</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Valor (MP)</label>
+                        <input type="number" id="wValue" placeholder="50">
+                    </div>
+                    <div class="form-group">
+                        <label>Efecto</label>
+                        <select id="wEffect">
+                            <option value="">Ninguno</option>
+                            <option value="bleed">🩸 Sangrado</option>
+                            <option value="poison">☠️ Veneno</option>
+                            <option value="fire">🔥 Fuego</option>
+                            <option value="cold">❄️ Frío</option>
+                            <option value="electric">⚡ Eléctrico</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="action-btn primary" onclick="saveWeapon()">💾 Guardar</button>
+                </div>
+                <div class="items-list" id="weaponsList"></div>
+            </div>
+
+            <!-- Armors Editor -->
+            <div class="editor-section" id="armorsEditor">
+                <h3>🛡️ Crear Armadura</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="aName" placeholder="Cota de Mithril">
+                    </div>
+                    <div class="form-group">
+                        <label>Defensa</label>
+                        <input type="number" id="aDefense" placeholder="5">
+                    </div>
+                    <div class="form-group">
+                        <label>Icono</label>
+                        <input type="text" id="aIcon" placeholder="🛡️" maxlength="2">
+                    </div>
+                    <div class="form-group">
+                        <label>Rareza</label>
+                        <select id="aRarity">
+                            <option value="common">Común</option>
+                            <option value="rare">Raro</option>
+                            <option value="epic">Épico</option>
+                            <option value="legendary">Legendario</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Valor (MP)</label>
+                        <input type="number" id="aValue" placeholder="100">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="action-btn primary" onclick="saveArmor()">💾 Guardar</button>
+                </div>
+                <div class="items-list" id="armorsList"></div>
+            </div>
+
+            <!-- Items Editor -->
+            <div class="editor-section" id="itemsEditor">
+                <h3>🎒 Crear Item</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="iName" placeholder="Poción de Vida">
+                    </div>
+                    <div class="form-group">
+                        <label>Tipo</label>
+                        <select id="iType">
+                            <option value="potion">Poción</option>
+                            <option value="food">Comida</option>
+                            <option value="antidote">Antídoto</option>
+                            <option value="escape">Escape</option>
+                            <option value="backpack">Mochila</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Icono</label>
+                        <input type="text" id="iIcon" placeholder="🧪" maxlength="2">
+                    </div>
+                    <div class="form-group">
+                        <label>Efecto</label>
+                        <input type="text" id="iEffect" placeholder="1d8 o 5">
+                    </div>
+                    <div class="form-group">
+                        <label>Valor (MP)</label>
+                        <input type="number" id="iValue" placeholder="10">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="action-btn primary" onclick="saveItem()">💾 Guardar</button>
+                </div>
+                <div class="items-list" id="itemsList"></div>
+            </div>
+
+            <!-- Enemies Editor -->
+            <div class="editor-section" id="enemiesEditor">
+                <h3>👹 Crear Enemigo</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="enName" placeholder="Troll">
+                    </div>
+                    <div class="form-group">
+                        <label>Salud</label>
+                        <input type="number" id="enHealth" placeholder="30">
+                    </div>
+                    <div class="form-group">
+                        <label>Daño</label>
+                        <input type="text" id="enDamage" placeholder="1d8">
+                    </div>
+                    <div class="form-group">
+                        <label>Dificultad</label>
+                        <select id="enDiff">
+                            <option value="6">Débil (6)</option>
+                            <option value="10">Moderado (10)</option>
+                            <option value="14">Fuerte (14)</option>
+                            <option value="17">Épico (17)</option>
+                            <option value="19">Legendario (19)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Icono</label>
+                        <input type="text" id="enIcon" placeholder="👹" maxlength="2">
+                    </div>
+                    <div class="form-group">
+                        <label>Efecto</label>
+                        <select id="enEffect">
+                            <option value="">Ninguno</option>
+                            <option value="bleed">Sangrado</option>
+                            <option value="poison">Veneno</option>
+                            <option value="fire">Fuego</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>MP min</label>
+                        <input type="number" id="enLootMin" placeholder="5">
+                    </div>
+                    <div class="form-group">
+                        <label>MP max</label>
+                        <input type="number" id="enLootMax" placeholder="20">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Drops</label>
+                    <div class="multi-select" id="enDropsSelect"></div>
+                </div>
+                <div class="form-actions">
+                    <button class="action-btn primary" onclick="saveEnemy()">💾 Guardar</button>
+                </div>
+                <div class="items-list" id="enemiesList"></div>
+            </div>
+
+            <!-- Pets Editor -->
+            <div class="editor-section" id="petsEditor">
+                <h3>🐺 Crear Mascota</h3>
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Nombre</label>
+                        <input type="text" id="petName" placeholder="Lobo">
+                    </div>
+                    <div class="form-group">
+                        <label>Salud</label>
+                        <input type="number" id="petHealth" placeholder="20">
+                    </div>
+                    <div class="form-group">
+                        <label>Daño</label>
+                        <input type="text" id="petDamage" placeholder="1d6">
+                    </div>
+                    <div class="form-group">
+                        <label>Dificultad</label>
+                        <select id="petDiff">
+                            <option value="24">Común (D24)</option>
+                            <option value="30">Raro (D30)</option>
+                            <option value="60">Épico (D60)</option>
+                            <option value="100">Legendario (D100)</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Icono</label>
+                        <input type="text" id="petIcon" placeholder="🐺" maxlength="2">
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button class="action-btn primary" onclick="savePet()">💾 Guardar</button>
+                </div>
+                <div class="items-list" id="petsList"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==================== MODALS ==================== -->
+    
+    <!-- Inventory Modal -->
+    <div class="modal-overlay" id="inventoryModal">
+        <div class="modal modal-large">
+            <button class="modal-close" onclick="closeModal('inventoryModal')">&times;</button>
+            <h3 class="modal-title">🎒 Inventario</h3>
+            <div id="invInfo" style="text-align:center;margin-bottom:0.75rem;color:var(--text-dim);font-size:0.85rem;"></div>
+            <div class="inventory-grid" id="invGrid"></div>
+        </div>
+    </div>
+
+    <!-- Item Detail Modal -->
+    <div class="modal-overlay" id="itemDetailModal">
+        <div class="modal">
+            <button class="modal-close" onclick="closeModal('itemDetailModal')">&times;</button>
+            <div class="item-detail">
+                <div class="item-detail-icon" id="detailIcon">📦</div>
+                <div class="item-detail-name" id="detailName">Item</div>
+                <div class="item-detail-type" id="detailType">Tipo</div>
+                <div class="item-detail-desc" id="detailDesc">Descripción del objeto...</div>
+                <div class="item-detail-stats" id="detailStats"></div>
+                <div class="item-detail-actions" id="detailActions"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dice Display -->
+    <div class="dice-display" id="diceDisplay">
+        <div class="dice-icon">🎲</div>
+        <div class="dice-label" id="diceLabel">D20</div>
+        <div class="dice-result" id="diceResult">--</div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toasts"></div>
+
+    <script>
+        // ==================== FIREBASE ====================
+        const firebaseConfig = {
+            apiKey: "AIzaSyAV4eSg9QjyE08zwtFsvjAomuMYVcNik9k",
+            authDomain: "rpggo-756a7.firebaseapp.com",
+            databaseURL: "https://rpggo-756a7-default-rtdb.firebaseio.com",
+            projectId: "rpggo-756a7",
+            storageBucket: "rpggo-756a7.firebasestorage.app",
+            messagingSenderId: "640446076493",
+            appId: "1:640446076493:web:d220244451bf1a3e006e04"
+        };
+
+        let db = null;
+        let fbConnected = false;
+
+        try {
+            firebase.initializeApp(firebaseConfig);
+            db = firebase.database();
+            db.ref('.info/connected').on('value', s => {
+                fbConnected = s.val() === true;
+                document.getElementById('fbDot').classList.toggle('connected', fbConnected);
+                document.getElementById('fbText').textContent = fbConnected ? '✓' : '✗';
+                if (fbConnected) loadFromFirebase();
+            });
+        } catch(e) { console.error(e); }
+
+        // ==================== DATA ====================
+        const customData = { weapons: [], armors: [], items: [], enemies: [], pets: [] };
+
+        const BASE_RACES = [
+            { name: 'Humano', bonus: { health: 1 }, icon: '🧑', desc: '+1 Salud máxima' },
+            { name: 'Elfo', bonus: { precision: 1 }, icon: '🧝', desc: '+1 Precisión' },
+            { name: 'Enano', bonus: { armor: 1 }, icon: '🧔', desc: '+1 Armadura' },
+            { name: 'Orco', bonus: { damage: 1 }, icon: '👹', desc: '+1 Daño' },
+            { name: 'Mediano', bonus: { evasion: 1 }, icon: '🧒', desc: '+1 Evasión' }
+        ];
+
+        const BASE_WEAPONS = [
+            { id: 'bw1', name: 'Daga', damage: '1d4', icon: '🗡️', value: 10, rarity: 'common', desc: 'Una daga oxidada pero funcional.' },
+            { id: 'bw2', name: 'Espada corta', damage: '1d6', icon: '⚔️', value: 20, rarity: 'common', desc: 'Espada de hoja corta, equilibrada.' },
+            { id: 'bw3', name: 'Hacha de mano', damage: '1d6', icon: '🪓', value: 20, rarity: 'common', desc: 'Hacha ligera para una mano.' },
+            { id: 'bw4', name: 'Bastón', damage: '1d4', icon: '🪄', value: 10, rarity: 'common', desc: 'Bastón de madera con punta de metal.' }
+        ];
+
+        const BASE_ARMORS = [
+            { id: 'ba1', name: 'Túnica de cuero', defense: 1, icon: '🦺', value: 15, rarity: 'common', desc: 'Cuero curtido básico.' },
+            { id: 'ba2', name: 'Cuero reforzado', defense: 2, icon: '🦺', value: 30, rarity: 'common', desc: 'Cuero con placas de metal.' },
+            { id: 'ba3', name: 'Cota de malla', defense: 3, icon: '⛓️', value: 75, rarity: 'rare', desc: 'Anillos de acero entrelazados.' },
+            { id: 'ba4', name: 'Túnica de tela', defense: 0, icon: '👕', value: 5, rarity: 'common', desc: 'Simple ropa de viaje.' }
+        ];
+
+        const BASE_ITEMS = [
+            { id: 'bi1', name: 'Poción curación menor', type: 'potion', effect: '1d8', icon: '🧪', value: 10, rarity: 'common', desc: 'Restaura 1d8 puntos de salud.' },
+            { id: 'bi2', name: 'Poción de maná', type: 'potion', effect: '1d4', icon: '💧', value: 10, rarity: 'common', desc: 'Restaura 1d4 puntos de maná.' },
+            { id: 'bi3', name: 'Antídoto', type: 'antidote', icon: '💊', value: 15, rarity: 'common', desc: 'Cura el estado de veneno.' },
+            { id: 'bi4', name: 'Bomba de humo', type: 'escape', icon: '💨', value: 25, rarity: 'common', desc: 'Permite escapar automáticamente del combate.' },
+            { id: 'bi5', name: 'Pergamino identificación', type: 'scroll', icon: '📜', value: 20, rarity: 'common', desc: 'Identifica objetos mágicos.' },
+            { id: 'bi6', name: 'Linterna', type: 'tool', icon: '🔦', value: 15, rarity: 'common', desc: 'Ilumina áreas oscuras.' },
+            { id: 'bi7', name: 'Carne', type: 'food', effect: '1d4', icon: '🥩', value: 5, rarity: 'common', desc: 'Restaura 1d4 HP. También sirve para domesticar.' }
+        ];
+
+        const BASE_ENEMIES = [
+            { id: 'be1', name: 'Rata Gigante', health: 10, damage: '1d4', difficulty: 6, icon: '🐀', loot: [5, 10], drops: ['bi1'], desc: 'Una rata del tamaño de un perro.' },
+            { id: 'be2', name: 'Goblin', health: 15, damage: '1d6', difficulty: 8, icon: '👺', loot: [8, 15], drops: ['bi1', 'bw1'], desc: 'Criatura verde y traicionera.' },
+            { id: 'be3', name: 'Esqueleto', health: 20, damage: '1d6', difficulty: 10, icon: '💀', loot: [10, 25], drops: ['bi1'], desc: 'Huesos animados por magia oscura.' },
+            { id: 'be4', name: 'Orco Guerrero', health: 35, damage: '1d8', difficulty: 12, icon: '👹', loot: [20, 40], drops: ['bw2'], desc: 'Un orco con armadura improvisada.' },
+            { id: 'be5', name: 'Troll', health: 50, damage: '2d6', difficulty: 14, icon: '🧌', loot: [40, 80], drops: ['ba2'], desc: 'Enorme y regenerativo.' },
+            { id: 'be6', name: 'Dragón Joven', health: 80, damage: '2d8', difficulty: 17, effect: 'fire', icon: '🐉', loot: [100, 200], drops: [], desc: 'Un dragón que aún no alcanza su tamaño completo.' }
+        ];
+
+        const BASE_PETS = [
+            { id: 'bp1', name: 'Lobo', health: 20, damage: '1d6', difficulty: 24, icon: '🐺', desc: 'Leal y feroz en batalla.' },
+            { id: 'bp2', name: 'Oso', health: 35, damage: '1d8', difficulty: 30, icon: '🐻', desc: 'Poderoso pero difícil de controlar.' },
+            { id: 'bp3', name: 'Águila', health: 15, damage: '1d4', difficulty: 24, icon: '🦅', desc: 'Ataca desde el aire.' },
+            { id: 'bp4', name: 'Tigre', health: 30, damage: '2d6', difficulty: 60, icon: '🐯', desc: 'El depredador definitivo.' }
+        ];
+
+        const ITEM_DESCRIPTIONS = {
+            potion: 'Poción consumible',
+            food: 'Alimento / Para domesticar',
+            antidote: 'Cura veneno',
+            escape: 'Escape de combate',
+            scroll: 'Pergamino mágico',
+            tool: 'Herramienta',
+            backpack: 'Aumenta inventario'
+        };
+
+        function getAllWeapons() { return [...BASE_WEAPONS, ...customData.weapons]; }
+        function getAllArmors() { return [...BASE_ARMORS, ...customData.armors]; }
+        function getAllItems() { return [...BASE_ITEMS, ...customData.items]; }
+        function getAllEnemies() { return [...BASE_ENEMIES, ...customData.enemies]; }
+        function getAllPets() { return [...BASE_PETS, ...customData.pets]; }
+
+        function findItem(id) {
+            return getAllWeapons().find(x => x.id === id) ||
+                   getAllArmors().find(x => x.id === id) ||
+                   getAllItems().find(x => x.id === id);
+        }
+
+        // ==================== GAME STATE ====================
+        let game = {
+            player: null,
+            inCombat: false,
+            enemy: null,
+            turn: 0
+        };
+
+        // ==================== UTILITIES ====================
+        function roll(notation) {
+            if (typeof notation === 'number') return notation;
+            const m = String(notation).match(/(\d+)?d(\d+)([+-]\d+)?/i);
+            if (!m) return parseInt(notation) || 0;
+            let total = parseInt(m[3]) || 0;
+            const count = parseInt(m[1]) || 1;
+            const sides = parseInt(m[2]);
+            for (let i = 0; i < count; i++) total += Math.floor(Math.random() * sides) + 1;
+            return Math.max(1, total);
+        }
+
+        function d20() { return Math.floor(Math.random() * 20) + 1; }
+        function dX(x) { return Math.floor(Math.random() * x) + 1; }
+        function pick(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+        function hpClass(pct) {
+            if (pct > 60) return 'hp-high';
+            if (pct > 30) return 'hp-medium';
+            if (pct > 15) return 'hp-low';
+            return 'hp-critical';
+        }
+
+        function toast(msg, type = 'info') {
+            const t = document.createElement('div');
+            t.className = `toast ${type}`;
+            t.textContent = msg;
+            document.getElementById('toasts').appendChild(t);
+            setTimeout(() => t.remove(), 3000);
+        }
+
+        function openModal(id) { document.getElementById(id).classList.add('active'); }
+        function closeModal(id) { document.getElementById(id).classList.remove('active'); }
+
+        async function showDice(result, sides = 20, crit = false) {
+            const d = document.getElementById('diceDisplay');
+            document.getElementById('diceLabel').textContent = `D${sides}`;
+            document.getElementById('diceResult').textContent = result;
+            document.getElementById('diceResult').classList.toggle('crit', crit);
+            d.classList.add('active');
+            await new Promise(r => setTimeout(r, 600));
+            d.classList.remove('active');
+        }
+
+        // ==================== STORY ====================
+        function addStory(txt, type = '') {
+            const c = document.getElementById('storyContent');
+            const d = document.createElement('div');
+            d.className = 'story-entry ' + (type ? 'story-' + type : '');
+            d.innerHTML = txt;
+            c.appendChild(d);
+            c.scrollTop = c.scrollHeight;
+        }
+
+        // ==================== COMBAT LOG ====================
+        function clearCombatLog() {
+            document.getElementById('combatLogContent').innerHTML = '';
+        }
+
+        function addTurnHeader(turnNum) {
+            const c = document.getElementById('combatLogContent');
+            c.innerHTML += `<div class="log-turn-header">═══ TURNO ${turnNum} ═══</div>`;
+            c.scrollTop = c.scrollHeight;
+        }
+
+        function addLogEntry(txt, cls = '') {
+            const c = document.getElementById('combatLogContent');
+            c.innerHTML += `<div class="log-entry ${cls}">${txt}</div>`;
+            c.scrollTop = c.scrollHeight;
+        }
+
+        function addLogSection(title, entries, type = '') {
+            const c = document.getElementById('combatLogContent');
+            let html = `<div class="log-section ${type}">`;
+            html += `<div style="font-size:0.75rem;color:var(--text-dim);margin-bottom:0.2rem;">${title}</div>`;
+            entries.forEach(e => {
+                html += `<div class="log-entry ${e.cls || ''}">${e.text}</div>`;
+            });
+            html += '</div>';
+            c.innerHTML += html;
+            c.scrollTop = c.scrollHeight;
+        }
+
+        // ==================== UI UPDATES ====================
+        function updateUI() {
+            const p = game.player;
+            if (!p) return;
+
+            document.getElementById('charAvatar').textContent = p.race.icon;
+            document.getElementById('charName').textContent = p.name;
+            document.getElementById('charRace').textContent = `${p.race.name} (${p.race.desc})`;
+
+            const pct = (p.hp / p.maxHp) * 100;
+            document.getElementById('hpDisplay').textContent = `${p.hp} / ${p.maxHp}`;
+            const hpBar = document.getElementById('hpBar');
+            hpBar.style.width = pct + '%';
+            hpBar.className = 'bar-inner ' + hpClass(pct);
+
+            document.getElementById('statArm').textContent = p.totalArmor();
+            document.getElementById('statEva').textContent = p.race.bonus.evasion || 0;
+            document.getElementById('statPrec').textContent = p.race.bonus.precision || 0;
+            document.getElementById('statDmg').textContent = p.race.bonus.damage || 0;
+
+            document.getElementById('weaponIcon').textContent = p.weapon.icon;
+            document.getElementById('weaponName').textContent = p.weapon.name;
+            document.getElementById('weaponStats').textContent = `Daño: ${p.weapon.damage}`;
+
+            document.getElementById('armorIcon').textContent = p.armor.icon;
+            document.getElementById('armorName').textContent = p.armor.name;
+            document.getElementById('armorStats').textContent = `Def: ${p.armor.defense}`;
+
+            document.getElementById('goldAmt').textContent = p.gold;
+            document.getElementById('silverAmt').textContent = p.silver;
+
+            // Effects
+            const effSec = document.getElementById('effectsSection');
+            const effRow = document.getElementById('playerEffectsPanel');
+            effRow.innerHTML = '';
+            if (p.effects.length > 0) {
+                effSec.style.display = 'block';
+                p.effects.forEach(e => {
+                    effRow.innerHTML += `<span class="effect-tag eff-${e.type}">${e.type} x${e.stacks} (${e.turns}t)</span>`;
+                });
+            } else {
+                effSec.style.display = 'none';
+            }
+
+            // Pet
+            const petSec = document.getElementById('petSection');
+            if (p.pet) {
+                petSec.style.display = 'block';
+                const ppct = (p.pet.hp / p.pet.maxHp) * 100;
+                document.getElementById('petDisplay').innerHTML = `
+                    <div class="pet-card">
+                        <div class="pet-icon">${p.pet.icon}</div>
+                        <div class="pet-info">
+                            <div class="pet-name">${p.pet.name}</div>
+                            <div class="pet-hp-bar"><div class="hp-bar-fill ${hpClass(ppct)}" style="width:${ppct}%"></div></div>
+                            <div style="font-size:0.65rem;color:var(--text-dim);">${p.pet.hp}/${p.pet.maxHp} HP | ${p.pet.damage}</div>
+                        </div>
+                    </div>
+                `;
+            } else {
+                petSec.style.display = 'none';
+            }
+        }
+
+        function updateCombatUI() {
+            const p = game.player;
+            const e = game.enemy;
+
+            document.getElementById('turnNumber').textContent = game.turn;
+
+            // Player
+            document.getElementById('pSprite').textContent = p.race.icon;
+            document.getElementById('pCombatName').textContent = p.name;
+            document.getElementById('pCombatDmg').textContent = p.weapon.damage;
+            document.getElementById('pCombatDef').textContent = p.totalArmor();
+
+            const ppct = (p.hp / p.maxHp) * 100;
+            document.getElementById('pHpText').textContent = `${p.hp}/${p.maxHp}`;
+            const pBar = document.getElementById('pHpBar');
+            pBar.style.width = ppct + '%';
+            pBar.className = 'hp-bar-fill ' + hpClass(ppct);
+
+            // Player effects
+            const pEff = document.getElementById('pEffects');
+            pEff.innerHTML = p.effects.map(ef => 
+                `<span class="effect-tag eff-${ef.type}">${ef.type} ${ef.turns}t</span>`
+            ).join('');
+
+            // Enemy
+            document.getElementById('eSprite').textContent = e.icon;
+            document.getElementById('eCombatName').textContent = e.name;
+            document.getElementById('eCombatDmg').textContent = e.damage;
+            document.getElementById('eCombatDiff').textContent = e.difficulty;
+
+            const epct = (e.hp / e.maxHp) * 100;
+            document.getElementById('eHpText').textContent = `${e.hp}/${e.maxHp}`;
+            const eBar = document.getElementById('eHpBar');
+            eBar.style.width = epct + '%';
+            eBar.className = 'hp-bar-fill ' + hpClass(epct);
+
+            // Enemy effects
+            const eEff = document.getElementById('eEffects');
+            eEff.innerHTML = (e.effects || []).map(ef => 
+                `<span class="effect-tag eff-${ef.type}">${ef.type} ${ef.turns}t</span>`
+            ).join('');
+
+            // Combat actions
+            const ca = document.getElementById('combatActions');
+            ca.innerHTML = '';
+            [
+                { text: '⚔️ Atacar', fn: playerAttack, cls: 'primary' },
+                { text: '🎒 Usar Item', fn: openCombatInventory },
+                { text: '🛡️ Defender', fn: playerDefend },
+                { text: '💨 Huir', fn: attemptFlee, cls: 'danger' }
+            ].forEach(a => {
+                const b = document.createElement('button');
+                b.className = 'action-btn ' + (a.cls || '');
+                b.textContent = a.text;
+                b.onclick = a.fn;
+                ca.appendChild(b);
+            });
+        }
+
+        // ==================== ITEM DETAIL ====================
+        function showItemDetail(item, context = 'inventory') {
+            if (!item) return;
+
+            document.getElementById('detailIcon').textContent = item.icon;
+            document.getElementById('detailName').textContent = item.name;
+            
+            let typeText = '';
+            if (item.damage) typeText = 'Arma';
+            else if (item.defense !== undefined) typeText = 'Armadura';
+            else typeText = ITEM_DESCRIPTIONS[item.type] || item.type || 'Item';
+            document.getElementById('detailType').textContent = typeText;
+
+            document.getElementById('detailDesc').textContent = item.desc || 'Sin descripción.';
+
+            // Stats
+            let statsHtml = '';
+            if (item.damage) {
+                statsHtml += `<div class="item-stat"><div class="item-stat-label">Daño</div><div class="item-stat-value">${item.damage}</div></div>`;
+            }
+            if (item.defense !== undefined) {
+                statsHtml += `<div class="item-stat"><div class="item-stat-label">Defensa</div><div class="item-stat-value">${item.defense}</div></div>`;
+            }
+            if (item.effect && item.type === 'potion') {
+                statsHtml += `<div class="item-stat"><div class="item-stat-label">Curación</div><div class="item-stat-value">${item.effect}</div></div>`;
+            }
+            if (item.effect && item.type === 'backpack') {
+                statsHtml += `<div class="item-stat"><div class="item-stat-label">Espacios</div><div class="item-stat-value">+${item.effect}</div></div>`;
+            }
+            if (item.value) {
+                statsHtml += `<div class="item-stat"><div class="item-stat-label">Valor</div><div class="item-stat-value">${item.value} MP</div></div>`;
+            }
+            if (item.rarity) {
+                statsHtml += `<div class="item-stat"><div class="item-stat-label">Rareza</div><div class="item-stat-value">${item.rarity}</div></div>`;
+            }
+            document.getElementById('detailStats').innerHTML = statsHtml;
+
+            // Actions
+            let actionsHtml = '';
+            
+            if (context === 'inventory' || context === 'combat') {
+                if (item.damage && context !== 'combat') {
+                    actionsHtml += `<button class="action-btn primary" onclick="confirmEquip('${item.uid}', 'weapon')">⚔️ Equipar</button>`;
+                }
+                if (item.defense !== undefined && context !== 'combat') {
+                    actionsHtml += `<button class="action-btn primary" onclick="confirmEquip('${item.uid}', 'armor')">🛡️ Equipar</button>`;
+                }
+                if (item.type === 'potion' || item.type === 'food') {
+                    actionsHtml += `<button class="action-btn primary" onclick="confirmUse('${item.uid}')">✨ Usar</button>`;
+                }
+                if (item.type === 'antidote') {
+                    actionsHtml += `<button class="action-btn primary" onclick="confirmUse('${item.uid}')">💊 Usar</button>`;
+                }
+                if (item.type === 'escape' && context === 'combat') {
+                    actionsHtml += `<button class="action-btn primary" onclick="confirmUse('${item.uid}')">💨 Usar</button>`;
+                }
+                if (item.type === 'backpack') {
+                    actionsHtml += `<button class="action-btn primary" onclick="confirmUse('${item.uid}')">🎒 Usar</button>`;
+                }
+            }
+            
+            actionsHtml += `<button class="action-btn" onclick="closeModal('itemDetailModal')">Cerrar</button>`;
+            document.getElementById('detailActions').innerHTML = actionsHtml;
+
+            openModal('itemDetailModal');
+        }
+
+        function confirmUse(uid) {
+            const item = game.player.inventory.find(i => i.uid === uid);
+            if (!item) return;
+
+            closeModal('itemDetailModal');
+            useItem(item);
+        }
+
+        function confirmEquip(uid, type) {
+            const item = game.player.inventory.find(i => i.uid === uid);
+            if (!item) return;
+
+            closeModal('itemDetailModal');
+            
+            const p = game.player;
+            if (type === 'weapon') {
+                if (p.weapon.uid) p.inventory.push(p.weapon);
+                p.weapon = item;
+                p.inventory = p.inventory.filter(i => i.uid !== uid);
+                addStory(`Equipas: ${item.name}`, 'system');
+                toast('Arma equipada', 'success');
+            } else if (type === 'armor') {
+                if (p.armor.uid) p.inventory.push(p.armor);
+                p.armor = item;
+                p.inventory = p.inventory.filter(i => i.uid !== uid);
+                addStory(`Equipas: ${item.name}`, 'system');
+                toast('Armadura equipada', 'success');
+            }
+
+            updateUI();
+            renderInventory();
+        }
+
+        function useItem(item) {
+            const p = game.player;
+
+            if (item.type === 'potion' || item.type === 'food') {
+                const heal = roll(item.effect || '1d4');
+                const actual = Math.min(heal, p.maxHp - p.hp);
+                p.hp += actual;
+                addStory(`Usas ${item.name}: <span style="color:var(--green-bright);">+${actual} HP</span>`, 'system');
+                if (game.inCombat) addLogEntry(`Usas ${item.name}: +${actual} HP`, 'log-heal');
+                p.inventory = p.inventory.filter(i => i.uid !== item.uid);
+            } else if (item.type === 'antidote') {
+                const hadPoison = p.effects.some(e => e.type === 'poison');
+                p.effects = p.effects.filter(e => e.type !== 'poison');
+                addStory(`Usas ${item.name}: ${hadPoison ? 'Veneno curado' : 'No tenías veneno'}`, 'system');
+                if (game.inCombat) addLogEntry(`Antídoto usado`, 'log-heal');
+                p.inventory = p.inventory.filter(i => i.uid !== item.uid);
+            } else if (item.type === 'escape' && game.inCombat) {
+                p.inventory = p.inventory.filter(i => i.uid !== item.uid);
+                addStory('Usas una bomba de humo y escapas del combate.', 'system');
+                endCombatEscape();
+                return;
+            } else if (item.type === 'backpack') {
+                const slots = parseInt(item.effect) || 5;
+                p.maxSlots += slots;
+                addStory(`Usas ${item.name}: +${slots} espacios de inventario`, 'system');
+                p.inventory = p.inventory.filter(i => i.uid !== item.uid);
+            }
+
+            updateUI();
+            renderInventory();
+            if (game.inCombat) updateCombatUI();
+            closeModal('inventoryModal');
+        }
+
+        // ==================== INVENTORY ====================
+        function renderInventory() {
+            const p = game.player;
+            document.getElementById('invInfo').textContent = `Espacios: ${p.inventory.length} / ${p.maxSlots}`;
+
+            const grid = document.getElementById('invGrid');
+            grid.innerHTML = '';
+
+            // Show items
+            p.inventory.forEach(item => {
+                const slot = document.createElement('div');
+                slot.className = `inv-slot rarity-${item.rarity || 'common'}`;
+                slot.innerHTML = `
+                    <div class="inv-slot-icon">${item.icon}</div>
+                    <div class="inv-slot-name">${item.name}</div>
+                `;
+                slot.onclick = () => showItemDetail(item, game.inCombat ? 'combat' : 'inventory');
+                grid.appendChild(slot);
+            });
+
+            // Empty slots
+            for (let i = p.inventory.length; i < p.maxSlots; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'inv-slot';
+                slot.innerHTML = '<div class="inv-slot-empty">vacío</div>';
+                grid.appendChild(slot);
+            }
+        }
+
+        function openCombatInventory() {
+            renderInventory();
+            openModal('inventoryModal');
+        }
+
+        // ==================== COMBAT ====================
+        function startCombat(enemy) {
+            game.inCombat = true;
+            game.enemy = {
+                ...enemy,
+                hp: enemy.health,
+                maxHp: enemy.health,
+                effects: []
+            };
+            game.turn = 1;
+
+            document.getElementById('combatArena').classList.add('active');
+            clearCombatLog();
+            
+            addStory(`<strong>¡Un ${enemy.name} aparece!</strong><br>${enemy.desc || ''}`, 'combat');
+            
+            addTurnHeader(1);
+            addLogEntry(`Combate iniciado contra ${enemy.name}`, '');
+            addLogEntry(`Dificultad para acertar: ${enemy.difficulty}+`, 'log-dice');
+
+            updateCombatUI();
+            document.getElementById('actionsGrid').innerHTML = '<span style="color:var(--text-dim)">En combate...</span>';
+        }
+
+        async function playerAttack() {
+            const p = game.player;
+            const e = game.enemy;
+
+            const attackRoll = d20();
+            const precision = p.race.bonus.precision || 0;
+            const totalRoll = attackRoll + precision;
+            const isCrit = attackRoll === 20;
+
+            await showDice(attackRoll, 20, isCrit);
+
+            const logs = [];
+            logs.push({ text: `🎲 Tirada de ataque: D20 = <span class="log-dice">${attackRoll}</span>${precision ? ` + ${precision} (precisión)` : ''} = <strong>${totalRoll}</strong> vs ${e.difficulty}`, cls: '' });
+
+            if (attackRoll === 1) {
+                logs.push({ text: `<span class="log-miss">¡PIFIA! El ataque falla estrepitosamente.</span>`, cls: '' });
+                addLogSection(`⚔️ ${p.name} ataca`, logs, 'player-action');
+            } else if (totalRoll >= e.difficulty) {
+                let dmg = roll(p.weapon.damage);
+                dmg += p.race.bonus.damage || 0;
+
+                if (isCrit) {
+                    dmg *= 2;
+                    logs.push({ text: `<span class="log-crit">¡¡CRÍTICO!! Daño ×2</span>`, cls: '' });
+                }
+
+                logs.push({ text: `✓ Impacto: <span class="log-damage">${dmg} daño</span>`, cls: '' });
+                e.hp -= dmg;
+
+                if (p.weapon.effect) {
+                    applyEffect(e, p.weapon.effect);
+                    logs.push({ text: `Aplica efecto: <span class="log-effect">${p.weapon.effect}</span>`, cls: '' });
+                }
+
+                // Pet attack
+                if (p.pet) {
+                    const petDmg = roll(p.pet.damage);
+                    e.hp -= petDmg;
+                    logs.push({ text: `${p.pet.icon} ${p.pet.name} ataca: <span class="log-damage">${petDmg} daño</span>`, cls: '' });
+                }
+
+                addLogSection(`⚔️ ${p.name} ataca`, logs, 'player-action');
+
+                if (e.hp <= 0) {
+                    endCombat(true);
+                    return;
+                }
+            } else {
+                logs.push({ text: `<span class="log-miss">✗ Fallo - No alcanza la dificultad</span>`, cls: '' });
+                addLogSection(`⚔️ ${p.name} ataca`, logs, 'player-action');
+            }
+
+            updateCombatUI();
+            await enemyTurn();
+        }
+
+        function playerDefend() {
+            game.player.defending = true;
+            
+            addLogSection(`🛡️ ${game.player.name} se defiende`, [
+                { text: 'Adopta postura defensiva: +4 a evasión este turno', cls: '' }
+            ], 'player-action');
+
+            enemyTurn();
+        }
+
+        async function attemptFlee() {
+            const p = game.player;
+            
+            const escapeRoll = d20();
+            await showDice(escapeRoll, 20, false);
+
+            const logs = [];
+            logs.push({ text: `🎲 Tirada de huida: D20 = <span class="log-dice">${escapeRoll}</span> vs 12`, cls: '' });
+
+            if (escapeRoll >= 12) {
+                logs.push({ text: `<span class="log-heal">✓ ¡Escape exitoso!</span>`, cls: '' });
+                addLogSection(`🏃 ${p.name} huye`, logs, 'player-action');
+                addStory('Logras escapar del combate.', 'system');
+                endCombatEscape();
+            } else {
+                logs.push({ text: `<span class="log-miss">✗ No logras escapar</span>`, cls: '' });
+                addLogSection(`🏃 ${p.name} intenta huir`, logs, 'player-action');
+                await enemyTurn();
+            }
+        }
+
+        async function enemyTurn() {
+            const p = game.player;
+            const e = game.enemy;
+
+            // Process enemy effects first
+            if (e.effects && e.effects.length > 0) {
+                const effLogs = processEffectsWithLog(e, 'enemy');
+                if (effLogs.length > 0) {
+                    addLogSection(`☠️ Efectos sobre ${e.name}`, effLogs, 'effects-phase');
+                }
+                updateCombatUI();
+                if (e.hp <= 0) {
+                    endCombat(true);
+                    return;
+                }
+            }
+
+            // Enemy attacks
+            const logs = [];
+            logs.push({ text: `${e.icon} ${e.name} ataca a ${p.name}`, cls: '' });
+
+            const dodgeRoll = d20();
+            const evasionBonus = (p.race.bonus.evasion || 0) + (p.defending ? 4 : 0);
+            const totalDodge = dodgeRoll + evasionBonus;
+            const dodgeTarget = 12;
+
+            logs.push({ text: `🎲 Tirada de esquive: D20 = <span class="log-dice">${dodgeRoll}</span>${evasionBonus ? ` + ${evasionBonus}` : ''} = <strong>${totalDodge}</strong> vs ${dodgeTarget}`, cls: '' });
+
+            if (totalDodge >= dodgeTarget) {
+                logs.push({ text: `<span class="log-heal">✓ ¡Esquivado!</span>`, cls: '' });
+            } else {
+                let dmg = roll(e.damage);
+                const isCrit = Math.random() < 0.1;
+                
+                if (isCrit) {
+                    dmg = Math.ceil(dmg * 1.25);
+                    logs.push({ text: `<span class="log-crit">¡Crítico enemigo! (×1.25)</span>`, cls: '' });
+                }
+
+                const armor = p.totalArmor();
+                const finalDmg = Math.max(1, dmg - armor);
+
+                logs.push({ text: `Daño base: ${dmg}${armor > 0 ? ` - ${armor} (armadura)` : ''} = <span class="log-damage">${finalDmg} daño recibido</span>`, cls: '' });
+                p.hp -= finalDmg;
+
+                if (e.effect) {
+                    applyEffect(p, e.effect);
+                    logs.push({ text: `Aplica efecto: <span class="log-effect">${e.effect}</span>`, cls: '' });
+                }
+
+                // Pet takes damage sometimes
+                if (p.pet && Math.random() < 0.2) {
+                    const petDmg = Math.floor(finalDmg * 0.5);
+                    p.pet.hp -= petDmg;
+                    logs.push({ text: `${p.pet.icon} ${p.pet.name} recibe ${petDmg} daño`, cls: '' });
+                    if (p.pet.hp <= 0) {
+                        logs.push({ text: `<span class="log-damage">💀 ${p.pet.name} ha muerto</span>`, cls: '' });
+                        p.pet = null;
+                    }
+                }
+            }
+
+            addLogSection(`👹 ${e.name} ataca`, logs, 'enemy-action');
+
+            // Process player effects
+            if (p.effects.length > 0) {
+                const effLogs = processEffectsWithLog(p, 'player');
+                if (effLogs.length > 0) {
+                    addLogSection(`☠️ Efectos sobre ${p.name}`, effLogs, 'effects-phase');
+                }
+            }
+
+            p.defending = false;
+            game.turn++;
+
+            updateCombatUI();
+            updateUI();
+
+            if (p.hp <= 0) {
+                endCombat(false);
+            } else {
+                // New turn header
+                addTurnHeader(game.turn);
+            }
+        }
+
+        function applyEffect(target, type) {
+            const data = {
+                bleed: { dmg: 1, turns: 3, maxStacks: 3 },
+                poison: { dmg: 2, turns: 2, maxStacks: 2 },
+                fire: { dmg: '1d4', turns: 2, maxStacks: 1 },
+                cold: { dmg: 0, turns: 2, maxStacks: 1 },
+                electric: { dmg: '1d6', turns: 1, maxStacks: 1, stun: 0.1 }
+            };
+
+            const eff = data[type];
+            if (!eff) return;
+
+            if (!target.effects) target.effects = [];
+            const existing = target.effects.find(e => e.type === type);
+
+            if (existing) {
+                if (existing.stacks < eff.maxStacks) {
+                    existing.stacks++;
+                }
+                existing.turns = eff.turns;
+            } else {
+                target.effects.push({
+                    type,
+                    dmg: eff.dmg,
+                    turns: eff.turns,
+                    stacks: 1,
+                    maxStacks: eff.maxStacks,
+                    stun: eff.stun
+                });
+            }
+        }
+
+        function processEffectsWithLog(target, who) {
+            const logs = [];
+            if (!target.effects || target.effects.length === 0) return logs;
+
+            let totalDmg = 0;
+            const expired = [];
+
+            target.effects.forEach((eff, i) => {
+                const dmg = typeof eff.dmg === 'string' ? roll(eff.dmg) : eff.dmg;
+                const stackDmg = dmg * eff.stacks;
+                totalDmg += stackDmg;
+
+                if (stackDmg > 0) {
+                    logs.push({ text: `${eff.type} (x${eff.stacks}): <span class="log-damage">${stackDmg} daño</span>`, cls: '' });
+                }
+
+                eff.turns--;
+                if (eff.turns <= 0) {
+                    expired.push(i);
+                    logs.push({ text: `${eff.type} ha terminado`, cls: 'log-miss' });
+                }
+            });
+
+            expired.reverse().forEach(i => target.effects.splice(i, 1));
+
+            if (totalDmg > 0) {
+                if (who === 'player') {
+                    target.hp -= totalDmg;
+                } else {
+                    target.hp -= totalDmg;
+                }
+            }
+
+            return logs;
+        }
+
+        function endCombatEscape() {
+            document.getElementById('combatArena').classList.remove('active');
+            game.inCombat = false;
+            game.enemy = null;
+            updateUI();
+            showExploreActions();
+        }
+
+        function endCombat(victory) {
+            document.getElementById('combatArena').classList.remove('active');
+            game.inCombat = false;
+
+            if (victory) {
+                const e = game.enemy;
+                addLogEntry(`🏆 Victoria contra ${e.name}`, 'log-heal');
+                addStory(`<strong>¡Victoria!</strong> Has derrotado al ${e.name}.`, 'loot');
+
+                // MP reward
+                if (e.loot) {
+                    const mp = dX(e.loot[1] - e.loot[0]) + e.loot[0];
+                    game.player.silver += mp;
+                    while (game.player.silver >= 99) {
+                        game.player.silver -= 99;
+                        game.player.gold++;
+                    }
+                    addStory(`Obtienes <strong>${mp} MP</strong>`, 'loot');
+                }
+
+                // Drops
+                if (e.drops && e.drops.length > 0) {
+                    e.drops.forEach(dropId => {
+                        if (Math.random() < 0.3 && game.player.inventory.length < game.player.maxSlots) {
+                            const item = findItem(dropId);
+                            if (item) {
+                                game.player.inventory.push({ ...item, uid: Date.now() + Math.random() });
+                                addStory(`¡Obtienes: <strong>${item.name}</strong>!`, 'loot');
+                            }
+                        }
+                    });
+                }
+            } else {
+                addStory(`<strong style="color:var(--red-bright);">Has muerto...</strong><br>Pierdes objetos no equipados y 50% de monedas.`, 'combat');
+                setActions([
+                    { text: '🔄 Nuevo Personaje', fn: startNewGame, cls: 'primary' }
+                ]);
+                return;
+            }
+
+            game.enemy = null;
+            updateUI();
+            showExploreActions();
+        }
+
+        // ==================== ACTIONS ====================
+        function setActions(acts) {
+            const g = document.getElementById('actionsGrid');
+            g.innerHTML = '';
+            acts.forEach(a => {
+                const b = document.createElement('button');
+                b.className = 'action-btn ' + (a.cls || '');
+                b.textContent = a.text;
+                b.disabled = a.disabled;
+                b.onclick = a.fn;
+                g.appendChild(b);
+            });
+        }
+
+        function showExploreActions() {
+            setActions([
+                { text: '🗺️ Explorar', fn: explore, cls: 'primary' },
+                { text: '🎒 Inventario', fn: () => { renderInventory(); openModal('inventoryModal'); } },
+                { text: '💾 Guardar', fn: saveGame }
+            ]);
+        }
+
+        function explore() {
+            const r = dX(100);
+
+            if (r <= 50) {
+                const enemies = getAllEnemies();
+                const rep = game.player.gold * 10 + Math.floor(game.player.silver / 10);
+                let pool = enemies.filter(e => {
+                    if (rep < 20) return e.difficulty <= 10;
+                    if (rep < 50) return e.difficulty <= 14;
+                    return true;
+                });
+                if (pool.length === 0) pool = enemies;
+                startCombat(pick(pool));
+            } else if (r <= 70) {
+                const mp = dX(30) + 5;
+                game.player.silver += mp;
+                while (game.player.silver >= 99) {
+                    game.player.silver -= 99;
+                    game.player.gold++;
+                }
+                addStory(`Encuentras un cofre con <strong>${mp} MP</strong>.`, 'loot');
+                updateUI();
+                showExploreActions();
+            } else if (r <= 85) {
+                const pets = getAllPets();
+                if (pets.length > 0 && !game.player.pet) {
+                    const pet = pick(pets);
+                    encounterPet(pet);
+                } else {
+                    addStory('El camino está tranquilo. Continúas tu viaje.', 'event');
+                    showExploreActions();
+                }
+            } else if (r <= 95) {
+                const trapDmg = roll('1d6');
+                const finalDmg = Math.max(1, trapDmg - Math.floor(game.player.totalArmor() / 2));
+                game.player.hp -= finalDmg;
+                addStory(`¡Trampa! Recibes <strong style="color:var(--red-bright);">${finalDmg} daño</strong>.`, 'combat');
+                updateUI();
+                if (game.player.hp <= 0) {
+                    addStory('<strong style="color:var(--red-bright);">Has muerto...</strong>', 'combat');
+                    setActions([{ text: '🔄 Nuevo Personaje', fn: startNewGame, cls: 'primary' }]);
+                } else {
+                    showExploreActions();
+                }
+            } else {
+                const heal = Math.floor(game.player.maxHp * 0.25);
+                game.player.hp = Math.min(game.player.maxHp, game.player.hp + heal);
+                addStory(`Encuentras un lugar seguro para descansar. <span style="color:var(--green-bright);">+${heal} HP</span>`, 'event');
+                updateUI();
+                showExploreActions();
+            }
+        }
+
+        function encounterPet(pet) {
+            addStory(`Encuentras un <strong>${pet.name}</strong> salvaje. ${pet.desc || ''}`, 'event');
+            
+            const hasMeat = game.player.inventory.some(i => i.type === 'food');
+
+            setActions([
+                { text: '🥩 Domesticar', fn: () => attemptTame(pet), disabled: !hasMeat, cls: hasMeat ? 'primary' : '' },
+                { text: '⚔️ Atacar', fn: () => startCombat({ ...pet, health: pet.health, difficulty: 10, loot: [5, 15], drops: ['bi7'] }) },
+                { text: '🏃 Dejar', fn: () => { addStory('Te alejas silenciosamente.', 'event'); showExploreActions(); } }
+            ]);
+        }
+
+        async function attemptTame(pet) {
+            const p = game.player;
+            const meatIdx = p.inventory.findIndex(i => i.type === 'food');
+            if (meatIdx !== -1) p.inventory.splice(meatIdx, 1);
+
+            addStory(`Ofreces carne al ${pet.name}...`, 'event');
+
+            const tameRoll = dX(pet.difficulty);
+            const threshold = Math.ceil(pet.difficulty * 0.6);
+
+            await showDice(tameRoll, pet.difficulty, tameRoll >= threshold);
+
+            addStory(`Tirada D${pet.difficulty}: <strong>${tameRoll}</strong> (necesitas ${threshold}+)`, 'system');
+
+            if (tameRoll >= threshold) {
+                p.pet = { ...pet, hp: pet.health, maxHp: pet.health };
+                addStory(`<strong style="color:var(--green-bright);">¡${pet.name} se une a ti!</strong>`, 'loot');
+                toast('Compañero obtenido', 'success');
+            } else {
+                addStory(`El ${pet.name} rechaza la comida y huye.`, 'event');
+            }
+
+            updateUI();
+            showExploreActions();
+        }
+
+        // ==================== CHARACTER ====================
+        class Player {
+            constructor() {
+                this.name = pick(['Aldric', 'Brynn', 'Cedric', 'Dara', 'Freya', 'Gideon', 'Kira', 'Mira', 'Orion', 'Sera']);
+                
+                const raceRoll = dX(5);
+                this.race = BASE_RACES[raceRoll - 1];
+                
+                const weapRoll = dX(4);
+                this.weapon = { ...BASE_WEAPONS[weapRoll - 1], uid: Date.now() };
+                
+                const armRoll = dX(4);
+                this.armor = { ...BASE_ARMORS[armRoll - 1], uid: Date.now() + 1 };
+                
+                const itemRoll = dX(6);
+                const startItem = { ...BASE_ITEMS[itemRoll - 1], uid: Date.now() + 2 };
+                
+                this.maxHp = 20 + (this.race.bonus.health || 0);
+                this.hp = this.maxHp;
+                
+                this.gold = 0;
+                this.silver = 20;
+                
+                this.inventory = [startItem];
+                this.maxSlots = 10;
+                
+                this.effects = [];
+                this.pet = null;
+                this.defending = false;
+
+                this.rolls = { race: raceRoll, weapon: weapRoll, armor: armRoll, item: itemRoll };
+            }
+
+            totalArmor() {
+                return (this.armor?.defense || 0) + (this.race.bonus.armor || 0);
+            }
+        }
+
+        // ==================== SAVE/LOAD ====================
+        function saveGame() {
+            const data = {
+                player: game.player,
+                custom: customData,
+                timestamp: Date.now()
+            };
+            if (db && fbConnected) {
+                db.ref('saveData').set(data);
+            }
+            localStorage.setItem('rpgSave', JSON.stringify(data));
+            toast('Partida guardada', 'success');
+        }
+
+        function loadFromFirebase() {
+            if (!db) return;
+            db.ref('gameData').once('value').then(snap => {
+                const data = snap.val();
+                if (data) {
+                    ['weapons', 'armors', 'items', 'enemies', 'pets'].forEach(k => {
+                        if (data[k]) customData[k] = data[k];
+                    });
+                    renderAllLists();
+                    updateDropSelects();
+                }
+            });
+        }
+
+        function loadFromLocal() {
+            ['weapons', 'armors', 'items', 'enemies', 'pets'].forEach(k => {
+                const d = localStorage.getItem('rpg_' + k);
+                if (d) customData[k] = JSON.parse(d);
+            });
+        }
+
+        // ==================== NEW GAME ====================
+        function startNewGame() {
+            game = { player: new Player(), inCombat: false, enemy: null, turn: 0 };
+            const p = game.player;
+
+            document.getElementById('storyContent').innerHTML = '';
+            document.getElementById('combatArena').classList.remove('active');
+
+            addStory(`<span style="font-size:1.2rem;color:var(--gold);">⚔️ Nueva Aventura</span>`, '');
+            addStory(`Eres <strong>${p.name}</strong>, un ${p.race.name} ${p.race.icon}`, 'event');
+            addStory(`
+                <strong>Tiradas de creación:</strong><br>
+                • Raza (D5): ${p.rolls.race} → ${p.race.name}<br>
+                • Arma (D4): ${p.rolls.weapon} → ${p.weapon.name}<br>
+                • Armadura (D4): ${p.rolls.armor} → ${p.armor.name}<br>
+                • Item (D6): ${p.rolls.item} → ${p.inventory[0]?.name}
+            `, 'system');
+
+            updateUI();
+            showExploreActions();
+        }
+
+        // ==================== TABS ====================
+        function switchTab(tab) {
+            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Tab').classList.add('active');
+        }
+
+        function switchEditorTab(tab) {
+            document.querySelectorAll('.editor-tab').forEach(b => b.classList.remove('active'));
+            document.querySelectorAll('.editor-section').forEach(s => s.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tab + 'Editor').classList.add('active');
+            if (tab === 'enemies') updateDropSelects();
+        }
+
+        // ==================== EDITOR ====================
+        function saveCustom(type, data) {
+            customData[type].push(data);
+            if (db && fbConnected) {
+                db.ref('gameData/' + type).set(customData[type]);
+            }
+            localStorage.setItem('rpg_' + type, JSON.stringify(customData[type]));
+        }
+
+        function saveWeapon() {
+            const w = {
+                id: 'cw_' + Date.now(),
+                name: document.getElementById('wName').value,
+                damage: document.getElementById('wDamage').value,
+                icon: document.getElementById('wIcon').value || '⚔️',
+                rarity: document.getElementById('wRarity').value,
+                value: parseInt(document.getElementById('wValue').value) || 10,
+                effect: document.getElementById('wEffect').value || null,
+                desc: 'Arma personalizada.'
+            };
+            if (!w.name || !w.damage) { toast('Faltan campos', 'error'); return; }
+            saveCustom('weapons', w);
+            renderWeaponsList();
+            updateDropSelects();
+            toast('Arma guardada', 'success');
+            document.getElementById('wName').value = '';
+            document.getElementById('wDamage').value = '';
+        }
+
+        function saveArmor() {
+            const a = {
+                id: 'ca_' + Date.now(),
+                name: document.getElementById('aName').value,
+                defense: parseInt(document.getElementById('aDefense').value) || 0,
+                icon: document.getElementById('aIcon').value || '🛡️',
+                rarity: document.getElementById('aRarity').value,
+                value: parseInt(document.getElementById('aValue').value) || 10,
+                desc: 'Armadura personalizada.'
+            };
+            if (!a.name) { toast('Falta nombre', 'error'); return; }
+            saveCustom('armors', a);
+            renderArmorsList();
+            updateDropSelects();
+            toast('Armadura guardada', 'success');
+            document.getElementById('aName').value = '';
+        }
+
+        function saveItem() {
+            const i = {
+                id: 'ci_' + Date.now(),
+                name: document.getElementById('iName').value,
+                type: document.getElementById('iType').value,
+                icon: document.getElementById('iIcon').value || '📦',
+                effect: document.getElementById('iEffect').value,
+                value: parseInt(document.getElementById('iValue').value) || 10,
+                rarity: 'common',
+                desc: 'Item personalizado.'
+            };
+            if (!i.name) { toast('Falta nombre', 'error'); return; }
+            saveCustom('items', i);
+            renderItemsList();
+            updateDropSelects();
+            toast('Item guardado', 'success');
+            document.getElementById('iName').value = '';
+        }
+
+        function saveEnemy() {
+            const drops = Array.from(document.querySelectorAll('#enDropsSelect input:checked')).map(c => c.value);
+            const e = {
+                id: 'ce_' + Date.now(),
+                name: document.getElementById('enName').value,
+                health: parseInt(document.getElementById('enHealth').value) || 20,
+                damage: document.getElementById('enDamage').value || '1d6',
+                difficulty: parseInt(document.getElementById('enDiff').value) || 10,
+                icon: document.getElementById('enIcon').value || '👹',
+                effect: document.getElementById('enEffect').value || null,
+                loot: [
+                    parseInt(document.getElementById('enLootMin').value) || 5,
+                    parseInt(document.getElementById('enLootMax').value) || 20
+                ],
+                drops: drops,
+                desc: 'Enemigo personalizado.'
+            };
+            if (!e.name) { toast('Falta nombre', 'error'); return; }
+            saveCustom('enemies', e);
+            renderEnemiesList();
+            toast('Enemigo guardado', 'success');
+            document.getElementById('enName').value = '';
+        }
+
+        function savePet() {
+            const p = {
+                id: 'cp_' + Date.now(),
+                name: document.getElementById('petName').value,
+                health: parseInt(document.getElementById('petHealth').value) || 20,
+                damage: document.getElementById('petDamage').value || '1d4',
+                difficulty: parseInt(document.getElementById('petDiff').value) || 24,
+                icon: document.getElementById('petIcon').value || '🐺',
+                desc: 'Mascota personalizada.'
+            };
+            if (!p.name) { toast('Falta nombre', 'error'); return; }
+            saveCustom('pets', p);
+            renderPetsList();
+            toast('Mascota guardada', 'success');
+            document.getElementById('petName').value = '';
+        }
+
+        function deleteCustom(type, index) {
+            customData[type].splice(index, 1);
+            if (db && fbConnected) db.ref('gameData/' + type).set(customData[type]);
+            localStorage.setItem('rpg_' + type, JSON.stringify(customData[type]));
+            renderAllLists();
+            updateDropSelects();
+            toast('Eliminado', 'info');
+        }
+
+        function renderAllLists() {
+            renderWeaponsList();
+            renderArmorsList();
+            renderItemsList();
+            renderEnemiesList();
+            renderPetsList();
+        }
+
+        function renderWeaponsList() {
+            document.getElementById('weaponsList').innerHTML = customData.weapons.map((w, i) => `
+                <div class="item-card"><span class="item-card-icon">${w.icon}</span>
+                <div class="item-card-info"><div class="item-card-name">${w.name}</div>
+                <div class="item-card-stats">${w.damage} | ${w.value}MP</div></div>
+                <button class="delete-btn" onclick="deleteCustom('weapons',${i})">✕</button></div>
+            `).join('');
+        }
+
+        function renderArmorsList() {
+            document.getElementById('armorsList').innerHTML = customData.armors.map((a, i) => `
+                <div class="item-card"><span class="item-card-icon">${a.icon}</span>
+                <div class="item-card-info"><div class="item-card-name">${a.name}</div>
+                <div class="item-card-stats">Def:${a.defense} | ${a.value}MP</div></div>
+                <button class="delete-btn" onclick="deleteCustom('armors',${i})">✕</button></div>
+            `).join('');
+        }
+
+        function renderItemsList() {
+            document.getElementById('itemsList').innerHTML = customData.items.map((it, i) => `
+                <div class="item-card"><span class="item-card-icon">${it.icon}</span>
+                <div class="item-card-info"><div class="item-card-name">${it.name}</div>
+                <div class="item-card-stats">${it.type} | ${it.value}MP</div></div>
+                <button class="delete-btn" onclick="deleteCustom('items',${i})">✕</button></div>
+            `).join('');
+        }
+
+        function renderEnemiesList() {
+            document.getElementById('enemiesList').innerHTML = customData.enemies.map((e, i) => `
+                <div class="item-card"><span class="item-card-icon">${e.icon}</span>
+                <div class="item-card-info"><div class="item-card-name">${e.name}</div>
+                <div class="item-card-stats">HP:${e.health} | ${e.damage} | Dif:${e.difficulty}</div></div>
+                <button class="delete-btn" onclick="deleteCustom('enemies',${i})">✕</button></div>
+            `).join('');
+        }
+
+        function renderPetsList() {
+            document.getElementById('petsList').innerHTML = customData.pets.map((p, i) => `
+                <div class="item-card"><span class="item-card-icon">${p.icon}</span>
+                <div class="item-card-info"><div class="item-card-name">${p.name}</div>
+                <div class="item-card-stats">HP:${p.health} | ${p.damage} | D${p.difficulty}</div></div>
+                <button class="delete-btn" onclick="deleteCustom('pets',${i})">✕</button></div>
+            `).join('');
+        }
+
+        function updateDropSelects() {
+            const sel = document.getElementById('enDropsSelect');
+            if (!sel) return;
+            const all = [...getAllWeapons(), ...getAllArmors(), ...getAllItems()];
+            sel.innerHTML = all.map(it => `
+                <label><input type="checkbox" value="${it.id}"> ${it.icon} ${it.name}</label>
+            `).join('');
+        }
+
+        // ==================== INIT ====================
+        document.addEventListener('DOMContentLoaded', () => {
+            loadFromLocal();
+            renderAllLists();
+            updateDropSelects();
+
+            const saved = localStorage.getItem('rpgSave');
+            if (saved) {
+                addStory('<span style="color:var(--gold);">Aventuras de Acero y Runas</span>', '');
+                addStory('Partida guardada encontrada.', 'system');
+                setActions([
+                    { text: '🆕 Nuevo', fn: startNewGame, cls: 'primary' },
+                    { text: '📂 Continuar', fn: () => {
+                        const data = JSON.parse(saved);
+                        if (data.player) {
+                            game.player = Object.assign(new Player(), data.player);
+                            updateUI();
+                            showExploreActions();
+                            addStory('Partida cargada.', 'system');
+                        }
+                    }}
+                ]);
+            } else {
+                startNewGame();
+            }
+        });
+    </script>
+</body>
+</html>
