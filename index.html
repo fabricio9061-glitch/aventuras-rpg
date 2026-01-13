@@ -83,19 +83,14 @@
             z-index: 100;
         }
 
-        .status-dot {
-            width: 5px;
-            height: 5px;
-            border-radius: 50%;
-            background: var(--red);
-        }
-
+        .status-dot { width: 5px; height: 5px; border-radius: 50%; background: var(--red); }
         .status-dot.connected { background: var(--green-bright); }
 
-        /* Game Layout */
+        /* Game Layout - ORIGINAL */
         .game-container {
             display: grid;
-            grid-template-columns: 1fr 240px;
+            grid-template-columns: 1fr 280px;
+            grid-template-rows: 1fr auto;
             gap: 0.5rem;
             max-width: 1100px;
             margin: 0 auto;
@@ -121,12 +116,13 @@
             letter-spacing: 0.08em;
         }
 
-        /* Story */
+        /* Story Panel - LEFT SIDE */
         .story-panel {
-            grid-row: 1 / 3;
+            grid-row: 1;
+            grid-column: 1;
             display: flex;
             flex-direction: column;
-            max-height: 75vh;
+            max-height: 70vh;
         }
 
         .story-content {
@@ -153,202 +149,23 @@
             background: linear-gradient(135deg, rgba(30,25,22,0.95), rgba(45,38,33,0.8));
             border-left: 3px solid var(--gold-dim);
             font-style: italic;
-            line-height: 1.65;
         }
 
-        .story-combat {
-            background: rgba(139,0,0,0.18);
-            border-left: 3px solid var(--red);
-        }
+        .story-combat { background: rgba(139,0,0,0.18); border-left: 3px solid var(--red); }
+        .story-loot { background: rgba(212,164,55,0.18); border-left: 3px solid var(--gold); }
+        .story-system { background: rgba(74,158,255,0.12); border-left: 3px solid var(--blue-bright); font-size: 0.8rem; }
+        .story-trap { background: rgba(255,107,53,0.18); border-left: 3px solid var(--orange); }
+        .story-dialogue { background: rgba(156,39,176,0.12); border-left: 3px solid var(--purple-bright); }
 
-        .story-loot {
-            background: rgba(212,164,55,0.18);
-            border-left: 3px solid var(--gold);
-        }
-
-        .story-system {
-            background: rgba(74,158,255,0.12);
-            border-left: 3px solid var(--blue-bright);
-            font-size: 0.8rem;
-        }
-
-        .story-trap {
-            background: rgba(255,107,53,0.18);
-            border-left: 3px solid var(--orange);
-        }
-
-        .story-choice {
-            background: var(--bg-panel-light);
-            border: 1px dashed var(--gold-dim);
-            text-align: center;
-            padding: 0.6rem;
-        }
-
-        .story-dialogue {
-            background: rgba(156,39,176,0.12);
-            border-left: 3px solid var(--purple-bright);
-        }
-
-        /* Combat Arena */
-        .combat-arena {
-            display: none;
-            grid-column: 1 / -1;
-            background: linear-gradient(180deg, rgba(139,0,0,0.2), transparent);
-            border: 2px solid var(--red);
-            border-radius: 6px;
-            padding: 0.6rem;
-        }
-
-        .combat-arena.active { display: block; }
-
-        .combat-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 0.4rem;
-            padding-bottom: 0.3rem;
-            border-bottom: 1px solid var(--red);
-        }
-
-        .combat-title {
-            font-family: 'Cinzel', serif;
-            font-size: 0.85rem;
-            color: var(--red-bright);
-        }
-
-        .turn-indicator {
-            background: var(--red);
-            color: white;
-            padding: 0.15rem 0.5rem;
-            border-radius: 3px;
-            font-family: 'Cinzel', serif;
-            font-size: 0.7rem;
-        }
-
-        .combat-main {
-            display: grid;
-            grid-template-columns: 1fr 260px;
-            gap: 0.6rem;
-        }
-
-        .combatants-row {
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.4rem;
-        }
-
-        .combatant {
-            background: var(--bg-dark);
-            border: 2px solid var(--border);
-            border-radius: 5px;
-            padding: 0.4rem;
-            text-align: center;
-            min-width: 120px;
-        }
-
-        .combatant.player { border-color: var(--gold-dim); }
-        .combatant.enemy { border-color: var(--red); }
-
-        .combatant-sprite { font-size: 1.8rem; margin-bottom: 0.15rem; }
-        .combatant-sprite img { width: 56px; height: 56px; object-fit: contain; image-rendering: pixelated; }
-
-        .combatant-name { font-family: 'Cinzel', serif; font-size: 0.8rem; }
-        .combatant-stats { font-size: 0.65rem; color: var(--text-dim); margin-bottom: 0.25rem; }
-
-        .hp-bar-container {
-            background: var(--bg-panel);
-            border: 1px solid var(--border);
-            border-radius: 3px;
-            height: 16px;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .hp-bar-fill { height: 100%; transition: width 0.4s; }
-        .hp-bar-text {
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            font-size: 0.6rem;
-            color: white;
-            text-shadow: 1px 1px 1px black;
-            top: 50%;
-            transform: translateY(-50%);
-        }
-
-        .hp-high { background: linear-gradient(180deg, var(--green-bright), var(--green)); }
-        .hp-medium { background: linear-gradient(180deg, var(--gold-bright), var(--gold-dim)); }
-        .hp-low { background: linear-gradient(180deg, var(--orange), #cc4400); }
-        .hp-critical { background: linear-gradient(180deg, var(--red-bright), var(--red)); animation: pulse 1s infinite; }
-
-        @keyframes pulse { 50% { opacity: 0.7; } }
-
-        .vs-icon { font-size: 1.1rem; color: var(--gold); }
-
-        .effects-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.15rem; margin-top: 0.25rem; min-height: 16px; }
-        .effect-tag { font-size: 0.55rem; padding: 0.08rem 0.2rem; border-radius: 2px; }
-        .eff-bleed { background: rgba(139,0,0,0.6); border: 1px solid var(--red); }
-        .eff-poison { background: rgba(0,100,0,0.6); border: 1px solid var(--green-bright); }
-        .eff-fire { background: rgba(255,100,0,0.5); border: 1px solid orange; }
-
-        .combat-log {
-            background: var(--bg-dark);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            display: flex;
-            flex-direction: column;
-            max-height: 180px;
-        }
-
-        .combat-log-header {
-            background: var(--bg-panel-light);
-            padding: 0.3rem;
-            font-family: 'Cinzel', serif;
-            font-size: 0.65rem;
-            color: var(--gold);
-            border-bottom: 1px solid var(--border);
-        }
-
-        .combat-log-content {
-            flex: 1;
+        /* Character Panel - RIGHT SIDE */
+        .char-panel {
+            grid-row: 1;
+            grid-column: 2;
+            font-size: 0.75rem;
             overflow-y: auto;
-            padding: 0.3rem;
-            font-size: 0.7rem;
+            max-height: 70vh;
         }
 
-        .log-turn-header {
-            background: var(--bg-panel-light);
-            color: var(--gold);
-            padding: 0.2rem;
-            margin: 0.2rem -0.3rem;
-            text-align: center;
-            font-size: 0.65rem;
-        }
-
-        .log-entry { padding: 0.15rem 0; border-bottom: 1px dashed rgba(255,255,255,0.08); }
-        .log-section { margin: 0.15rem 0; padding-left: 0.3rem; border-left: 2px solid var(--border); }
-        .log-section.player-action { border-left-color: var(--gold-dim); }
-        .log-section.enemy-action { border-left-color: var(--red); }
-        .log-damage { color: var(--orange); }
-        .log-heal { color: var(--green-bright); }
-        .log-miss { color: var(--text-dim); font-style: italic; }
-        .log-crit { color: var(--gold-bright); font-weight: bold; }
-        .log-dice { color: var(--blue-bright); font-family: monospace; }
-
-        .combat-actions {
-            display: flex;
-            justify-content: center;
-            gap: 0.35rem;
-            flex-wrap: wrap;
-            margin-top: 0.4rem;
-            padding-top: 0.4rem;
-            border-top: 1px solid var(--border);
-        }
-
-        /* Character Panel */
-        .char-panel { font-size: 0.75rem; overflow-y: auto; max-height: 40vh; }
         .char-section { margin-bottom: 0.4rem; }
 
         .char-header { display: flex; align-items: center; gap: 0.35rem; margin-bottom: 0.3rem; }
@@ -387,6 +204,12 @@
             top: 50%;
             transform: translateY(-50%);
         }
+
+        .hp-high { background: linear-gradient(180deg, var(--green-bright), var(--green)); }
+        .hp-medium { background: linear-gradient(180deg, var(--gold-bright), var(--gold-dim)); }
+        .hp-low { background: linear-gradient(180deg, var(--orange), #cc4400); }
+        .hp-critical { background: linear-gradient(180deg, var(--red-bright), var(--red)); animation: pulse 1s infinite; }
+        @keyframes pulse { 50% { opacity: 0.7; } }
 
         .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.2rem; }
         .stat-item {
@@ -436,8 +259,8 @@
         .location-badge.safe { border-color: var(--green); color: var(--green-bright); }
         .location-badge.danger { border-color: var(--red); color: var(--red-bright); }
 
-        /* Actions */
-        .actions-panel { grid-column: 1 / -1; }
+        /* Actions Panel - BOTTOM */
+        .actions-panel { grid-column: 1 / -1; grid-row: 2; }
         .actions-grid { display: flex; flex-wrap: wrap; gap: 0.35rem; }
 
         .action-btn {
@@ -457,6 +280,113 @@
         .action-btn.primary { background: var(--gold-dim); color: var(--bg-dark); }
         .action-btn.danger { border-color: var(--red); color: var(--red-bright); }
         .action-btn.danger:hover:not(:disabled) { background: var(--red); color: white; }
+
+        /* Combat Arena */
+        .combat-arena {
+            display: none;
+            grid-column: 1 / -1;
+            grid-row: 1;
+            background: linear-gradient(180deg, rgba(139,0,0,0.2), transparent);
+            border: 2px solid var(--red);
+            border-radius: 6px;
+            padding: 0.6rem;
+        }
+
+        .combat-arena.active { display: block; }
+
+        .combat-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.4rem;
+            padding-bottom: 0.3rem;
+            border-bottom: 1px solid var(--red);
+        }
+
+        .combat-title { font-family: 'Cinzel', serif; font-size: 0.85rem; color: var(--red-bright); }
+        .turn-indicator { background: var(--red); color: white; padding: 0.15rem 0.5rem; border-radius: 3px; font-family: 'Cinzel', serif; font-size: 0.7rem; }
+
+        .combat-main { display: grid; grid-template-columns: 1fr 260px; gap: 0.6rem; }
+
+        .combatants-row { display: flex; justify-content: space-around; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem; }
+
+        .combatant {
+            background: var(--bg-dark);
+            border: 2px solid var(--border);
+            border-radius: 5px;
+            padding: 0.4rem;
+            text-align: center;
+            min-width: 120px;
+        }
+
+        .combatant.player { border-color: var(--gold-dim); }
+        .combatant.enemy { border-color: var(--red); }
+
+        .combatant-sprite { font-size: 1.8rem; margin-bottom: 0.15rem; }
+        .combatant-sprite img { width: 56px; height: 56px; object-fit: contain; }
+        .combatant-name { font-family: 'Cinzel', serif; font-size: 0.8rem; }
+        .combatant-stats { font-size: 0.65rem; color: var(--text-dim); margin-bottom: 0.25rem; }
+
+        .hp-bar-container {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 3px;
+            height: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hp-bar-fill { height: 100%; transition: width 0.4s; }
+        .hp-bar-text {
+            position: absolute;
+            width: 100%;
+            text-align: center;
+            font-size: 0.6rem;
+            color: white;
+            text-shadow: 1px 1px 1px black;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+
+        .vs-icon { font-size: 1.1rem; color: var(--gold); }
+
+        .effects-row { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.15rem; margin-top: 0.25rem; min-height: 16px; }
+        .effect-tag { font-size: 0.55rem; padding: 0.08rem 0.2rem; border-radius: 2px; }
+        .eff-bleed { background: rgba(139,0,0,0.6); border: 1px solid var(--red); }
+        .eff-poison { background: rgba(0,100,0,0.6); border: 1px solid var(--green-bright); }
+        .eff-fire { background: rgba(255,100,0,0.5); border: 1px solid orange; }
+
+        .combat-log {
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            max-height: 180px;
+        }
+
+        .combat-log-header { background: var(--bg-panel-light); padding: 0.3rem; font-family: 'Cinzel', serif; font-size: 0.65rem; color: var(--gold); border-bottom: 1px solid var(--border); }
+        .combat-log-content { flex: 1; overflow-y: auto; padding: 0.3rem; font-size: 0.7rem; }
+        .log-turn-header { background: var(--bg-panel-light); color: var(--gold); padding: 0.2rem; margin: 0.2rem -0.3rem; text-align: center; font-size: 0.65rem; }
+        .log-entry { padding: 0.15rem 0; border-bottom: 1px dashed rgba(255,255,255,0.08); }
+        .log-section { margin: 0.15rem 0; padding-left: 0.3rem; border-left: 2px solid var(--border); }
+        .log-section.player-action { border-left-color: var(--gold-dim); }
+        .log-section.enemy-action { border-left-color: var(--red); }
+        .log-damage { color: var(--orange); }
+        .log-heal { color: var(--green-bright); }
+        .log-miss { color: var(--text-dim); font-style: italic; }
+        .log-crit { color: var(--gold-bright); font-weight: bold; }
+        .log-dice { color: var(--blue-bright); font-family: monospace; }
+
+        .combat-actions {
+            display: flex;
+            justify-content: center;
+            gap: 0.35rem;
+            flex-wrap: wrap;
+            margin-top: 0.4rem;
+            padding-top: 0.4rem;
+            border-top: 1px solid var(--border);
+        }
 
         /* Modals */
         .modal-overlay {
@@ -483,7 +413,7 @@
             overflow-y: auto;
             position: relative;
         }
-        .modal-large { max-width: 750px; }
+        .modal-large { max-width: 850px; }
 
         .modal-close {
             position: absolute;
@@ -510,18 +440,10 @@
         /* Item Detail */
         .item-detail { text-align: center; }
         .item-detail-icon { font-size: 3rem; margin-bottom: 0.3rem; }
-        .item-detail-icon img { width: 72px; height: 72px; object-fit: contain; image-rendering: pixelated; }
+        .item-detail-icon img { width: 72px; height: 72px; object-fit: contain; }
         .item-detail-name { font-family: 'Cinzel', serif; font-size: 1.1rem; color: var(--gold-bright); }
         .item-detail-type { color: var(--text-dim); font-size: 0.75rem; margin-bottom: 0.6rem; }
-        .item-detail-desc {
-            background: var(--bg-dark);
-            padding: 0.6rem;
-            border-radius: 4px;
-            margin-bottom: 0.6rem;
-            text-align: left;
-            line-height: 1.5;
-            font-size: 0.8rem;
-        }
+        .item-detail-desc { background: var(--bg-dark); padding: 0.6rem; border-radius: 4px; margin-bottom: 0.6rem; text-align: left; font-size: 0.8rem; }
         .item-detail-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 0.35rem; margin-bottom: 0.6rem; }
         .item-stat { background: var(--bg-panel-light); padding: 0.35rem; border-radius: 3px; }
         .item-stat-label { font-size: 0.6rem; color: var(--text-dim); text-transform: uppercase; }
@@ -546,9 +468,8 @@
         .inv-slot:hover { border-color: var(--gold-dim); transform: scale(1.03); }
         .inv-slot-icon { font-size: 1.3rem; }
         .inv-slot-icon img { width: 28px; height: 28px; object-fit: contain; }
-        .inv-slot-name { font-size: 0.48rem; text-align: center; color: var(--text-dim); margin-top: 0.08rem; line-height: 1; max-height: 1.6em; overflow: hidden; }
+        .inv-slot-name { font-size: 0.48rem; text-align: center; color: var(--text-dim); margin-top: 0.08rem; }
         .inv-slot-empty { color: var(--text-dim); font-size: 0.5rem; }
-
         .rarity-common { border-color: #555; }
         .rarity-rare { border-color: var(--blue-bright); }
         .rarity-epic { border-color: var(--purple-bright); }
@@ -588,7 +509,7 @@
         .form-group input:focus, .form-group select:focus { outline: none; border-color: var(--gold-dim); }
         .form-actions { display: flex; gap: 0.35rem; justify-content: flex-end; padding-top: 0.35rem; border-top: 1px solid var(--border); }
 
-        .items-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 0.3rem; margin-top: 0.5rem; max-height: 200px; overflow-y: auto; }
+        .items-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 0.3rem; margin-top: 0.5rem; max-height: 250px; overflow-y: auto; }
         .item-card {
             background: var(--bg-dark);
             border: 1px solid var(--border);
@@ -599,9 +520,9 @@
             align-items: center;
             font-size: 0.7rem;
             cursor: pointer;
-            transition: border-color 0.2s;
         }
         .item-card:hover { border-color: var(--gold-dim); }
+        .item-card.base-item { border-left: 2px solid var(--blue-bright); }
         .item-card-icon { font-size: 1.1rem; width: 24px; text-align: center; }
         .item-card-icon img { width: 24px; height: 24px; object-fit: contain; }
         .item-card-info { flex: 1; }
@@ -616,8 +537,17 @@
         .multi-select { background: var(--bg-input); border: 1px solid var(--border); border-radius: 3px; padding: 0.3rem; max-height: 80px; overflow-y: auto; font-size: 0.7rem; }
         .multi-select label { display: flex; align-items: center; gap: 0.3rem; padding: 0.08rem; cursor: pointer; }
 
-        .sprite-preview { width: 44px; height: 44px; background: var(--bg-dark); border: 1px dashed var(--border); border-radius: 3px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; }
-        .sprite-preview img { max-width: 100%; max-height: 100%; object-fit: contain; image-rendering: pixelated; }
+        /* Rules */
+        .rules-container { max-width: 900px; margin: 0 auto; padding: 0.6rem; }
+        .rules-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 0.5rem; }
+        .rules-section { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem; }
+        .rules-section h3 { font-family: 'Cinzel', serif; color: var(--gold); margin-bottom: 0.35rem; font-size: 0.85rem; }
+        .rules-section p, .rules-section li { font-size: 0.78rem; margin-bottom: 0.2rem; }
+        .rules-section ul { padding-left: 1rem; }
+        .rules-table { width: 100%; border-collapse: collapse; margin: 0.25rem 0; font-size: 0.72rem; }
+        .rules-table th, .rules-table td { border: 1px solid var(--border); padding: 0.2rem 0.3rem; text-align: left; }
+        .rules-table th { background: var(--bg-panel-light); color: var(--gold); }
+        .highlight-box { background: var(--bg-dark); border-left: 3px solid var(--gold); padding: 0.4rem; margin: 0.25rem 0; font-size: 0.78rem; }
 
         /* Toast */
         .toast-container { position: fixed; top: 2.2rem; right: 0.6rem; z-index: 200; }
@@ -633,25 +563,18 @@
         .dice-display.active { display: block; }
         .dice-icon { font-size: 2.2rem; animation: roll 0.4s; }
         @keyframes roll { 0% { transform: rotate(0) scale(0.5); } 50% { transform: rotate(180deg) scale(1.2); } 100% { transform: rotate(360deg) scale(1); } }
-        .dice-label { font-size: 0.7rem; color: var(--text-dim); margin-top: 0.15rem; }
-        .dice-result { font-family: 'Cinzel', serif; font-size: 1.6rem; color: var(--gold-bright); margin-top: 0.15rem; }
-        .dice-result.crit { color: var(--red-bright); text-shadow: 0 0 8px var(--red); font-size: 1.8rem; }
-
-        /* Rules */
-        .rules-container { max-width: 750px; margin: 0 auto; padding: 0.6rem; }
-        .rules-section { background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem; margin-bottom: 0.5rem; }
-        .rules-section h3 { font-family: 'Cinzel', serif; color: var(--gold); margin-bottom: 0.35rem; font-size: 0.85rem; }
-        .rules-table { width: 100%; border-collapse: collapse; margin: 0.25rem 0; font-size: 0.75rem; }
-        .rules-table th, .rules-table td { border: 1px solid var(--border); padding: 0.25rem; text-align: left; }
-        .rules-table th { background: var(--bg-panel-light); color: var(--gold); }
-        .highlight-box { background: var(--bg-dark); border-left: 3px solid var(--gold); padding: 0.4rem; margin: 0.25rem 0; font-size: 0.8rem; }
+        .dice-label { font-size: 0.7rem; color: var(--text-dim); }
+        .dice-result { font-family: 'Cinzel', serif; font-size: 1.6rem; color: var(--gold-bright); }
+        .dice-result.crit { color: var(--red-bright); text-shadow: 0 0 8px var(--red); }
 
         @media (max-width: 768px) {
             .game-container { grid-template-columns: 1fr; }
+            .story-panel { grid-column: 1; }
+            .char-panel { grid-column: 1; grid-row: 2; max-height: none; }
+            .actions-panel { grid-row: 3; }
             .combat-main { grid-template-columns: 1fr; }
             .combatants-row { flex-direction: column; }
-            .vs-icon { display: none; }
-            .inventory-grid { grid-template-columns: repeat(4, 1fr); }
+            .rules-grid { grid-template-columns: 1fr; }
         }
     </style>
 </head>
@@ -753,22 +676,191 @@
         </div>
     </div>
 
-    <!-- RULES TAB -->
+    <!-- RULES TAB - COMPLETE -->
     <div class="tab-content" id="rulesTab">
         <div class="rules-container">
-            <div class="rules-section">
-                <h3>⚔️ Combate</h3>
-                <div class="highlight-box"><strong>Atacar:</strong> D20 ≥ dificultad enemigo → Aciertas<br><strong>Crítico:</strong> 20 natural = daño ×2<br><strong>Esquivar:</strong> D20 ≥ 12 → Esquivas</div>
-                <table class="rules-table"><tr><th>Enemigo</th><th>Dificultad</th></tr><tr><td>Débil</td><td>6-8</td></tr><tr><td>Moderado</td><td>9-12</td></tr><tr><td>Fuerte</td><td>13-15</td></tr><tr><td>Épico</td><td>16-18</td></tr><tr><td>Legendario</td><td>19-20</td></tr></table>
-            </div>
-            <div class="rules-section">
-                <h3>🪤 Trampas</h3>
-                <p style="font-size:0.8rem;">1. <strong>Detectar:</strong> D20 ≥ dificultad de la trampa<br>2. <strong>Esquivar/Desactivar:</strong> D20 ≥ 12</p>
-                <table class="rules-table"><tr><th>Trampa</th><th>Daño</th><th>Efecto</th></tr><tr><td>Púas</td><td>1d6</td><td>Sangrado</td></tr><tr><td>Dardo venenoso</td><td>1d4</td><td>Veneno</td></tr><tr><td>Foso</td><td>2d6</td><td>-</td></tr><tr><td>Runa explosiva</td><td>2d8</td><td>Fuego</td></tr></table>
-            </div>
-            <div class="rules-section">
-                <h3>🎒 Equipamiento</h3>
-                <p style="font-size:0.8rem;">Solo puedes cambiar arma/armadura en <strong>zonas seguras</strong> (pueblo, descanso). Durante el combate no es posible cambiar equipo.</p>
+            <h2 style="text-align:center;color:var(--gold);font-family:'Cinzel',serif;margin-bottom:0.6rem;">📜 Reglas Completas</h2>
+            <div class="rules-grid">
+                <div class="rules-section">
+                    <h3>🎭 1. Creación de Personaje</h3>
+                    <p><strong>Raza (D5):</strong></p>
+                    <ul>
+                        <li><strong>1 - Humano:</strong> +1 salud máxima</li>
+                        <li><strong>2 - Elfo:</strong> +1 precisión en ataques</li>
+                        <li><strong>3 - Enano:</strong> +1 armadura</li>
+                        <li><strong>4 - Orco:</strong> +1 daño físico</li>
+                        <li><strong>5 - Mediano:</strong> +1 evasión</li>
+                    </ul>
+                    <p><strong>Arma inicial (D4):</strong></p>
+                    <ul>
+                        <li>1: Daga (1d4) | 2: Espada corta (1d6)</li>
+                        <li>3: Hacha (1d6) | 4: Bastón (1d4)</li>
+                    </ul>
+                    <p><strong>Armadura inicial (D4):</strong></p>
+                    <ul>
+                        <li>1: Túnica cuero (1) | 2: Cuero reforzado (2)</li>
+                        <li>3: Cota malla (3) | 4: Túnica tela (0)</li>
+                    </ul>
+                    <p><strong>Objeto inicial (D6):</strong> Poción, Antídoto, Bomba humo, Pergamino, Linterna, Carne</p>
+                    <p><strong>Inicio:</strong> 20 MP, 10 espacios inventario</p>
+                </div>
+
+                <div class="rules-section">
+                    <h3>⚔️ 2. Sistema de Combate</h3>
+                    <div class="highlight-box">
+                        <strong>Atacar:</strong> D20 + precisión ≥ dificultad enemigo<br>
+                        <strong>Daño:</strong> Dado del arma + bonos<br>
+                        <strong>Crítico (20 natural):</strong> Daño ×2<br>
+                        <strong>Pifia (1 natural):</strong> Fallo automático
+                    </div>
+                    <table class="rules-table">
+                        <tr><th>Tipo Enemigo</th><th>Dificultad</th></tr>
+                        <tr><td>Débil</td><td>6-8</td></tr>
+                        <tr><td>Moderado</td><td>9-12</td></tr>
+                        <tr><td>Fuerte</td><td>13-15</td></tr>
+                        <tr><td>Épico</td><td>16-18</td></tr>
+                        <tr><td>Legendario</td><td>19-20</td></tr>
+                    </table>
+                    <div class="highlight-box">
+                        <strong>Esquivar:</strong> D20 + evasión ≥ 12<br>
+                        <strong>Armadura:</strong> Reduce daño recibido<br>
+                        <strong>Defender:</strong> +4 a evasión este turno
+                    </div>
+                </div>
+
+                <div class="rules-section">
+                    <h3>🩸 3. Efectos de Estado</h3>
+                    <table class="rules-table">
+                        <tr><th>Efecto</th><th>Daño/Turno</th><th>Duración</th><th>Acumula</th></tr>
+                        <tr><td>🩸 Sangrado</td><td>1</td><td>3 turnos</td><td>Sí (×3)</td></tr>
+                        <tr><td>☠️ Veneno</td><td>2</td><td>2 turnos</td><td>Sí (×2)</td></tr>
+                        <tr><td>🔥 Fuego</td><td>1d4</td><td>2 turnos</td><td>No</td></tr>
+                        <tr><td>❄️ Frío</td><td>-evasión</td><td>2 turnos</td><td>No</td></tr>
+                        <tr><td>⚡ Eléctrico</td><td>1d6 +aturdir</td><td>1 turno</td><td>No</td></tr>
+                    </table>
+                    <p>Los efectos que acumulan aumentan su daño por cada aplicación.</p>
+                </div>
+
+                <div class="rules-section">
+                    <h3>🪤 4. Trampas</h3>
+                    <p>Al explorar puedes encontrar trampas:</p>
+                    <div class="highlight-box">
+                        <strong>1. Detectar:</strong> D20 ≥ dificultad de trampa<br>
+                        <strong>2. Esquivar:</strong> D20 + evasión ≥ 12<br>
+                        <strong>3. Desactivar:</strong> D20 ≥ 15 (recompensa MP)
+                    </div>
+                    <table class="rules-table">
+                        <tr><th>Trampa</th><th>Daño</th><th>Efecto</th><th>Detectar</th></tr>
+                        <tr><td>Púas ocultas</td><td>1d6</td><td>Sangrado</td><td>10</td></tr>
+                        <tr><td>Dardo venenoso</td><td>1d4</td><td>Veneno</td><td>12</td></tr>
+                        <tr><td>Foso</td><td>2d6</td><td>-</td><td>8</td></tr>
+                        <tr><td>Runa explosiva</td><td>2d8</td><td>Fuego</td><td>14</td></tr>
+                    </table>
+                </div>
+
+                <div class="rules-section">
+                    <h3>🎒 5. Equipamiento</h3>
+                    <div class="highlight-box">
+                        <strong>⚠️ Regla importante:</strong><br>
+                        Solo puedes equipar/desequipar armas y armaduras en <strong>zonas seguras</strong> (pueblo, refugio, descanso).<br>
+                        Durante combate o en zonas de peligro NO puedes cambiar equipo.
+                    </div>
+                    <p><strong>Inventario:</strong></p>
+                    <ul>
+                        <li>Inicio: 10 espacios</li>
+                        <li>Mochila pequeña: +5 espacios (10 MP)</li>
+                        <li>Mochila mediana: +10 espacios (25 MP)</li>
+                        <li>Mochila grande: +20 espacios (50 MP)</li>
+                    </ul>
+                </div>
+
+                <div class="rules-section">
+                    <h3>💰 6. Economía</h3>
+                    <div class="highlight-box">
+                        <strong>99 MP (Monedas Plata) = 1 MO (Moneda Oro)</strong>
+                    </div>
+                    <p><strong>Precios aproximados:</strong></p>
+                    <ul>
+                        <li>Objetos comunes: 5-20 MP</li>
+                        <li>Objetos raros: 1-5 MO</li>
+                        <li>Objetos épicos: 10-20 MO</li>
+                        <li>Legendarios: No se venden</li>
+                    </ul>
+                    <p><strong>Vender:</strong> 50% del valor original</p>
+                </div>
+
+                <div class="rules-section">
+                    <h3>🐺 7. Domesticación</h3>
+                    <p>Puedes domesticar animales usando <strong>carne</strong>:</p>
+                    <table class="rules-table">
+                        <tr><th>Tipo</th><th>Dado</th><th>Éxito</th></tr>
+                        <tr><td>Común (lobo, águila)</td><td>D24</td><td>≥ 60%</td></tr>
+                        <tr><td>Raro (oso)</td><td>D30</td><td>≥ 60%</td></tr>
+                        <tr><td>Épico (tigre)</td><td>D60</td><td>≥ 60%</td></tr>
+                        <tr><td>Legendario (dragón)</td><td>D100</td><td>≥ 60%</td></tr>
+                    </table>
+                    <div class="highlight-box">
+                        Solo 1 mascota a la vez. Si muere, no revive.<br>
+                        Las mascotas atacan automáticamente en combate.
+                    </div>
+                </div>
+
+                <div class="rules-section">
+                    <h3>☠️ 8. Muerte</h3>
+                    <div class="highlight-box" style="border-color:var(--red);">
+                        <strong>Si tu HP llega a 0:</strong><br>
+                        • Pierdes 50% de tus monedas<br>
+                        • Pierdes todos los objetos NO equipados<br>
+                        • Debes crear un nuevo personaje
+                    </div>
+                </div>
+
+                <div class="rules-section">
+                    <h3>🏘️ 9. Pueblo y NPCs</h3>
+                    <p><strong>Servicios disponibles:</strong></p>
+                    <ul>
+                        <li><strong>Herrero:</strong> Compra/venta armas</li>
+                        <li><strong>Alquimista:</strong> Pociones y antídotos</li>
+                        <li><strong>Tabernero:</strong> Descanso (+50% HP, 5 MP)</li>
+                        <li><strong>Curandero:</strong> Curación total (10 MP)</li>
+                        <li><strong>Comerciante:</strong> Items varios</li>
+                    </ul>
+                </div>
+
+                <div class="rules-section">
+                    <h3>🗺️ 10. Exploración</h3>
+                    <p><strong>Eventos posibles:</strong></p>
+                    <ul>
+                        <li>50% - Encuentro con enemigo</li>
+                        <li>20% - Trampa</li>
+                        <li>15% - Tesoro</li>
+                        <li>10% - Encuentro con animal</li>
+                        <li>5% - Zona de descanso</li>
+                    </ul>
+                    <p><strong>Huir antes del combate:</strong> D20 ≥ 14</p>
+                    <p><strong>Huir durante combate:</strong> D20 ≥ 12</p>
+                </div>
+
+                <div class="rules-section">
+                    <h3>🎲 11. Tiradas de Dado</h3>
+                    <table class="rules-table">
+                        <tr><th>Dificultad</th><th>Número</th></tr>
+                        <tr><td>Fácil</td><td>8</td></tr>
+                        <tr><td>Moderado</td><td>10</td></tr>
+                        <tr><td>Difícil</td><td>12</td></tr>
+                        <tr><td>Muy difícil</td><td>14</td></tr>
+                        <tr><td>Casi imposible</td><td>16+</td></tr>
+                    </table>
+                </div>
+
+                <div class="rules-section">
+                    <h3>⚡ 12. Críticos</h3>
+                    <div class="highlight-box">
+                        <strong>Jugador:</strong> 20 natural = daño ×2<br>
+                        <strong>Enemigo:</strong> 10% probabilidad = daño ×1.25
+                    </div>
+                    <p>Los críticos ignoran parte de la armadura y pueden aplicar efectos especiales del arma.</p>
+                </div>
             </div>
         </div>
     </div>
@@ -786,8 +878,9 @@
             </div>
 
             <div class="editor-section active" id="weaponsEditor">
-                <h3>⚔️ Armas <span style="font-size:0.7rem;color:var(--text-dim);">(Base + Personalizadas)</span></h3>
+                <h3>⚔️ Editor de Armas <span style="font-size:0.65rem;color:var(--text-dim);">(Click en cualquier arma para editar)</span></h3>
                 <div class="form-grid">
+                    <div class="form-group"><label>ID (único)</label><input type="text" id="wId" placeholder="auto-generado"></div>
                     <div class="form-group"><label>Nombre</label><input type="text" id="wName" placeholder="Espada..."></div>
                     <div class="form-group"><label>Daño</label><input type="text" id="wDamage" placeholder="1d8"></div>
                     <div class="form-group"><label>Emoji</label><input type="text" id="wIcon" placeholder="⚔️" maxlength="2"></div>
@@ -795,89 +888,113 @@
                     <div class="form-group"><label>Rareza</label><select id="wRarity"><option value="common">Común</option><option value="rare">Raro</option><option value="epic">Épico</option><option value="legendary">Legendario</option></select></div>
                     <div class="form-group"><label>Valor MP</label><input type="number" id="wValue" placeholder="50"></div>
                     <div class="form-group"><label>Efecto</label><select id="wEffect"><option value="">Ninguno</option><option value="bleed">Sangrado</option><option value="poison">Veneno</option><option value="fire">Fuego</option></select></div>
-                    <div class="form-group"><label>Descripción</label><input type="text" id="wDesc" placeholder="Una espada..."></div>
                 </div>
-                <div class="form-actions"><button class="action-btn" onclick="clearForm('weapon')">Limpiar</button><button class="action-btn primary" onclick="saveWeapon()">💾 Guardar</button></div>
+                <div class="form-group"><label>Descripción</label><textarea id="wDesc" rows="2" placeholder="Descripción del arma..."></textarea></div>
+                <div class="form-actions">
+                    <button class="action-btn" onclick="clearForm('weapon')">🆕 Nuevo</button>
+                    <button class="action-btn primary" onclick="saveWeapon()">💾 Guardar</button>
+                </div>
                 <div class="items-list" id="weaponsList"></div>
             </div>
 
             <div class="editor-section" id="armorsEditor">
-                <h3>🛡️ Armaduras</h3>
+                <h3>🛡️ Editor de Armaduras</h3>
                 <div class="form-grid">
+                    <div class="form-group"><label>ID</label><input type="text" id="aId" placeholder="auto"></div>
                     <div class="form-group"><label>Nombre</label><input type="text" id="aName" placeholder="Cota..."></div>
                     <div class="form-group"><label>Defensa</label><input type="number" id="aDefense" placeholder="3"></div>
                     <div class="form-group"><label>Emoji</label><input type="text" id="aIcon" placeholder="🛡️" maxlength="2"></div>
                     <div class="form-group"><label>Sprite URL</label><input type="text" id="aSprite" placeholder="https://..."></div>
                     <div class="form-group"><label>Rareza</label><select id="aRarity"><option value="common">Común</option><option value="rare">Raro</option><option value="epic">Épico</option><option value="legendary">Legendario</option></select></div>
                     <div class="form-group"><label>Valor MP</label><input type="number" id="aValue" placeholder="100"></div>
-                    <div class="form-group"><label>Descripción</label><input type="text" id="aDesc" placeholder="Armadura..."></div>
                 </div>
-                <div class="form-actions"><button class="action-btn" onclick="clearForm('armor')">Limpiar</button><button class="action-btn primary" onclick="saveArmor()">💾 Guardar</button></div>
+                <div class="form-group"><label>Descripción</label><textarea id="aDesc" rows="2" placeholder="Descripción..."></textarea></div>
+                <div class="form-actions">
+                    <button class="action-btn" onclick="clearForm('armor')">🆕 Nuevo</button>
+                    <button class="action-btn primary" onclick="saveArmor()">💾 Guardar</button>
+                </div>
                 <div class="items-list" id="armorsList"></div>
             </div>
 
             <div class="editor-section" id="itemsEditor">
-                <h3>🎒 Items</h3>
+                <h3>🎒 Editor de Items</h3>
                 <div class="form-grid">
+                    <div class="form-group"><label>ID</label><input type="text" id="iId" placeholder="auto"></div>
                     <div class="form-group"><label>Nombre</label><input type="text" id="iName" placeholder="Poción..."></div>
-                    <div class="form-group"><label>Tipo</label><select id="iType"><option value="potion">Poción</option><option value="food">Comida</option><option value="antidote">Antídoto</option><option value="escape">Escape</option><option value="backpack">Mochila</option><option value="misc">Otro</option></select></div>
+                    <div class="form-group"><label>Tipo</label><select id="iType"><option value="potion">Poción</option><option value="food">Comida</option><option value="antidote">Antídoto</option><option value="escape">Escape</option><option value="backpack">Mochila</option><option value="scroll">Pergamino</option><option value="tool">Herramienta</option><option value="misc">Otro</option></select></div>
                     <div class="form-group"><label>Emoji</label><input type="text" id="iIcon" placeholder="🧪" maxlength="2"></div>
                     <div class="form-group"><label>Sprite URL</label><input type="text" id="iSprite" placeholder="https://..."></div>
-                    <div class="form-group"><label>Efecto</label><input type="text" id="iEffect" placeholder="1d8"></div>
+                    <div class="form-group"><label>Efecto</label><input type="text" id="iEffect" placeholder="1d8 o 5"></div>
                     <div class="form-group"><label>Valor MP</label><input type="number" id="iValue" placeholder="10"></div>
-                    <div class="form-group"><label>Descripción</label><input type="text" id="iDesc" placeholder="Restaura..."></div>
+                    <div class="form-group"><label>Rareza</label><select id="iRarity"><option value="common">Común</option><option value="rare">Raro</option><option value="epic">Épico</option><option value="legendary">Legendario</option></select></div>
                 </div>
-                <div class="form-actions"><button class="action-btn" onclick="clearForm('item')">Limpiar</button><button class="action-btn primary" onclick="saveItem()">💾 Guardar</button></div>
+                <div class="form-group"><label>Descripción</label><textarea id="iDesc" rows="2" placeholder="Descripción..."></textarea></div>
+                <div class="form-actions">
+                    <button class="action-btn" onclick="clearForm('item')">🆕 Nuevo</button>
+                    <button class="action-btn primary" onclick="saveItem()">💾 Guardar</button>
+                </div>
                 <div class="items-list" id="itemsList"></div>
             </div>
 
             <div class="editor-section" id="enemiesEditor">
-                <h3>👹 Enemigos</h3>
+                <h3>👹 Editor de Enemigos</h3>
                 <div class="form-grid">
+                    <div class="form-group"><label>ID</label><input type="text" id="enId" placeholder="auto"></div>
                     <div class="form-group"><label>Nombre</label><input type="text" id="enName" placeholder="Troll..."></div>
                     <div class="form-group"><label>Salud</label><input type="number" id="enHealth" placeholder="30"></div>
                     <div class="form-group"><label>Daño</label><input type="text" id="enDamage" placeholder="1d8"></div>
-                    <div class="form-group"><label>Dificultad</label><select id="enDiff"><option value="6">Débil (6)</option><option value="10">Moderado (10)</option><option value="14">Fuerte (14)</option><option value="17">Épico (17)</option><option value="19">Legendario (19)</option></select></div>
+                    <div class="form-group"><label>Dificultad</label><input type="number" id="enDiff" placeholder="10" min="1" max="20"></div>
                     <div class="form-group"><label>Emoji</label><input type="text" id="enIcon" placeholder="👹" maxlength="2"></div>
                     <div class="form-group"><label>Sprite URL</label><input type="text" id="enSprite" placeholder="https://..."></div>
                     <div class="form-group"><label>Efecto ataque</label><select id="enEffect"><option value="">Ninguno</option><option value="bleed">Sangrado</option><option value="poison">Veneno</option><option value="fire">Fuego</option></select></div>
-                    <div class="form-group"><label>Hábitat</label><select id="enHabitat"><option value="any">Cualquiera</option><option value="forest">Bosque</option><option value="dungeon">Mazmorra</option><option value="mountain">Montaña</option><option value="swamp">Pantano</option></select></div>
+                    <div class="form-group"><label>Hábitat</label><select id="enHabitat"><option value="any">Cualquiera</option><option value="forest">Bosque</option><option value="dungeon">Mazmorra</option><option value="mountain">Montaña</option><option value="swamp">Pantano</option><option value="ruins">Ruinas</option></select></div>
                     <div class="form-group"><label>MP min</label><input type="number" id="enLootMin" placeholder="5"></div>
                     <div class="form-group"><label>MP max</label><input type="number" id="enLootMax" placeholder="20"></div>
                 </div>
-                <div class="form-group"><label>Narrativa de encuentro</label><textarea id="enDesc" rows="2" placeholder="El troll emerge de las sombras..."></textarea></div>
-                <div class="form-group"><label>Drops</label><div class="multi-select" id="enDropsSelect"></div></div>
-                <div class="form-actions"><button class="action-btn" onclick="clearForm('enemy')">Limpiar</button><button class="action-btn primary" onclick="saveEnemy()">💾 Guardar</button></div>
+                <div class="form-group"><label>Narrativa de encuentro</label><textarea id="enDesc" rows="3" placeholder="El troll emerge de las sombras, su piel verde cubierta de cicatrices..."></textarea></div>
+                <div class="form-group"><label>Drops posibles</label><div class="multi-select" id="enDropsSelect"></div></div>
+                <div class="form-actions">
+                    <button class="action-btn" onclick="clearForm('enemy')">🆕 Nuevo</button>
+                    <button class="action-btn primary" onclick="saveEnemy()">💾 Guardar</button>
+                </div>
                 <div class="items-list" id="enemiesList"></div>
             </div>
 
             <div class="editor-section" id="petsEditor">
-                <h3>🐺 Mascotas</h3>
+                <h3>🐺 Editor de Mascotas</h3>
                 <div class="form-grid">
+                    <div class="form-group"><label>ID</label><input type="text" id="petId" placeholder="auto"></div>
                     <div class="form-group"><label>Nombre</label><input type="text" id="petName" placeholder="Lobo..."></div>
                     <div class="form-group"><label>Salud</label><input type="number" id="petHealth" placeholder="20"></div>
                     <div class="form-group"><label>Daño</label><input type="text" id="petDamage" placeholder="1d6"></div>
-                    <div class="form-group"><label>Dificultad</label><select id="petDiff"><option value="24">Común (D24)</option><option value="30">Raro (D30)</option><option value="60">Épico (D60)</option><option value="100">Legendario (D100)</option></select></div>
+                    <div class="form-group"><label>Dado domesticar</label><input type="number" id="petDiff" placeholder="24"></div>
                     <div class="form-group"><label>Emoji</label><input type="text" id="petIcon" placeholder="🐺" maxlength="2"></div>
                     <div class="form-group"><label>Sprite URL</label><input type="text" id="petSprite" placeholder="https://..."></div>
-                    <div class="form-group"><label>Descripción</label><input type="text" id="petDesc" placeholder="Un lobo..."></div>
                 </div>
-                <div class="form-actions"><button class="action-btn" onclick="clearForm('pet')">Limpiar</button><button class="action-btn primary" onclick="savePet()">💾 Guardar</button></div>
+                <div class="form-group"><label>Descripción</label><textarea id="petDesc" rows="2" placeholder="Un lobo salvaje te observa..."></textarea></div>
+                <div class="form-actions">
+                    <button class="action-btn" onclick="clearForm('pet')">🆕 Nuevo</button>
+                    <button class="action-btn primary" onclick="savePet()">💾 Guardar</button>
+                </div>
                 <div class="items-list" id="petsList"></div>
             </div>
 
             <div class="editor-section" id="npcsEditor">
-                <h3>🧔 NPCs</h3>
+                <h3>🧔 Editor de NPCs</h3>
                 <div class="form-grid">
+                    <div class="form-group"><label>ID</label><input type="text" id="npcId" placeholder="auto"></div>
                     <div class="form-group"><label>Nombre</label><input type="text" id="npcName" placeholder="Aldric..."></div>
                     <div class="form-group"><label>Rol</label><select id="npcRole"><option value="merchant">Comerciante</option><option value="blacksmith">Herrero</option><option value="alchemist">Alquimista</option><option value="innkeeper">Tabernero</option><option value="baker">Panadero</option><option value="healer">Curandero</option><option value="guard">Guardia</option><option value="questgiver">Misiones</option><option value="villager">Aldeano</option></select></div>
                     <div class="form-group"><label>Emoji</label><input type="text" id="npcIcon" placeholder="🧔" maxlength="2"></div>
                     <div class="form-group"><label>Sprite URL</label><input type="text" id="npcSprite" placeholder="https://..."></div>
                     <div class="form-group"><label>Ubicación</label><input type="text" id="npcLocation" placeholder="Plaza..."></div>
-                    <div class="form-group"><label>Diálogo</label><input type="text" id="npcDialogue" placeholder="¡Bienvenido!"></div>
                 </div>
-                <div class="form-group"><label>Items que vende</label><div class="multi-select" id="npcShopSelect"></div></div>
-                <div class="form-actions"><button class="action-btn" onclick="clearForm('npc')">Limpiar</button><button class="action-btn primary" onclick="saveNpc()">💾 Guardar</button></div>
+                <div class="form-group"><label>Diálogo</label><textarea id="npcDialogue" rows="2" placeholder="¡Bienvenido, viajero!"></textarea></div>
+                <div class="form-group"><label>Items que vende (comerciantes)</label><div class="multi-select" id="npcShopSelect"></div></div>
+                <div class="form-actions">
+                    <button class="action-btn" onclick="clearForm('npc')">🆕 Nuevo</button>
+                    <button class="action-btn primary" onclick="saveNpc()">💾 Guardar</button>
+                </div>
                 <div class="items-list" id="npcsList"></div>
             </div>
         </div>
@@ -935,12 +1052,8 @@
         // ==================== FIREBASE ====================
         const firebaseConfig = {
             apiKey: "AIzaSyAV4eSg9QjyE08zwtFsvjAomuMYVcNik9k",
-            authDomain: "rpggo-756a7.firebaseapp.com",
             databaseURL: "https://rpggo-756a7-default-rtdb.firebaseio.com",
-            projectId: "rpggo-756a7",
-            storageBucket: "rpggo-756a7.firebasestorage.app",
-            messagingSenderId: "640446076493",
-            appId: "1:640446076493:web:d220244451bf1a3e006e04"
+            projectId: "rpggo-756a7"
         };
 
         let db = null, fbConnected = false;
@@ -956,7 +1069,48 @@
         } catch(e) { console.error(e); }
 
         // ==================== DATA ====================
-        const customData = { weapons: [], armors: [], items: [], enemies: [], pets: [], npcs: [] };
+        let gameData = {
+            weapons: [
+                { id: 'bw1', name: 'Daga', damage: '1d4', icon: '🗡️', value: 10, rarity: 'common', desc: 'Una daga oxidada pero afilada.' },
+                { id: 'bw2', name: 'Espada corta', damage: '1d6', icon: '⚔️', value: 20, rarity: 'common', desc: 'Espada equilibrada de todo aventurero.' },
+                { id: 'bw3', name: 'Hacha de mano', damage: '1d6', icon: '🪓', value: 20, rarity: 'common', desc: 'Hacha ligera para combate.' },
+                { id: 'bw4', name: 'Bastón', damage: '1d4', icon: '🪄', value: 10, rarity: 'common', desc: 'Bastón de madera con punta de hierro.' }
+            ],
+            armors: [
+                { id: 'ba1', name: 'Túnica de cuero', defense: 1, icon: '🦺', value: 15, rarity: 'common', desc: 'Cuero curtido básico.' },
+                { id: 'ba2', name: 'Cuero reforzado', defense: 2, icon: '🦺', value: 30, rarity: 'common', desc: 'Cuero con placas de metal.' },
+                { id: 'ba3', name: 'Cota de malla', defense: 3, icon: '⛓️', value: 75, rarity: 'rare', desc: 'Anillos de acero entrelazados.' },
+                { id: 'ba4', name: 'Túnica de tela', defense: 0, icon: '👕', value: 5, rarity: 'common', desc: 'Simple ropa de viaje.' }
+            ],
+            items: [
+                { id: 'bi1', name: 'Poción menor', type: 'potion', effect: '1d8', icon: '🧪', value: 10, rarity: 'common', desc: 'Restaura 1d8 HP.' },
+                { id: 'bi2', name: 'Poción de maná', type: 'potion', effect: '1d4', icon: '💧', value: 10, rarity: 'common', desc: 'Restaura energía mágica.' },
+                { id: 'bi3', name: 'Antídoto', type: 'antidote', icon: '💊', value: 15, rarity: 'common', desc: 'Cura veneno.' },
+                { id: 'bi4', name: 'Bomba de humo', type: 'escape', icon: '💨', value: 25, rarity: 'common', desc: 'Escape instantáneo del combate.' },
+                { id: 'bi5', name: 'Pergamino', type: 'scroll', icon: '📜', value: 20, rarity: 'common', desc: 'Pergamino mágico.' },
+                { id: 'bi6', name: 'Linterna', type: 'tool', icon: '🔦', value: 15, rarity: 'common', desc: 'Ilumina áreas oscuras.' },
+                { id: 'bi7', name: 'Carne', type: 'food', effect: '1d4', icon: '🥩', value: 5, rarity: 'common', desc: 'Restaura HP. Sirve para domesticar.' }
+            ],
+            enemies: [
+                { id: 'be1', name: 'Rata Gigante', health: 10, damage: '1d4', difficulty: 6, icon: '🐀', loot: [5, 10], drops: ['bi1'], habitat: 'dungeon', desc: 'Una rata del tamaño de un perro te mira con ojos hambrientos desde las sombras.' },
+                { id: 'be2', name: 'Goblin', health: 15, damage: '1d6', difficulty: 8, icon: '👺', loot: [8, 15], drops: ['bi1', 'bw1'], habitat: 'forest', desc: 'Un goblin escuálido salta de entre los arbustos, blandiendo una daga oxidada.' },
+                { id: 'be3', name: 'Esqueleto', health: 20, damage: '1d6', difficulty: 10, icon: '💀', loot: [10, 25], drops: ['bi1'], habitat: 'ruins', desc: 'Los huesos crujen mientras el esqueleto se alza, sus cuencas vacías brillando.' },
+                { id: 'be4', name: 'Orco Guerrero', health: 35, damage: '1d8', difficulty: 12, icon: '👹', loot: [20, 40], drops: ['bw2'], habitat: 'mountain', desc: 'Un orco musculoso bloquea el camino, su hacha manchada de sangre seca.' },
+                { id: 'be5', name: 'Troll', health: 50, damage: '2d6', difficulty: 14, icon: '🧌', loot: [40, 80], drops: ['ba2'], habitat: 'swamp', desc: 'El suelo tiembla cuando el troll emerge del pantano, su piel cubierta de musgo.' },
+                { id: 'be6', name: 'Dragón Joven', health: 80, damage: '2d8', difficulty: 17, effect: 'fire', icon: '🐉', loot: [100, 200], drops: [], habitat: 'mountain', desc: 'Un rugido ensordecedor anuncia la llegada del dragón, sus escamas brillando como rubíes.' }
+            ],
+            pets: [
+                { id: 'bp1', name: 'Lobo', health: 20, damage: '1d6', difficulty: 24, icon: '🐺', desc: 'Un lobo solitario te observa con curiosidad.' },
+                { id: 'bp2', name: 'Oso', health: 35, damage: '1d8', difficulty: 30, icon: '🐻', desc: 'Un oso pardo gruñe suavemente.' },
+                { id: 'bp3', name: 'Águila', health: 15, damage: '1d4', difficulty: 24, icon: '🦅', desc: 'Un águila majestuosa planea sobre ti.' },
+                { id: 'bp4', name: 'Tigre', health: 30, damage: '2d6', difficulty: 60, icon: '🐯', desc: 'Un tigre descansa a la sombra.' }
+            ],
+            npcs: [
+                { id: 'bn1', name: 'Grimbold', role: 'blacksmith', icon: '🧔', location: 'Herrería', dialogue: '¡Ah, un cliente! Mis armas son las mejores del reino.', sells: ['bw1', 'bw2', 'bw3'] },
+                { id: 'bn2', name: 'Elara', role: 'alchemist', icon: '🧙‍♀️', location: 'Botica', dialogue: 'Bienvenido. Mis pociones pueden curar... o matar.', sells: ['bi1', 'bi2', 'bi3'] },
+                { id: 'bn3', name: 'Tobias', role: 'innkeeper', icon: '🧑‍🍳', location: 'Taberna', dialogue: '¡Siéntate, amigo! Una cerveza fría cura el alma.', sells: ['bi7'] }
+            ]
+        };
 
         const BASE_RACES = [
             { name: 'Humano', bonus: { health: 1 }, icon: '🧑', desc: '+1 HP' },
@@ -966,117 +1120,35 @@
             { name: 'Mediano', bonus: { evasion: 1 }, icon: '🧒', desc: '+1 Evasión' }
         ];
 
-        const BASE_WEAPONS = [
-            { id: 'bw1', name: 'Daga', damage: '1d4', icon: '🗡️', value: 10, rarity: 'common', desc: 'Una daga oxidada pero afilada. Perfecta para ataques rápidos.' },
-            { id: 'bw2', name: 'Espada corta', damage: '1d6', icon: '⚔️', value: 20, rarity: 'common', desc: 'Espada de hoja equilibrada, el arma estándar de todo aventurero.' },
-            { id: 'bw3', name: 'Hacha de mano', damage: '1d6', icon: '🪓', value: 20, rarity: 'common', desc: 'Hacha ligera que puede lanzarse o usarse en combate cercano.' },
-            { id: 'bw4', name: 'Bastón', damage: '1d4', icon: '🪄', value: 10, rarity: 'common', desc: 'Bastón de madera reforzada con punta de hierro.' }
-        ];
-
-        const BASE_ARMORS = [
-            { id: 'ba1', name: 'Túnica de cuero', defense: 1, icon: '🦺', value: 15, rarity: 'common', desc: 'Cuero curtido que ofrece protección básica.' },
-            { id: 'ba2', name: 'Cuero reforzado', defense: 2, icon: '🦺', value: 30, rarity: 'common', desc: 'Cuero con placas de metal cosidas.' },
-            { id: 'ba3', name: 'Cota de malla', defense: 3, icon: '⛓️', value: 75, rarity: 'rare', desc: 'Anillos de acero entrelazados. Pesada pero resistente.' },
-            { id: 'ba4', name: 'Túnica de tela', defense: 0, icon: '👕', value: 5, rarity: 'common', desc: 'Simple ropa de viaje. No ofrece protección.' }
-        ];
-
-        const BASE_ITEMS = [
-            { id: 'bi1', name: 'Poción menor', type: 'potion', effect: '1d8', icon: '🧪', value: 10, rarity: 'common', desc: 'Un líquido rojizo que restaura 1d8 puntos de salud.' },
-            { id: 'bi2', name: 'Poción de maná', type: 'potion', effect: '1d4', icon: '💧', value: 10, rarity: 'common', desc: 'Esencia azulada que restaura energía mágica.' },
-            { id: 'bi3', name: 'Antídoto', type: 'antidote', icon: '💊', value: 15, rarity: 'common', desc: 'Contraveneno que purifica la sangre.' },
-            { id: 'bi4', name: 'Bomba de humo', type: 'escape', icon: '💨', value: 25, rarity: 'common', desc: 'Permite escapar del combate al instante.' },
-            { id: 'bi5', name: 'Pergamino', type: 'scroll', icon: '📜', value: 20, rarity: 'common', desc: 'Pergamino con inscripciones arcanas.' },
-            { id: 'bi6', name: 'Linterna', type: 'tool', icon: '🔦', value: 15, rarity: 'common', desc: 'Ilumina lugares oscuros.' },
-            { id: 'bi7', name: 'Carne', type: 'food', effect: '1d4', icon: '🥩', value: 5, rarity: 'common', desc: 'Carne fresca. Restaura salud y sirve para domesticar.' }
-        ];
-
-        const BASE_ENEMIES = [
-            { id: 'be1', name: 'Rata Gigante', health: 10, damage: '1d4', difficulty: 6, icon: '🐀', loot: [5, 10], drops: ['bi1'], habitat: 'dungeon', desc: 'El sonido de garras raspando piedra te alerta. Una rata del tamaño de un perro emerge de las sombras, sus ojos rojos brillando con hambre primaria. Sus dientes amarillentos gotean saliva mientras se prepara para atacar.' },
-            { id: 'be2', name: 'Goblin', health: 15, damage: '1d6', difficulty: 8, icon: '👺', loot: [8, 15], drops: ['bi1', 'bw1'], habitat: 'forest', desc: 'Un crujido de ramas rompe el silencio del bosque. Un goblin escuálido salta desde los arbustos, blandiendo una daga oxidada. Su risa aguda y maliciosa resuena entre los árboles mientras adopta una postura amenazante.' },
-            { id: 'be3', name: 'Esqueleto', health: 20, damage: '1d6', difficulty: 10, icon: '💀', loot: [10, 25], drops: ['bi1'], habitat: 'ruins', desc: 'Los huesos crujen y se recomponen ante tus ojos. Un esqueleto antiguo se alza de su tumba olvidada, sus cuencas vacías brillando con una luz antinatural. Empuña un arma oxidada con determinación sobrenatural.' },
-            { id: 'be4', name: 'Orco Guerrero', health: 35, damage: '1d8', difficulty: 12, icon: '👹', loot: [20, 40], drops: ['bw2'], habitat: 'mountain', desc: 'Un gruñido gutural anuncia su presencia. Un orco musculoso, cubierto de cicatrices de batalla, bloquea el camino. Su hacha de guerra, manchada con sangre seca, descansa sobre su hombro mientras te evalúa como presa.' },
-            { id: 'be5', name: 'Troll', health: 50, damage: '2d6', difficulty: 14, icon: '🧌', loot: [40, 80], drops: ['ba2'], habitat: 'swamp', desc: 'El suelo tiembla con cada paso. Un troll gigantesco emerge del pantano, su piel verde cubierta de musgo y lodo. El hedor a putrefacción te golpea mientras la criatura ruge, mostrando colmillos del tamaño de dagas.' },
-            { id: 'be6', name: 'Dragón Joven', health: 80, damage: '2d8', difficulty: 17, effect: 'fire', icon: '🐉', loot: [100, 200], drops: [], habitat: 'mountain', desc: 'Un rugido ensordecedor hace eco en las montañas. El dragón desciende en espiral, sus escamas brillando como rubíes bajo el sol. Llamas danzan entre sus fauces mientras aterriza, agrietando la roca bajo sus garras.' }
-        ];
-
-        const BASE_PETS = [
-            { id: 'bp1', name: 'Lobo', health: 20, damage: '1d6', difficulty: 24, icon: '🐺', desc: 'Un lobo solitario te observa desde la maleza, sus ojos ambarinos evaluándote con cautela.' },
-            { id: 'bp2', name: 'Oso', health: 35, damage: '1d8', difficulty: 30, icon: '🐻', desc: 'Un oso pardo gruñe suavemente, olfateando el aire en tu dirección.' },
-            { id: 'bp3', name: 'Águila', health: 15, damage: '1d4', difficulty: 24, icon: '🦅', desc: 'Un águila majestuosa planea en círculos sobre ti, su mirada penetrante.' },
-            { id: 'bp4', name: 'Tigre', health: 30, damage: '2d6', difficulty: 60, icon: '🐯', desc: 'Un tigre descansa entre las sombras, su pelaje rayado camuflándolo perfectamente.' }
-        ];
-
-        const BASE_NPCS = [
-            { id: 'bn1', name: 'Grimbold', role: 'blacksmith', icon: '🧔', location: 'Herrería', dialogue: '"¡Ah, un cliente! Mis armas son las mejores del reino, forjadas con fuego de dragón."', sells: ['bw1', 'bw2', 'bw3'] },
-            { id: 'bn2', name: 'Elara', role: 'alchemist', icon: '🧙‍♀️', location: 'Botica', dialogue: '"Bienvenido a mi humilde establecimiento. Mis pociones pueden curar... o matar."', sells: ['bi1', 'bi2', 'bi3'] },
-            { id: 'bn3', name: 'Tobias', role: 'innkeeper', icon: '🧑‍🍳', location: 'Taberna El Jabalí Dorado', dialogue: '"¡Siéntate, amigo! Una cerveza fría y un plato caliente curan el alma del aventurero."', sells: ['bi7'] }
-        ];
-
         const TRAPS = [
-            { name: 'Trampa de púas', damage: '1d6', effect: 'bleed', detectDiff: 10, dodgeDiff: 12, narrative: 'Un ligero clic resuena bajo tu pie. El suelo cede revelando un foso lleno de púas oxidadas, dispuestas en ángulos mortales. El mecanismo, aunque antiguo, sigue siendo letal.' },
-            { name: 'Dardo venenoso', damage: '1d4', effect: 'poison', detectDiff: 12, dodgeDiff: 10, narrative: 'Un destello metálico en la pared capta tu atención. Pequeños orificios ocultos entre las piedras esconden dardos impregnados de un líquido verdoso. Un paso en falso activaría el resorte.' },
-            { name: 'Foso oculto', damage: '2d6', effect: null, detectDiff: 8, dodgeDiff: 14, narrative: 'Las tablas del suelo crujen de forma sospechosa. Debajo, un foso profundo lleno de escombros puntiagudos y huesos de víctimas anteriores espera su próxima presa.' },
-            { name: 'Runa explosiva', damage: '2d8', effect: 'fire', detectDiff: 14, dodgeDiff: 12, narrative: 'Símbolos arcanos grabados en el suelo comienzan a brillar con una luz púrpura amenazante. La runa mágica pulsa con energía destructiva, acumulando poder para detonar.' }
+            { name: 'Trampa de púas', damage: '1d6', effect: 'bleed', detectDiff: 10, dodgeDiff: 12, narrative: 'El suelo cede revelando un foso lleno de púas oxidadas.' },
+            { name: 'Dardo venenoso', damage: '1d4', effect: 'poison', detectDiff: 12, dodgeDiff: 10, narrative: 'Pequeños orificios en la pared esconden dardos impregnados de veneno.' },
+            { name: 'Foso oculto', damage: '2d6', effect: null, detectDiff: 8, dodgeDiff: 14, narrative: 'Las tablas crujen peligrosamente. Debajo, un pozo profundo.' },
+            { name: 'Runa explosiva', damage: '2d8', effect: 'fire', detectDiff: 14, dodgeDiff: 12, narrative: 'Símbolos arcanos brillan en el suelo, pulsando con energía destructiva.' }
         ];
 
         const LOCATIONS = {
             danger: [
-                { name: 'Bosque Sombrío', habitat: 'forest', narratives: [
-                    'Los árboles centenarios se alzan como gigantes silenciosos, sus ramas entrelazadas formando un dosel que apenas deja pasar la luz. El aire está cargado de humedad y el olor a hojas en descomposición.',
-                    'Un sendero apenas visible serpentea entre helechos gigantes y raíces retorcidas. Los sonidos del bosque —crujidos, aleteos, susurros— te mantienen alerta.',
-                    'La niebla se arrastra entre los troncos como dedos fantasmales. Cada sombra parece moverse, cada silencio parece una amenaza contenida.'
-                ]},
-                { name: 'Ruinas Antiguas', habitat: 'ruins', narratives: [
-                    'Columnas rotas y arcos derrumbados cuentan la historia de una civilización olvidada. Las inscripciones en las paredes, erosionadas por el tiempo, guardan secretos indescifrables.',
-                    'El viento silba entre las piedras caídas, creando melodías fantasmales. Fragmentos de mosaicos coloridos asoman bajo capas de polvo y escombros.',
-                    'Una escalera de caracol desciende hacia la oscuridad. El eco de tus pasos resuena en cámaras que no han conocido la luz del sol en siglos.'
-                ]},
-                { name: 'Pantano Maldito', habitat: 'swamp', narratives: [
-                    'El agua estancada burbujea con gases nocivos, liberando un hedor que quema la garganta. Árboles muertos se alzan como espectros sobre el lodo.',
-                    'Cada paso es una lucha contra el barro que succiona tus botas. Insectos zumban alrededor mientras luces fantasmales danzan sobre las aguas turbias.',
-                    'Un puente de madera podrida cruza un tramo de agua negra. Algo se mueve bajo la superficie, creando ondas que no presagian nada bueno.'
-                ]},
-                { name: 'Caverna Profunda', habitat: 'dungeon', narratives: [
-                    'La oscuridad es casi absoluta. El goteo constante del agua crea un ritmo hipnótico mientras estalactitas brillan con minerales desconocidos.',
-                    'El túnel se estrecha, obligándote a agacharte. Marcas de garras en las paredes sugieren que no eres el único que ha pasado por aquí.',
-                    'Una cámara natural se abre ante ti, iluminada por hongos bioluminiscentes. Sus esporas flotan en el aire como pequeñas estrellas azuladas.'
-                ]},
-                { name: 'Paso de Montaña', habitat: 'mountain', narratives: [
-                    'El viento aúlla entre los picos nevados, cortando como cuchillos de hielo. El sendero serpentea al borde de precipicios vertiginosos.',
-                    'Rocas sueltas amenazan con ceder bajo tus pies. A lo lejos, el rugido de una avalancha recuerda la fragilidad de la vida en estas alturas.',
-                    'Una cueva natural ofrece refugio temporal del clima inclemente. Huesos roídos cerca de la entrada sugieren que algo más la considera su hogar.'
-                ]}
+                { name: 'Bosque Sombrío', habitat: 'forest', narratives: ['Los árboles se alzan como gigantes silenciosos. El aire huele a musgo y hojas podridas.', 'Un sendero serpentea entre helechos gigantes y raíces retorcidas.'] },
+                { name: 'Ruinas Antiguas', habitat: 'ruins', narratives: ['Columnas rotas cuentan la historia de una civilización olvidada.', 'El viento silba entre las piedras caídas.'] },
+                { name: 'Pantano Maldito', habitat: 'swamp', narratives: ['El agua estancada burbujea con gases nocivos.', 'Cada paso es una lucha contra el lodo.'] },
+                { name: 'Caverna Profunda', habitat: 'dungeon', narratives: ['La oscuridad es casi total. El goteo del agua resuena.', 'El túnel se estrecha. Marcas de garras cubren las paredes.'] },
+                { name: 'Paso de Montaña', habitat: 'mountain', narratives: ['El viento aúlla entre los picos nevados.', 'Rocas sueltas amenazan con ceder bajo tus pies.'] }
             ],
             safe: [
-                { name: 'Claro del Bosque', narratives: [
-                    'Un rayo de sol ilumina un pequeño claro donde flores silvestres danzan con la brisa. El canto de los pájaros y el murmullo de un arroyo cercano ofrecen paz.',
-                    'Árboles frutales rodean este oasis de tranquilidad. El aroma dulce de las frutas maduras llena el aire.'
-                ]},
-                { name: 'Refugio de Piedra', narratives: [
-                    'Una pequeña cueva natural ofrece protección perfecta. Restos de fogatas anteriores indican que otros viajeros han descansado aquí con seguridad.',
-                    'Las paredes de piedra, lisas por el paso del tiempo, irradian un calor reconfortante. Este lugar parece bendecido contra el mal.'
-                ]}
+                { name: 'Claro del Bosque', narratives: ['Un rayo de sol ilumina un pequeño claro donde flores silvestres danzan.'] },
+                { name: 'Refugio de Piedra', narratives: ['Una cueva natural ofrece protección. Restos de fogatas indican que otros han descansado aquí.'] }
             ]
         };
 
         const EXPLORATION_INTROS = [
             'Te adentras en lo desconocido, cada paso resonando con determinación...',
-            'El camino se bifurca ante ti. Siguiendo tu instinto, eliges la senda menos transitada...',
-            'Una brisa cargada de presagios acaricia tu rostro mientras avanzas...',
-            'El terreno se vuelve más agreste, señales de peligro se hacen evidentes...',
-            'Tus sentidos se agudizan mientras exploras este territorio hostil...',
-            'Las sombras parecen alargarse a tu paso, como si el lugar mismo te observara...'
+            'El camino se bifurca ante ti. Siguiendo tu instinto, eliges avanzar...',
+            'Una brisa cargada de presagios acaricia tu rostro mientras exploras...'
         ];
 
-        function getAllWeapons() { return [...BASE_WEAPONS, ...customData.weapons]; }
-        function getAllArmors() { return [...BASE_ARMORS, ...customData.armors]; }
-        function getAllItems() { return [...BASE_ITEMS, ...customData.items]; }
-        function getAllEnemies() { return [...BASE_ENEMIES, ...customData.enemies]; }
-        function getAllPets() { return [...BASE_PETS, ...customData.pets]; }
-        function getAllNpcs() { return [...BASE_NPCS, ...customData.npcs]; }
-
         function findItem(id) {
-            return getAllWeapons().find(x => x.id === id) || getAllArmors().find(x => x.id === id) || getAllItems().find(x => x.id === id);
+            return gameData.weapons.find(x => x.id === id) || gameData.armors.find(x => x.id === id) || gameData.items.find(x => x.id === id);
         }
 
         function getSprite(item) {
@@ -1086,6 +1158,7 @@
 
         // ==================== GAME STATE ====================
         let game = { player: null, inCombat: false, enemy: null, turn: 0, location: { name: 'Pueblo', type: 'safe' } };
+        let currentDetailItem = null; // FIX: Store current item for modal
 
         // ==================== UTILITIES ====================
         function roll(n) { if (typeof n === 'number') return n; const m = String(n).match(/(\d+)?d(\d+)([+-]\d+)?/i); if (!m) return parseInt(n) || 0; let t = parseInt(m[3]) || 0; for (let i = 0; i < (parseInt(m[1]) || 1); i++) t += Math.floor(Math.random() * parseInt(m[2])) + 1; return Math.max(1, t); }
@@ -1142,7 +1215,7 @@
             document.getElementById('weaponSlot').classList.toggle('disabled', !canEquip);
             document.getElementById('armorSlot').classList.toggle('disabled', !canEquip);
             const petSec = document.getElementById('petSection');
-            if (p.pet) { petSec.style.display = 'block'; const pp = (p.pet.hp / p.pet.maxHp) * 100; document.getElementById('petDisplay').innerHTML = `<div style="display:flex;gap:0.3rem;align-items:center;background:var(--bg-dark);padding:0.25rem;border-radius:3px;border:1px solid var(--green);"><span style="font-size:1.2rem;">${getSprite(p.pet)}</span><div style="flex:1;"><div style="color:var(--green-bright);font-size:0.7rem;">${p.pet.name}</div><div class="hp-bar-container" style="height:6px;"><div class="hp-bar-fill ${hpClass(pp)}" style="width:${pp}%"></div></div><div style="font-size:0.55rem;color:var(--text-dim);">${p.pet.hp}/${p.pet.maxHp}</div></div></div>`; } else { petSec.style.display = 'none'; }
+            if (p.pet) { petSec.style.display = 'block'; const pp = (p.pet.hp / p.pet.maxHp) * 100; document.getElementById('petDisplay').innerHTML = `<div style="display:flex;gap:0.3rem;align-items:center;background:var(--bg-dark);padding:0.25rem;border-radius:3px;border:1px solid var(--green);"><span style="font-size:1.2rem;">${getSprite(p.pet)}</span><div style="flex:1;"><div style="color:var(--green-bright);font-size:0.7rem;">${p.pet.name}</div><div class="hp-bar-container" style="height:6px;"><div class="hp-bar-fill ${hpClass(pp)}" style="width:${pp}%"></div></div></div></div>`; } else { petSec.style.display = 'none'; }
         }
 
         function updateCombatUI() {
@@ -1170,15 +1243,17 @@
             [{ text: '⚔️ Atacar', fn: playerAttack, cls: 'primary' }, { text: '🎒 Item', fn: () => { renderInventory(); openModal('inventoryModal'); } }, { text: '🛡️ Defender', fn: playerDefend }, { text: '💨 Huir', fn: attemptFlee, cls: 'danger' }].forEach(a => { const b = document.createElement('button'); b.className = 'action-btn ' + (a.cls || ''); b.textContent = a.text; b.onclick = a.fn; ca.appendChild(b); });
         }
 
-        // ==================== EQUIPMENT ====================
+        // ==================== EQUIPMENT - FIXED ====================
         function handleEquipClick(slot) {
             if (game.inCombat) { toast('No puedes cambiar equipo en combate', 'error'); return; }
             if (game.location.type !== 'safe') { toast('Solo en zona segura', 'error'); return; }
-            showItemDetail(slot === 'weapon' ? game.player.weapon : game.player.armor, 'equipped-' + slot);
+            const item = slot === 'weapon' ? game.player.weapon : game.player.armor;
+            showItemDetail(item, 'equipped-' + slot);
         }
 
         function showItemDetail(item, context = 'inventory') {
             if (!item) return;
+            currentDetailItem = item; // STORE REFERENCE
             document.getElementById('detailIcon').innerHTML = getSprite(item);
             document.getElementById('detailName').textContent = item.name;
             document.getElementById('detailType').textContent = item.damage ? 'Arma' : item.defense !== undefined ? 'Armadura' : item.type || 'Item';
@@ -1189,50 +1264,130 @@
             if (item.effect && (item.type === 'potion' || item.type === 'food')) stats += `<div class="item-stat"><div class="item-stat-label">Cura</div><div class="item-stat-value">${item.effect}</div></div>`;
             if (item.value) stats += `<div class="item-stat"><div class="item-stat-label">Valor</div><div class="item-stat-value">${item.value} MP</div></div>`;
             document.getElementById('detailStats').innerHTML = stats;
+            
             let actions = '';
             const canEquip = !game.inCombat && game.location.type === 'safe';
-            if (context.startsWith('equipped-')) { if (canEquip) actions += `<button class="action-btn danger" onclick="unequipItem('${context.split('-')[1]}')">❌ Desequipar</button>`; else actions += `<div style="font-size:0.75rem;color:var(--text-dim);">Solo en zona segura</div>`; }
-            else { if (item.damage && canEquip) actions += `<button class="action-btn primary" onclick="equipItem('${item.uid}','weapon')">⚔️ Equipar</button>`; if (item.defense !== undefined && canEquip) actions += `<button class="action-btn primary" onclick="equipItem('${item.uid}','armor')">🛡️ Equipar</button>`; if (item.type === 'potion' || item.type === 'food') actions += `<button class="action-btn primary" onclick="useItem('${item.uid}')">✨ Usar</button>`; if (item.type === 'antidote') actions += `<button class="action-btn primary" onclick="useItem('${item.uid}')">💊 Usar</button>`; if (item.type === 'escape' && game.inCombat) actions += `<button class="action-btn primary" onclick="useItem('${item.uid}')">💨 Usar</button>`; if (item.type === 'backpack') actions += `<button class="action-btn primary" onclick="useItem('${item.uid}')">🎒 Usar</button>`; }
+            
+            if (context.startsWith('equipped-')) {
+                if (canEquip) {
+                    const slot = context.split('-')[1];
+                    actions += `<button class="action-btn danger" onclick="unequipItem('${slot}')">❌ Desequipar</button>`;
+                } else {
+                    actions += `<div style="font-size:0.75rem;color:var(--text-dim);padding:0.3rem;">Solo en zona segura</div>`;
+                }
+            } else {
+                // From inventory
+                if (item.damage && canEquip) {
+                    actions += `<button class="action-btn primary" onclick="doEquipItem('weapon')">⚔️ Equipar Arma</button>`;
+                }
+                if (item.defense !== undefined && canEquip) {
+                    actions += `<button class="action-btn primary" onclick="doEquipItem('armor')">🛡️ Equipar Armadura</button>`;
+                }
+                if (item.type === 'potion' || item.type === 'food') {
+                    actions += `<button class="action-btn primary" onclick="doUseItem()">✨ Usar</button>`;
+                }
+                if (item.type === 'antidote') {
+                    actions += `<button class="action-btn primary" onclick="doUseItem()">💊 Usar</button>`;
+                }
+                if (item.type === 'escape' && game.inCombat) {
+                    actions += `<button class="action-btn primary" onclick="doUseItem()">💨 Usar</button>`;
+                }
+                if (item.type === 'backpack') {
+                    actions += `<button class="action-btn primary" onclick="doUseItem()">🎒 Usar</button>`;
+                }
+            }
             actions += `<button class="action-btn" onclick="closeModal('itemDetailModal')">Cerrar</button>`;
             document.getElementById('detailActions').innerHTML = actions;
             openModal('itemDetailModal');
         }
 
-        function equipItem(uid, type) {
-            const p = game.player, item = p.inventory.find(i => i.uid === uid); if (!item) return;
+        function doEquipItem(type) {
+            const item = currentDetailItem;
+            if (!item || !item.uid) return;
+            const p = game.player;
             closeModal('itemDetailModal');
-            if (type === 'weapon') { if (p.weapon.uid) p.inventory.push(p.weapon); p.weapon = item; } else { if (p.armor.uid) p.inventory.push(p.armor); p.armor = item; }
-            p.inventory = p.inventory.filter(i => i.uid !== uid);
+            
+            if (type === 'weapon') {
+                if (p.weapon && p.weapon.uid) p.inventory.push(p.weapon);
+                p.weapon = item;
+            } else {
+                if (p.armor && p.armor.uid) p.inventory.push(p.armor);
+                p.armor = item;
+            }
+            p.inventory = p.inventory.filter(i => i.uid !== item.uid);
+            
             addStory(`Te equipas con <strong>${item.name}</strong>.`, 'system');
             toast('Equipado', 'success');
-            updateUI(); renderInventory();
+            updateUI();
+            renderInventory();
         }
 
         function unequipItem(type) {
-            const p = game.player; if (p.inventory.length >= p.maxSlots) { toast('Inventario lleno', 'error'); return; }
+            const p = game.player;
+            if (p.inventory.length >= p.maxSlots) { toast('Inventario lleno', 'error'); return; }
             closeModal('itemDetailModal');
-            if (type === 'weapon') { p.inventory.push(p.weapon); p.weapon = { id: 'fist', name: 'Puños', damage: '1d2', icon: '✊', value: 0, desc: 'Tus propios puños.' }; }
-            else { p.inventory.push(p.armor); p.armor = { id: 'none', name: 'Sin armadura', defense: 0, icon: '👤', value: 0, desc: 'Sin protección.' }; }
+            
+            if (type === 'weapon') {
+                if (p.weapon && p.weapon.uid) p.inventory.push(p.weapon);
+                p.weapon = { name: 'Puños', damage: '1d2', icon: '✊', value: 0, defense: undefined, desc: 'Tus propios puños.' };
+            } else {
+                if (p.armor && p.armor.uid) p.inventory.push(p.armor);
+                p.armor = { name: 'Sin armadura', defense: 0, icon: '👤', value: 0, desc: 'Sin protección.' };
+            }
+            
             addStory('Guardas tu equipo en el inventario.', 'system');
-            toast('Desequipado', 'info'); updateUI();
+            toast('Desequipado', 'info');
+            updateUI();
         }
 
-        function useItem(uid) {
-            const p = game.player, item = p.inventory.find(i => i.uid === uid); if (!item) return;
-            closeModal('itemDetailModal'); closeModal('inventoryModal');
-            if (item.type === 'potion' || item.type === 'food') { const heal = roll(item.effect || '1d4'); const actual = Math.min(heal, p.maxHp - p.hp); p.hp += actual; addStory(`Usas ${item.name}: <span style="color:var(--green-bright);">+${actual} HP</span>`, 'system'); p.inventory = p.inventory.filter(i => i.uid !== uid); }
-            else if (item.type === 'antidote') { p.effects = p.effects.filter(e => e.type !== 'poison'); addStory(`Usas ${item.name}: Veneno curado`, 'system'); p.inventory = p.inventory.filter(i => i.uid !== uid); }
-            else if (item.type === 'escape' && game.inCombat) { p.inventory = p.inventory.filter(i => i.uid !== uid); addStory('Lanzas una bomba de humo y escapas entre la confusión.', 'narrative'); endCombatEscape(); return; }
-            else if (item.type === 'backpack') { const slots = parseInt(item.effect) || 5; p.maxSlots += slots; addStory(`+${slots} espacios de inventario`, 'system'); p.inventory = p.inventory.filter(i => i.uid !== uid); }
-            updateUI(); if (game.inCombat) updateCombatUI();
+        function doUseItem() {
+            const item = currentDetailItem;
+            if (!item || !item.uid) return;
+            const p = game.player;
+            closeModal('itemDetailModal');
+            closeModal('inventoryModal');
+            
+            if (item.type === 'potion' || item.type === 'food') {
+                const heal = roll(item.effect || '1d4');
+                const actual = Math.min(heal, p.maxHp - p.hp);
+                p.hp += actual;
+                addStory(`Usas ${item.name}: <span style="color:var(--green-bright);">+${actual} HP</span>`, 'system');
+            } else if (item.type === 'antidote') {
+                p.effects = p.effects.filter(e => e.type !== 'poison');
+                addStory(`Usas ${item.name}: Veneno curado`, 'system');
+            } else if (item.type === 'escape' && game.inCombat) {
+                p.inventory = p.inventory.filter(i => i.uid !== item.uid);
+                addStory('Lanzas una bomba de humo y escapas.', 'narrative');
+                endCombatEscape();
+                return;
+            } else if (item.type === 'backpack') {
+                const slots = parseInt(item.effect) || 5;
+                p.maxSlots += slots;
+                addStory(`+${slots} espacios de inventario`, 'system');
+            }
+            
+            p.inventory = p.inventory.filter(i => i.uid !== item.uid);
+            updateUI();
+            if (game.inCombat) updateCombatUI();
         }
 
         function renderInventory() {
             const p = game.player;
             document.getElementById('invInfo').textContent = `${p.inventory.length} / ${p.maxSlots} espacios`;
             const grid = document.getElementById('invGrid'); grid.innerHTML = '';
-            p.inventory.forEach(item => { const slot = document.createElement('div'); slot.className = `inv-slot rarity-${item.rarity || 'common'}`; slot.innerHTML = `<div class="inv-slot-icon">${getSprite(item)}</div><div class="inv-slot-name">${item.name}</div>`; slot.onclick = () => showItemDetail(item, game.inCombat ? 'combat' : 'inventory'); grid.appendChild(slot); });
-            for (let i = p.inventory.length; i < p.maxSlots; i++) { const slot = document.createElement('div'); slot.className = 'inv-slot'; slot.innerHTML = '<div class="inv-slot-empty">vacío</div>'; grid.appendChild(slot); }
+            p.inventory.forEach(item => {
+                const slot = document.createElement('div');
+                slot.className = `inv-slot rarity-${item.rarity || 'common'}`;
+                slot.innerHTML = `<div class="inv-slot-icon">${getSprite(item)}</div><div class="inv-slot-name">${item.name}</div>`;
+                slot.onclick = () => showItemDetail(item, game.inCombat ? 'combat' : 'inventory');
+                grid.appendChild(slot);
+            });
+            for (let i = p.inventory.length; i < p.maxSlots; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'inv-slot';
+                slot.innerHTML = '<div class="inv-slot-empty">vacío</div>';
+                grid.appendChild(slot);
+            }
         }
 
         // ==================== EXPLORATION ====================
@@ -1257,87 +1412,75 @@
                     else if (r <= 85) triggerTreasure();
                     else if (r <= 95) triggerPetEncounter();
                     else triggerSafeEvent();
-                }, 1500);
-            }, 1000);
+                }, 1200);
+            }, 800);
         }
 
         function triggerEnemyEncounter() {
-            const enemies = getAllEnemies();
             const habitat = game.location.habitat;
-            const pool = enemies.filter(e => e.habitat === habitat || e.habitat === 'any' || !e.habitat);
-            const enemy = pick(pool.length > 0 ? pool : enemies);
+            const pool = gameData.enemies.filter(e => e.habitat === habitat || e.habitat === 'any' || !e.habitat);
+            const enemy = pick(pool.length > 0 ? pool : gameData.enemies);
             
             addStory(enemy.desc || `Un ${enemy.name} aparece ante ti.`, 'narrative');
-            
             setTimeout(() => {
                 addStory(`<strong>¡${enemy.name} se prepara para atacar!</strong>`, 'combat');
                 setActions([
                     { text: '⚔️ ¡Luchar!', fn: () => startCombat(enemy), cls: 'primary' },
                     { text: '💨 Huir', fn: () => attemptFleeBeforeCombat(enemy), cls: 'danger' }
                 ]);
-            }, 800);
+            }, 600);
         }
 
         async function attemptFleeBeforeCombat(enemy) {
-            addStory('Intentas escapar antes de que el enemigo te alcance...', 'narrative');
             const fleeRoll = d20();
             await showDice(fleeRoll);
             addStory(`Tirada de huida: <strong>${fleeRoll}</strong> vs 14`, 'system');
             if (fleeRoll >= 14) {
-                addStory('¡Logras escapar justo a tiempo! El enemigo te pierde de vista entre las sombras.', 'narrative');
+                addStory('¡Escapas antes de que te alcance!', 'narrative');
                 game.location = { name: 'Sendero', type: 'safe' };
                 updateUI(); showExploreActions();
             } else {
-                addStory('¡No logras escapar! El enemigo te bloquea el paso. ¡El combate es inevitable!', 'combat');
+                addStory('¡No logras escapar! El combate es inevitable.', 'combat');
                 startCombat(enemy);
             }
         }
 
         async function triggerTrap() {
             const trap = pick(TRAPS);
-            addStory('Algo no está bien. Tus instintos de aventurero se activan...', 'narrative');
-            
+            addStory('Algo no está bien. Tus instintos se activan...', 'narrative');
             setTimeout(async () => {
-                addStory(`<strong>¡Trampa detectada!</strong>`, 'trap');
-                addStory(trap.narrative, 'trap');
-                addStory(`<em>Es una ${trap.name}. Puedes intentar detectarla a tiempo (D20 ≥ ${trap.detectDiff}).</em>`, 'system');
-                
+                addStory(`<strong>¡Trampa!</strong> ${trap.narrative}`, 'trap');
                 const detectRoll = d20();
                 await showDice(detectRoll);
-                addStory(`Tirada de percepción: <strong>${detectRoll}</strong> vs ${trap.detectDiff}`, 'system');
-
+                addStory(`Percepción: <strong>${detectRoll}</strong> vs ${trap.detectDiff}`, 'system');
                 if (detectRoll >= trap.detectDiff) {
-                    addStory('¡Detectas la trampa justo a tiempo! Puedes intentar esquivarla o desactivarla.', 'system');
+                    addStory('¡Detectas la trampa a tiempo!', 'system');
                     setActions([
                         { text: '🏃 Esquivar', fn: () => attemptDodgeTrap(trap), cls: 'primary' },
                         { text: '🔧 Desactivar', fn: () => attemptDisableTrap(trap) }
                     ]);
                 } else {
-                    addStory('No notas el peligro hasta que es demasiado tarde...', 'trap');
+                    addStory('No notas el peligro hasta que es tarde...', 'trap');
                     await applyTrapDamage(trap, false);
                 }
-            }, 1000);
+            }, 800);
         }
 
         async function attemptDodgeTrap(trap) {
-            addStory('Te lanzas a un lado intentando evitar la trampa...', 'narrative');
-            const dodgeRoll = d20();
-            const evasion = game.player.race.bonus.evasion || 0;
-            const total = dodgeRoll + evasion;
+            const dodgeRoll = d20() + (game.player.race.bonus.evasion || 0);
             await showDice(dodgeRoll);
-            addStory(`Tirada de esquive: <strong>${dodgeRoll}</strong>${evasion ? ` +${evasion}` : ''} = ${total} vs ${trap.dodgeDiff}`, 'system');
-            if (total >= trap.dodgeDiff) { addStory('¡Te apartas justo a tiempo! La trampa se activa inofensivamente.', 'loot'); showExploreActions(); }
-            else { addStory('No logras evitarla por completo...', 'trap'); await applyTrapDamage(trap, true); }
+            addStory(`Esquive: <strong>${dodgeRoll}</strong> vs ${trap.dodgeDiff}`, 'system');
+            if (dodgeRoll >= trap.dodgeDiff) { addStory('¡Te apartas a tiempo!', 'loot'); showExploreActions(); }
+            else { await applyTrapDamage(trap, true); }
         }
 
         async function attemptDisableTrap(trap) {
-            addStory('Con manos firmes, intentas desactivar el mecanismo...', 'narrative');
             const disableRoll = d20();
             await showDice(disableRoll);
-            addStory(`Tirada de desactivación: <strong>${disableRoll}</strong> vs 15`, 'system');
-            if (disableRoll >= 15) { const r = dX(15) + 5; game.player.silver += r; addStory(`¡Éxito! Desactivas la trampa y encuentras ${r} MP entre sus componentes.`, 'loot'); }
-            else if (disableRoll >= 10) { addStory('El mecanismo se resiste... decides apartarte con cuidado.', 'system'); }
-            else { addStory('¡El mecanismo se activa accidentalmente!', 'trap'); await applyTrapDamage(trap, false); return; }
+            addStory(`Desactivación: <strong>${disableRoll}</strong> vs 15`, 'system');
+            if (disableRoll >= 15) { const r = dX(15) + 5; game.player.silver += r; addStory(`¡Éxito! Encuentras ${r} MP.`, 'loot'); }
+            else if (disableRoll >= 10) { addStory('El mecanismo se resiste... te apartas.', 'system'); }
+            else { addStory('¡Activas la trampa!', 'trap'); await applyTrapDamage(trap, false); return; }
             updateUI(); showExploreActions();
         }
 
@@ -1346,79 +1489,67 @@
             const armor = Math.floor(game.player.totalArmor() / 2);
             const finalDmg = Math.max(1, dmg - armor);
             game.player.hp -= finalDmg;
-            addStory(`La ${trap.name} te causa <span style="color:var(--red-bright);">${finalDmg} de daño</span>${armor > 0 ? ` (${armor} absorbido)` : ''}.`, 'combat');
-            if (trap.effect) { applyEffect(game.player, trap.effect); addStory(`Sufres: <span style="color:var(--purple-bright);">${trap.effect}</span>`, 'system'); }
+            addStory(`${trap.name}: <span style="color:var(--red-bright);">${finalDmg} daño</span>`, 'combat');
+            if (trap.effect) { applyEffect(game.player, trap.effect); }
             updateUI();
-            if (game.player.hp <= 0) { addStory('<strong style="color:var(--red-bright);">La trampa acaba con tu vida...</strong>', 'combat'); setActions([{ text: '🔄 Nuevo Personaje', fn: startNewGame, cls: 'primary' }]); }
+            if (game.player.hp <= 0) { addStory('<strong style="color:var(--red-bright);">Has muerto...</strong>', 'combat'); setActions([{ text: '🔄 Nuevo Personaje', fn: startNewGame, cls: 'primary' }]); }
             else showExploreActions();
         }
 
         function triggerTreasure() {
-            const narratives = [
-                'Algo brilla entre los escombros, llamando tu atención. Te acercas con cautela...',
-                'Un cofre olvidado yace medio enterrado en el suelo. Las bisagras crujen cuando lo abres...',
-                'Encuentras los restos de un viajero menos afortunado. Entre sus pertenencias hay algo de valor...'
-            ];
-            addStory(pick(narratives), 'narrative');
+            addStory('¡Algo brilla entre los escombros!', 'narrative');
             setTimeout(() => {
                 const mp = dX(30) + 10;
                 game.player.silver += mp;
                 while (game.player.silver >= 99) { game.player.silver -= 99; game.player.gold++; }
-                addStory(`¡Encuentras <strong>${mp} MP</strong>!`, 'loot');
+                addStory(`Encuentras <strong>${mp} MP</strong>`, 'loot');
                 if (Math.random() < 0.3 && game.player.inventory.length < game.player.maxSlots) {
-                    const item = pick(getAllItems());
+                    const item = pick(gameData.items);
                     game.player.inventory.push({ ...item, uid: Date.now() });
-                    addStory(`También encuentras: <strong>${item.name}</strong>`, 'loot');
+                    addStory(`También: <strong>${item.name}</strong>`, 'loot');
                 }
                 updateUI(); showExploreActions();
-            }, 1000);
+            }, 800);
         }
 
         function triggerPetEncounter() {
             if (game.player.pet) { triggerSafeEvent(); return; }
-            const pets = getAllPets();
-            const pet = pick(pets);
-            addStory('Un movimiento entre las sombras capta tu atención...', 'narrative');
-            setTimeout(() => {
-                addStory(pet.desc || `Un ${pet.name} te observa con curiosidad.`, 'narrative');
-                addStory(`Es un <strong>${pet.name}</strong>. Parece salvaje pero no hostil. Podrías intentar domesticarlo.`, 'system');
-                const hasMeat = game.player.inventory.some(i => i.type === 'food');
-                setActions([
-                    { text: '🥩 Domesticar', fn: () => attemptTame(pet), disabled: !hasMeat, cls: hasMeat ? 'primary' : '' },
-                    { text: '⚔️ Cazar', fn: () => startCombat({ ...pet, health: pet.health, difficulty: 10, loot: [5, 15], drops: ['bi7'], desc: `El ${pet.name} se da cuenta de tus intenciones y se prepara para defenderse.` }) },
-                    { text: '🚶 Dejar', fn: () => { addStory('Te alejas silenciosamente, dejando a la criatura en paz.', 'narrative'); showExploreActions(); } }
-                ]);
-            }, 1000);
+            const pet = pick(gameData.pets);
+            addStory(pet.desc || `Un ${pet.name} aparece.`, 'narrative');
+            const hasMeat = game.player.inventory.some(i => i.type === 'food');
+            setActions([
+                { text: '🥩 Domesticar', fn: () => attemptTame(pet), disabled: !hasMeat, cls: hasMeat ? 'primary' : '' },
+                { text: '⚔️ Cazar', fn: () => startCombat({ ...pet, health: pet.health, difficulty: 10, loot: [5, 15], drops: ['bi7'] }) },
+                { text: '🚶 Dejar', fn: () => { addStory('Te alejas silenciosamente.', 'narrative'); showExploreActions(); } }
+            ]);
         }
 
         async function attemptTame(pet) {
             const p = game.player;
-            const meatIdx = p.inventory.findIndex(i => i.type === 'food');
-            if (meatIdx !== -1) p.inventory.splice(meatIdx, 1);
-            addStory(`Te acercas lentamente, extendiendo la mano con un trozo de carne...`, 'narrative');
-            addStory(`El ${pet.name} olfatea el aire, evaluando si eres una amenaza o un amigo potencial.`, 'narrative');
+            const idx = p.inventory.findIndex(i => i.type === 'food');
+            if (idx !== -1) p.inventory.splice(idx, 1);
+            addStory(`Ofreces comida al ${pet.name}...`, 'narrative');
             const tameRoll = dX(pet.difficulty);
             const threshold = Math.ceil(pet.difficulty * 0.6);
             await showDice(tameRoll, pet.difficulty, tameRoll >= threshold);
-            addStory(`Tirada de domesticación D${pet.difficulty}: <strong>${tameRoll}</strong> (necesitas ${threshold}+)`, 'system');
+            addStory(`D${pet.difficulty}: <strong>${tameRoll}</strong> (necesitas ${threshold}+)`, 'system');
             if (tameRoll >= threshold) {
                 p.pet = { ...pet, hp: pet.health, maxHp: pet.health };
-                addStory(`El ${pet.name} acepta la ofrenda y se acerca a ti con confianza. <strong style="color:var(--green-bright);">¡Has ganado un compañero leal!</strong>`, 'loot');
+                addStory(`<strong style="color:var(--green-bright);">¡${pet.name} es ahora tu compañero!</strong>`, 'loot');
                 toast('Compañero obtenido', 'success');
             } else {
-                addStory(`El ${pet.name} toma la comida pero retrocede, desapareciendo entre las sombras. No confía en ti... todavía.`, 'narrative');
+                addStory(`El ${pet.name} toma la comida y se aleja.`, 'narrative');
             }
             updateUI(); showExploreActions();
         }
 
         function triggerSafeEvent() {
-            addStory('Encuentras un lugar tranquilo donde el peligro parece distante. Es un buen momento para descansar.', 'narrative');
+            addStory('Encuentras un lugar tranquilo para descansar.', 'narrative');
             game.location = { name: 'Refugio', type: 'safe' };
             const heal = Math.floor(game.player.maxHp * 0.3);
             game.player.hp = Math.min(game.player.maxHp, game.player.hp + heal);
             game.player.effects = [];
-            addStory(`Descansas y recuperas fuerzas. <span style="color:var(--green-bright);">+${heal} HP</span>. Estados curados.`, 'system');
-            addStory('<em>Estás en zona segura. Puedes cambiar tu equipamiento.</em>', 'system');
+            addStory(`<span style="color:var(--green-bright);">+${heal} HP</span>. Estados curados. <em>Zona segura.</em>`, 'system');
             updateUI(); showExploreActions();
         }
 
@@ -1428,10 +1559,8 @@
             game.enemy = { ...enemy, hp: enemy.health, maxHp: enemy.health, effects: [] };
             game.turn = 1;
             document.getElementById('combatArena').classList.add('active');
-            clearCombatLog();
-            addTurnHeader(1);
-            updateCombatUI();
-            updateUI();
+            clearCombatLog(); addTurnHeader(1);
+            updateCombatUI(); updateUI();
             document.getElementById('actionsGrid').innerHTML = '<span style="color:var(--text-dim)">En combate...</span>';
         }
 
@@ -1439,18 +1568,17 @@
             const p = game.player, e = game.enemy;
             const attackRoll = d20(), precision = p.race.bonus.precision || 0, total = attackRoll + precision, isCrit = attackRoll === 20;
             await showDice(attackRoll, 20, isCrit);
-            const logs = [];
-            logs.push({ text: `🎲 D20 = <span class="log-dice">${attackRoll}</span>${precision ? ` +${precision}` : ''} = ${total} vs ${e.difficulty}` });
-            if (attackRoll === 1) { logs.push({ text: `<span class="log-miss">¡PIFIA!</span>` }); }
+            const logs = [{ text: `D20: ${attackRoll}${precision ? `+${precision}` : ''} = ${total} vs ${e.difficulty}` }];
+            if (attackRoll === 1) { logs.push({ text: '¡Pifia!', cls: 'log-miss' }); }
             else if (total >= e.difficulty) {
                 let dmg = roll(p.weapon.damage) + (p.race.bonus.damage || 0);
-                if (isCrit) { dmg *= 2; logs.push({ text: `<span class="log-crit">¡CRÍTICO! ×2</span>` }); }
+                if (isCrit) { dmg *= 2; logs.push({ text: '¡CRÍTICO! ×2', cls: 'log-crit' }); }
                 e.hp -= dmg;
-                logs.push({ text: `<span class="log-damage">${dmg} daño</span>` });
-                if (p.weapon.effect) { applyEffect(e, p.weapon.effect); }
-                if (p.pet) { const pd = roll(p.pet.damage); e.hp -= pd; logs.push({ text: `${p.pet.icon} ${p.pet.name}: ${pd}` }); }
+                logs.push({ text: `${dmg} daño`, cls: 'log-damage' });
+                if (p.weapon.effect) applyEffect(e, p.weapon.effect);
+                if (p.pet) { const pd = roll(p.pet.damage); e.hp -= pd; logs.push({ text: `${p.pet.icon} +${pd}` }); }
                 if (e.hp <= 0) { addLogSection(`⚔️ ${p.name}`, logs, 'player-action'); endCombat(true); return; }
-            } else { logs.push({ text: `<span class="log-miss">Fallo</span>` }); }
+            } else { logs.push({ text: 'Fallo', cls: 'log-miss' }); }
             addLogSection(`⚔️ ${p.name}`, logs, 'player-action');
             updateCombatUI();
             await enemyTurn();
@@ -1458,15 +1586,15 @@
 
         function playerDefend() {
             game.player.defending = true;
-            addLogSection(`🛡️ ${game.player.name}`, [{ text: 'Postura defensiva: +4 evasión' }], 'player-action');
+            addLogSection(`🛡️ Defender`, [{ text: '+4 evasión' }], 'player-action');
             enemyTurn();
         }
 
         async function attemptFlee() {
             const fleeRoll = d20();
             await showDice(fleeRoll);
-            if (fleeRoll >= 12) { addLogSection(`🏃 Huida`, [{ text: `${fleeRoll} ≥ 12 - ¡Escape!`, cls: 'log-heal' }], 'player-action'); addStory('Logras escapar del combate.', 'system'); endCombatEscape(); }
-            else { addLogSection(`🏃 Huida`, [{ text: `${fleeRoll} < 12 - Fallido`, cls: 'log-miss' }], 'player-action'); await enemyTurn(); }
+            if (fleeRoll >= 12) { addLogSection('🏃 Huida', [{ text: `${fleeRoll} ≥ 12 ¡Escape!`, cls: 'log-heal' }], 'player-action'); endCombatEscape(); }
+            else { addLogSection('🏃 Huida', [{ text: `${fleeRoll} < 12 Fallido`, cls: 'log-miss' }], 'player-action'); await enemyTurn(); }
         }
 
         async function enemyTurn() {
@@ -1474,14 +1602,14 @@
             processEffects(e); updateCombatUI(); if (e.hp <= 0) { endCombat(true); return; }
             const logs = [];
             const dodgeRoll = d20(), evasion = (p.race.bonus.evasion || 0) + (p.defending ? 4 : 0), totalDodge = dodgeRoll + evasion;
-            logs.push({ text: `🎲 Esquive: D20 = ${dodgeRoll}${evasion ? ` +${evasion}` : ''} = ${totalDodge} vs 12` });
-            if (totalDodge >= 12) { logs.push({ text: `<span class="log-heal">¡Esquivado!</span>` }); }
+            logs.push({ text: `Esquive: ${dodgeRoll}${evasion ? `+${evasion}` : ''} = ${totalDodge} vs 12` });
+            if (totalDodge >= 12) { logs.push({ text: '¡Esquivado!', cls: 'log-heal' }); }
             else {
                 let dmg = roll(e.damage);
-                if (Math.random() < 0.1) { dmg = Math.ceil(dmg * 1.25); logs.push({ text: `<span class="log-crit">Crítico enemigo</span>` }); }
+                if (Math.random() < 0.1) { dmg = Math.ceil(dmg * 1.25); logs.push({ text: 'Crítico!', cls: 'log-crit' }); }
                 const armor = p.totalArmor(), final = Math.max(1, dmg - armor);
                 p.hp -= final;
-                logs.push({ text: `<span class="log-damage">${final} daño</span> (${dmg}-${armor})` });
+                logs.push({ text: `${final} daño`, cls: 'log-damage' });
                 if (e.effect) applyEffect(p, e.effect);
             }
             addLogSection(`👹 ${e.name}`, logs, 'enemy-action');
@@ -1499,15 +1627,14 @@
             if (!target.effects) target.effects = [];
             const existing = target.effects.find(e => e.type === type);
             if (existing) { if (existing.stacks < eff.max) existing.stacks++; existing.turns = eff.turns; }
-            else target.effects.push({ type, dmg: eff.dmg, turns: eff.turns, stacks: 1, maxStacks: eff.max });
+            else target.effects.push({ type, dmg: eff.dmg, turns: eff.turns, stacks: 1 });
         }
 
         function processEffects(target) {
             if (!target.effects) return;
             let total = 0;
-            const expired = [];
-            target.effects.forEach((eff, i) => { const dmg = (typeof eff.dmg === 'string' ? roll(eff.dmg) : eff.dmg) * eff.stacks; total += dmg; eff.turns--; if (eff.turns <= 0) expired.push(i); });
-            expired.reverse().forEach(i => target.effects.splice(i, 1));
+            target.effects.forEach((eff, i) => { total += (typeof eff.dmg === 'string' ? roll(eff.dmg) : eff.dmg) * (eff.stacks || 1); eff.turns--; });
+            target.effects = target.effects.filter(e => e.turns > 0);
             if (total > 0) target.hp -= total;
         }
 
@@ -1516,6 +1643,7 @@
             game.inCombat = false;
             game.enemy = null;
             game.location = { name: 'Sendero', type: 'safe' };
+            addStory('Escapas del combate.', 'system');
             updateUI(); showExploreActions();
         }
 
@@ -1524,12 +1652,12 @@
             game.inCombat = false;
             if (victory) {
                 const e = game.enemy;
-                addStory(`El ${e.name} cae derrotado. <strong style="color:var(--green-bright);">¡Victoria!</strong>`, 'loot');
-                if (e.loot) { const mp = dX(e.loot[1] - e.loot[0]) + e.loot[0]; game.player.silver += mp; while (game.player.silver >= 99) { game.player.silver -= 99; game.player.gold++; } addStory(`Obtienes <strong>${mp} MP</strong>`, 'loot'); }
-                if (e.drops) { e.drops.forEach(dropId => { if (Math.random() < 0.3 && game.player.inventory.length < game.player.maxSlots) { const item = findItem(dropId); if (item) { game.player.inventory.push({ ...item, uid: Date.now() + Math.random() }); addStory(`Encuentras: <strong>${item.name}</strong>`, 'loot'); } } }); }
+                addStory(`¡<strong style="color:var(--green-bright);">Victoria</strong> contra ${e.name}!`, 'loot');
+                if (e.loot) { const mp = dX(e.loot[1] - e.loot[0]) + e.loot[0]; game.player.silver += mp; while (game.player.silver >= 99) { game.player.silver -= 99; game.player.gold++; } addStory(`+${mp} MP`, 'loot'); }
+                if (e.drops) { e.drops.forEach(dropId => { if (Math.random() < 0.3 && game.player.inventory.length < game.player.maxSlots) { const item = findItem(dropId); if (item) { game.player.inventory.push({ ...item, uid: Date.now() + Math.random() }); addStory(`+${item.name}`, 'loot'); } } }); }
                 game.location = { name: 'Campo de batalla', type: 'safe' };
             } else {
-                addStory('<strong style="color:var(--red-bright);">Has caído en batalla...</strong>', 'combat');
+                addStory('<strong style="color:var(--red-bright);">Has caído...</strong>', 'combat');
                 setActions([{ text: '🔄 Nuevo Personaje', fn: startNewGame, cls: 'primary' }]);
                 return;
             }
@@ -1541,30 +1669,26 @@
         function visitTown() {
             game.location = { name: 'Pueblo', type: 'safe' };
             updateUI();
-            addStory('Llegas al pueblo. Los aldeanos van y vienen por sus asuntos. Varias tiendas y establecimientos ofrecen sus servicios.', 'narrative');
-            const npcs = getAllNpcs();
+            addStory('Llegas al pueblo. Varios comerciantes ofrecen sus servicios.', 'narrative');
             const roleNames = { merchant: 'Comerciante', blacksmith: 'Herrero', alchemist: 'Alquimista', innkeeper: 'Tabernero', baker: 'Panadero', healer: 'Curandero', guard: 'Guardia', questgiver: 'Misiones', villager: 'Aldeano' };
             let html = '<div style="display:grid;gap:0.35rem;">';
-            npcs.forEach(npc => { html += `<div class="item-card" onclick="interactNpc('${npc.id}')" style="cursor:pointer;"><span class="item-card-icon">${getSprite(npc)}</span><div class="item-card-info"><div class="item-card-name">${npc.name}</div><div class="item-card-stats">${roleNames[npc.role] || npc.role} - ${npc.location || 'Plaza'}</div></div></div>`; });
+            gameData.npcs.forEach(npc => { html += `<div class="item-card" onclick="interactNpc('${npc.id}')" style="cursor:pointer;"><span class="item-card-icon">${getSprite(npc)}</span><div class="item-card-info"><div class="item-card-name">${npc.name}</div><div class="item-card-stats">${roleNames[npc.role] || npc.role} - ${npc.location || 'Plaza'}</div></div></div>`; });
             html += '</div>';
             document.getElementById('townContent').innerHTML = html;
             openModal('townModal');
         }
 
         function interactNpc(npcId) {
-            const npc = getAllNpcs().find(n => n.id === npcId); if (!npc) return;
+            const npc = gameData.npcs.find(n => n.id === npcId); if (!npc) return;
             closeModal('townModal');
-            addStory(`Te acercas a <strong>${npc.name}</strong>.`, 'dialogue');
-            addStory(`"${npc.dialogue || '¡Saludos, viajero!'}"`, 'dialogue');
-            if (npc.sells && npc.sells.length > 0) { setTimeout(() => openShop(npc), 500); }
+            addStory(`<strong>${npc.name}</strong>: "${npc.dialogue || '¡Saludos!'}"`, 'dialogue');
+            if (npc.sells && npc.sells.length > 0) { setTimeout(() => openShop(npc), 400); }
             else if (npc.role === 'healer') {
-                const cost = 10;
-                if (game.player.silver >= cost) { game.player.silver -= cost; game.player.hp = game.player.maxHp; game.player.effects = []; addStory(`El curandero restaura tu salud completamente. (-${cost} MP)`, 'system'); }
-                else addStory('"No tienes suficiente dinero para mis servicios."', 'dialogue');
+                if (game.player.silver >= 10) { game.player.silver -= 10; game.player.hp = game.player.maxHp; game.player.effects = []; addStory('Curación completa. (-10 MP)', 'system'); }
+                else addStory('"No tienes suficiente dinero."', 'dialogue');
                 updateUI();
             } else if (npc.role === 'innkeeper') {
-                const cost = 5;
-                if (game.player.silver >= cost) { game.player.silver -= cost; const heal = Math.floor(game.player.maxHp * 0.5); game.player.hp = Math.min(game.player.maxHp, game.player.hp + heal); addStory(`Descansas en la taberna. +${heal} HP (-${cost} MP)`, 'system'); }
+                if (game.player.silver >= 5) { game.player.silver -= 5; game.player.hp = Math.min(game.player.maxHp, game.player.hp + Math.floor(game.player.maxHp * 0.5)); addStory('Descansas. +50% HP (-5 MP)', 'system'); }
                 updateUI();
             }
         }
@@ -1572,13 +1696,13 @@
         function openShop(npc) {
             document.getElementById('shopTitle').textContent = `🏪 ${npc.name}`;
             let html = '<div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;">';
-            html += '<div><h4 style="color:var(--gold);margin-bottom:0.4rem;font-size:0.8rem;">En venta</h4><div style="display:grid;gap:0.25rem;">';
+            html += '<div><h4 style="color:var(--gold);margin-bottom:0.4rem;font-size:0.8rem;">En venta</h4><div style="display:grid;gap:0.25rem;max-height:200px;overflow-y:auto;">';
             (npc.sells || []).forEach(itemId => { const item = findItem(itemId); if (item) { const canBuy = game.player.silver >= item.value && game.player.inventory.length < game.player.maxSlots; html += `<div class="item-card" style="opacity:${canBuy ? 1 : 0.5}"><span class="item-card-icon">${getSprite(item)}</span><div class="item-card-info"><div class="item-card-name">${item.name}</div><div class="item-card-stats">${item.value} MP</div></div><button class="action-btn" onclick="buyItem('${item.id}')" ${canBuy ? '' : 'disabled'}>Comprar</button></div>`; } });
             html += '</div></div>';
-            html += '<div><h4 style="color:var(--gold);margin-bottom:0.4rem;font-size:0.8rem;">Vender</h4><div style="display:grid;gap:0.25rem;">';
+            html += '<div><h4 style="color:var(--gold);margin-bottom:0.4rem;font-size:0.8rem;">Vender</h4><div style="display:grid;gap:0.25rem;max-height:200px;overflow-y:auto;">';
             game.player.inventory.forEach(item => { const sellPrice = Math.floor((item.value || 10) * 0.5); html += `<div class="item-card"><span class="item-card-icon">${getSprite(item)}</span><div class="item-card-info"><div class="item-card-name">${item.name}</div><div class="item-card-stats">${sellPrice} MP</div></div><button class="action-btn" onclick="sellItem('${item.uid}', ${sellPrice})">Vender</button></div>`; });
             html += '</div></div></div>';
-            html += `<div style="text-align:center;margin-top:0.5rem;color:var(--text-dim);font-size:0.75rem;">Tu dinero: ${game.player.gold} MO ${game.player.silver} MP</div>`;
+            html += `<div style="text-align:center;margin-top:0.5rem;color:var(--text-dim);font-size:0.75rem;">Dinero: ${game.player.gold} MO ${game.player.silver} MP</div>`;
             document.getElementById('shopContent').innerHTML = html;
             openModal('shopModal');
         }
@@ -1587,20 +1711,20 @@
             const item = findItem(itemId); if (!item || game.player.silver < item.value || game.player.inventory.length >= game.player.maxSlots) return;
             game.player.silver -= item.value;
             game.player.inventory.push({ ...item, uid: Date.now() });
-            addStory(`Compras: ${item.name} (-${item.value} MP)`, 'system');
+            addStory(`Compras ${item.name}`, 'system');
             toast('Comprado', 'success'); updateUI();
-            const npc = getAllNpcs().find(n => document.getElementById('shopTitle').textContent.includes(n.name));
+            const npc = gameData.npcs.find(n => document.getElementById('shopTitle').textContent.includes(n.name));
             if (npc) openShop(npc);
         }
 
         function sellItem(uid, price) {
-            const item = game.player.inventory.find(i => i.uid === uid); if (!item) return;
-            game.player.inventory = game.player.inventory.filter(i => i.uid !== uid);
+            const item = game.player.inventory.find(i => i.uid == uid); if (!item) return;
+            game.player.inventory = game.player.inventory.filter(i => i.uid != uid);
             game.player.silver += price;
             while (game.player.silver >= 99) { game.player.silver -= 99; game.player.gold++; }
-            addStory(`Vendes: ${item.name} (+${price} MP)`, 'system');
+            addStory(`Vendes ${item.name}`, 'system');
             toast('Vendido', 'success'); updateUI();
-            const npc = getAllNpcs().find(n => document.getElementById('shopTitle').textContent.includes(n.name));
+            const npc = gameData.npcs.find(n => document.getElementById('shopTitle').textContent.includes(n.name));
             if (npc) openShop(npc);
         }
 
@@ -1622,11 +1746,11 @@
         // ==================== CHARACTER ====================
         class Player {
             constructor() {
-                this.name = pick(['Aldric', 'Brynn', 'Cedric', 'Dara', 'Freya', 'Gideon', 'Kira', 'Mira', 'Orion', 'Sera', 'Theron', 'Lyra', 'Magnus', 'Elena']);
+                this.name = pick(['Aldric', 'Brynn', 'Cedric', 'Dara', 'Freya', 'Gideon', 'Kira', 'Mira', 'Orion', 'Sera', 'Theron', 'Lyra']);
                 this.race = BASE_RACES[dX(5) - 1];
-                this.weapon = { ...BASE_WEAPONS[dX(4) - 1], uid: Date.now() };
-                this.armor = { ...BASE_ARMORS[dX(4) - 1], uid: Date.now() + 1 };
-                const startItem = { ...BASE_ITEMS[dX(6) - 1], uid: Date.now() + 2 };
+                this.weapon = { ...gameData.weapons[dX(4) - 1], uid: Date.now() };
+                this.armor = { ...gameData.armors[dX(4) - 1], uid: Date.now() + 1 };
+                const startItem = { ...gameData.items[dX(gameData.items.length) - 1], uid: Date.now() + 2 };
                 this.maxHp = 20 + (this.race.bonus.health || 0);
                 this.hp = this.maxHp;
                 this.gold = 0;
@@ -1642,7 +1766,7 @@
 
         // ==================== SAVE/LOAD ====================
         function saveGame() {
-            const data = { player: game.player, location: game.location, custom: customData, timestamp: Date.now() };
+            const data = { player: game.player, location: game.location, gameData: gameData, timestamp: Date.now() };
             if (db && fbConnected) db.ref('saveData').set(data);
             localStorage.setItem('rpgSave', JSON.stringify(data));
             toast('Guardado', 'success');
@@ -1652,12 +1776,12 @@
             if (!db) return;
             db.ref('gameData').once('value').then(snap => {
                 const data = snap.val();
-                if (data) { ['weapons', 'armors', 'items', 'enemies', 'pets', 'npcs'].forEach(k => { if (data[k]) customData[k] = data[k]; }); renderAllLists(); updateDropSelects(); }
+                if (data) {
+                    ['weapons', 'armors', 'items', 'enemies', 'pets', 'npcs'].forEach(k => { if (data[k]) gameData[k] = data[k]; });
+                    renderAllLists();
+                    updateDropSelects();
+                }
             });
-        }
-
-        function loadFromLocal() {
-            ['weapons', 'armors', 'items', 'enemies', 'pets', 'npcs'].forEach(k => { const d = localStorage.getItem('rpg_' + k); if (d) customData[k] = JSON.parse(d); });
         }
 
         function startNewGame() {
@@ -1665,9 +1789,8 @@
             document.getElementById('storyContent').innerHTML = '';
             document.getElementById('combatArena').classList.remove('active');
             addStory('<strong style="font-size:1rem;color:var(--gold);">⚔️ Nueva Aventura ⚔️</strong>', '');
-            addStory(`Eres <strong>${game.player.name}</strong>, un ${game.player.race.name} ${game.player.race.icon} que busca fortuna y gloria en las tierras salvajes.`, 'narrative');
-            addStory(`Comienzas tu viaje en el pueblo, equipado con ${game.player.weapon.name} y ${game.player.armor.name}. Tienes ${game.player.silver} monedas de plata y un ${game.player.inventory[0]?.name} en tu mochila.`, 'system');
-            addStory('<em>El mundo te espera. ¿Qué aventuras te depara el destino?</em>', 'narrative');
+            addStory(`Eres <strong>${game.player.name}</strong>, un ${game.player.race.name} ${game.player.race.icon} en busca de fortuna y gloria.`, 'narrative');
+            addStory(`Equipado con ${game.player.weapon.name} y ${game.player.armor.name}. Tienes ${game.player.silver} MP.`, 'system');
             updateUI(); showExploreActions();
         }
 
@@ -1687,122 +1810,150 @@
             if (tab === 'enemies' || tab === 'npcs') updateDropSelects();
         }
 
-        // ==================== EDITOR ====================
+        // ==================== EDITOR - EDIT ALL ====================
         let editingId = null;
 
-        function saveToStorage(type) {
-            if (db && fbConnected) db.ref('gameData/' + type).set(customData[type]);
-            localStorage.setItem('rpg_' + type, JSON.stringify(customData[type]));
+        function saveToFirebase() {
+            if (db && fbConnected) db.ref('gameData').set(gameData);
+            localStorage.setItem('rpgGameData', JSON.stringify(gameData));
         }
 
         function clearForm(type) {
             editingId = null;
             const fields = {
-                weapon: ['wName', 'wDamage', 'wIcon', 'wSprite', 'wValue', 'wDesc'],
-                armor: ['aName', 'aDefense', 'aIcon', 'aSprite', 'aValue', 'aDesc'],
-                item: ['iName', 'iIcon', 'iSprite', 'iEffect', 'iValue', 'iDesc'],
-                enemy: ['enName', 'enHealth', 'enDamage', 'enIcon', 'enSprite', 'enLootMin', 'enLootMax', 'enDesc'],
-                pet: ['petName', 'petHealth', 'petDamage', 'petIcon', 'petSprite', 'petDesc'],
-                npc: ['npcName', 'npcIcon', 'npcSprite', 'npcLocation', 'npcDialogue']
+                weapon: ['wId', 'wName', 'wDamage', 'wIcon', 'wSprite', 'wValue', 'wDesc'],
+                armor: ['aId', 'aName', 'aDefense', 'aIcon', 'aSprite', 'aValue', 'aDesc'],
+                item: ['iId', 'iName', 'iIcon', 'iSprite', 'iEffect', 'iValue', 'iDesc'],
+                enemy: ['enId', 'enName', 'enHealth', 'enDamage', 'enDiff', 'enIcon', 'enSprite', 'enLootMin', 'enLootMax', 'enDesc'],
+                pet: ['petId', 'petName', 'petHealth', 'petDamage', 'petDiff', 'petIcon', 'petSprite', 'petDesc'],
+                npc: ['npcId', 'npcName', 'npcIcon', 'npcSprite', 'npcLocation', 'npcDialogue']
             };
             (fields[type] || []).forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+            document.querySelectorAll('.multi-select input').forEach(c => c.checked = false);
         }
 
+        // WEAPONS
         function saveWeapon() {
-            const w = { id: editingId || 'cw_' + Date.now(), name: document.getElementById('wName').value, damage: document.getElementById('wDamage').value, icon: document.getElementById('wIcon').value || '⚔️', sprite: document.getElementById('wSprite').value || '', rarity: document.getElementById('wRarity').value, value: parseInt(document.getElementById('wValue').value) || 10, effect: document.getElementById('wEffect').value || null, desc: document.getElementById('wDesc').value || 'Arma personalizada.' };
+            const id = document.getElementById('wId').value || 'w_' + Date.now();
+            const w = { id, name: document.getElementById('wName').value, damage: document.getElementById('wDamage').value, icon: document.getElementById('wIcon').value || '⚔️', sprite: document.getElementById('wSprite').value || '', rarity: document.getElementById('wRarity').value, value: parseInt(document.getElementById('wValue').value) || 10, effect: document.getElementById('wEffect').value || null, desc: document.getElementById('wDesc').value || '' };
             if (!w.name || !w.damage) { toast('Faltan campos', 'error'); return; }
-            if (editingId) { const idx = customData.weapons.findIndex(x => x.id === editingId); if (idx >= 0) customData.weapons[idx] = w; }
-            else customData.weapons.push(w);
-            saveToStorage('weapons'); renderWeaponsList(); updateDropSelects(); clearForm('weapon'); toast('Guardado', 'success');
+            const idx = gameData.weapons.findIndex(x => x.id === id);
+            if (idx >= 0) gameData.weapons[idx] = w; else gameData.weapons.push(w);
+            saveToFirebase(); renderWeaponsList(); updateDropSelects(); clearForm('weapon'); toast('Guardado', 'success');
         }
 
-        function editWeapon(id) { const w = customData.weapons.find(x => x.id === id); if (!w) return; editingId = id; document.getElementById('wName').value = w.name; document.getElementById('wDamage').value = w.damage; document.getElementById('wIcon').value = w.icon || ''; document.getElementById('wSprite').value = w.sprite || ''; document.getElementById('wRarity').value = w.rarity || 'common'; document.getElementById('wValue').value = w.value || ''; document.getElementById('wEffect').value = w.effect || ''; document.getElementById('wDesc').value = w.desc || ''; }
-        function deleteWeapon(id) { customData.weapons = customData.weapons.filter(x => x.id !== id); saveToStorage('weapons'); renderWeaponsList(); updateDropSelects(); toast('Eliminado', 'info'); }
+        function editWeapon(id) {
+            const w = gameData.weapons.find(x => x.id === id); if (!w) return;
+            editingId = id;
+            document.getElementById('wId').value = w.id;
+            document.getElementById('wName').value = w.name;
+            document.getElementById('wDamage').value = w.damage;
+            document.getElementById('wIcon').value = w.icon || '';
+            document.getElementById('wSprite').value = w.sprite || '';
+            document.getElementById('wRarity').value = w.rarity || 'common';
+            document.getElementById('wValue').value = w.value || '';
+            document.getElementById('wEffect').value = w.effect || '';
+            document.getElementById('wDesc').value = w.desc || '';
+        }
 
+        function deleteWeapon(id) { if (!confirm('¿Eliminar?')) return; gameData.weapons = gameData.weapons.filter(x => x.id !== id); saveToFirebase(); renderWeaponsList(); updateDropSelects(); toast('Eliminado', 'info'); }
+
+        // ARMORS
         function saveArmor() {
-            const a = { id: editingId || 'ca_' + Date.now(), name: document.getElementById('aName').value, defense: parseInt(document.getElementById('aDefense').value) || 0, icon: document.getElementById('aIcon').value || '🛡️', sprite: document.getElementById('aSprite').value || '', rarity: document.getElementById('aRarity').value, value: parseInt(document.getElementById('aValue').value) || 10, desc: document.getElementById('aDesc').value || 'Armadura personalizada.' };
+            const id = document.getElementById('aId').value || 'a_' + Date.now();
+            const a = { id, name: document.getElementById('aName').value, defense: parseInt(document.getElementById('aDefense').value) || 0, icon: document.getElementById('aIcon').value || '🛡️', sprite: document.getElementById('aSprite').value || '', rarity: document.getElementById('aRarity').value, value: parseInt(document.getElementById('aValue').value) || 10, desc: document.getElementById('aDesc').value || '' };
             if (!a.name) { toast('Falta nombre', 'error'); return; }
-            if (editingId) { const idx = customData.armors.findIndex(x => x.id === editingId); if (idx >= 0) customData.armors[idx] = a; }
-            else customData.armors.push(a);
-            saveToStorage('armors'); renderArmorsList(); updateDropSelects(); clearForm('armor'); toast('Guardado', 'success');
+            const idx = gameData.armors.findIndex(x => x.id === id);
+            if (idx >= 0) gameData.armors[idx] = a; else gameData.armors.push(a);
+            saveToFirebase(); renderArmorsList(); updateDropSelects(); clearForm('armor'); toast('Guardado', 'success');
         }
 
-        function editArmor(id) { const a = customData.armors.find(x => x.id === id); if (!a) return; editingId = id; document.getElementById('aName').value = a.name; document.getElementById('aDefense').value = a.defense || ''; document.getElementById('aIcon').value = a.icon || ''; document.getElementById('aSprite').value = a.sprite || ''; document.getElementById('aRarity').value = a.rarity || 'common'; document.getElementById('aValue').value = a.value || ''; document.getElementById('aDesc').value = a.desc || ''; }
-        function deleteArmor(id) { customData.armors = customData.armors.filter(x => x.id !== id); saveToStorage('armors'); renderArmorsList(); updateDropSelects(); toast('Eliminado', 'info'); }
+        function editArmor(id) { const a = gameData.armors.find(x => x.id === id); if (!a) return; document.getElementById('aId').value = a.id; document.getElementById('aName').value = a.name; document.getElementById('aDefense').value = a.defense || ''; document.getElementById('aIcon').value = a.icon || ''; document.getElementById('aSprite').value = a.sprite || ''; document.getElementById('aRarity').value = a.rarity || 'common'; document.getElementById('aValue').value = a.value || ''; document.getElementById('aDesc').value = a.desc || ''; }
+        function deleteArmor(id) { if (!confirm('¿Eliminar?')) return; gameData.armors = gameData.armors.filter(x => x.id !== id); saveToFirebase(); renderArmorsList(); updateDropSelects(); toast('Eliminado', 'info'); }
 
+        // ITEMS
         function saveItem() {
-            const i = { id: editingId || 'ci_' + Date.now(), name: document.getElementById('iName').value, type: document.getElementById('iType').value, icon: document.getElementById('iIcon').value || '📦', sprite: document.getElementById('iSprite').value || '', effect: document.getElementById('iEffect').value, value: parseInt(document.getElementById('iValue').value) || 10, desc: document.getElementById('iDesc').value || 'Item personalizado.', rarity: 'common' };
+            const id = document.getElementById('iId').value || 'i_' + Date.now();
+            const i = { id, name: document.getElementById('iName').value, type: document.getElementById('iType').value, icon: document.getElementById('iIcon').value || '📦', sprite: document.getElementById('iSprite').value || '', effect: document.getElementById('iEffect').value, value: parseInt(document.getElementById('iValue').value) || 10, desc: document.getElementById('iDesc').value || '', rarity: document.getElementById('iRarity').value };
             if (!i.name) { toast('Falta nombre', 'error'); return; }
-            if (editingId) { const idx = customData.items.findIndex(x => x.id === editingId); if (idx >= 0) customData.items[idx] = i; }
-            else customData.items.push(i);
-            saveToStorage('items'); renderItemsList(); updateDropSelects(); clearForm('item'); toast('Guardado', 'success');
+            const idx = gameData.items.findIndex(x => x.id === id);
+            if (idx >= 0) gameData.items[idx] = i; else gameData.items.push(i);
+            saveToFirebase(); renderItemsList(); updateDropSelects(); clearForm('item'); toast('Guardado', 'success');
         }
 
-        function editItem(id) { const i = customData.items.find(x => x.id === id); if (!i) return; editingId = id; document.getElementById('iName').value = i.name; document.getElementById('iType').value = i.type || 'potion'; document.getElementById('iIcon').value = i.icon || ''; document.getElementById('iSprite').value = i.sprite || ''; document.getElementById('iEffect').value = i.effect || ''; document.getElementById('iValue').value = i.value || ''; document.getElementById('iDesc').value = i.desc || ''; }
-        function deleteItem(id) { customData.items = customData.items.filter(x => x.id !== id); saveToStorage('items'); renderItemsList(); updateDropSelects(); toast('Eliminado', 'info'); }
+        function editItem(id) { const i = gameData.items.find(x => x.id === id); if (!i) return; document.getElementById('iId').value = i.id; document.getElementById('iName').value = i.name; document.getElementById('iType').value = i.type || 'potion'; document.getElementById('iIcon').value = i.icon || ''; document.getElementById('iSprite').value = i.sprite || ''; document.getElementById('iEffect').value = i.effect || ''; document.getElementById('iValue').value = i.value || ''; document.getElementById('iDesc').value = i.desc || ''; document.getElementById('iRarity').value = i.rarity || 'common'; }
+        function deleteItem(id) { if (!confirm('¿Eliminar?')) return; gameData.items = gameData.items.filter(x => x.id !== id); saveToFirebase(); renderItemsList(); updateDropSelects(); toast('Eliminado', 'info'); }
 
+        // ENEMIES
         function saveEnemy() {
+            const id = document.getElementById('enId').value || 'e_' + Date.now();
             const drops = Array.from(document.querySelectorAll('#enDropsSelect input:checked')).map(c => c.value);
-            const e = { id: editingId || 'ce_' + Date.now(), name: document.getElementById('enName').value, health: parseInt(document.getElementById('enHealth').value) || 20, damage: document.getElementById('enDamage').value || '1d6', difficulty: parseInt(document.getElementById('enDiff').value) || 10, icon: document.getElementById('enIcon').value || '👹', sprite: document.getElementById('enSprite').value || '', effect: document.getElementById('enEffect').value || null, habitat: document.getElementById('enHabitat').value || 'any', loot: [parseInt(document.getElementById('enLootMin').value) || 5, parseInt(document.getElementById('enLootMax').value) || 20], drops: drops, desc: document.getElementById('enDesc').value || 'Un enemigo aparece.' };
+            const e = { id, name: document.getElementById('enName').value, health: parseInt(document.getElementById('enHealth').value) || 20, damage: document.getElementById('enDamage').value || '1d6', difficulty: parseInt(document.getElementById('enDiff').value) || 10, icon: document.getElementById('enIcon').value || '👹', sprite: document.getElementById('enSprite').value || '', effect: document.getElementById('enEffect').value || null, habitat: document.getElementById('enHabitat').value || 'any', loot: [parseInt(document.getElementById('enLootMin').value) || 5, parseInt(document.getElementById('enLootMax').value) || 20], drops, desc: document.getElementById('enDesc').value || '' };
             if (!e.name) { toast('Falta nombre', 'error'); return; }
-            if (editingId) { const idx = customData.enemies.findIndex(x => x.id === editingId); if (idx >= 0) customData.enemies[idx] = e; }
-            else customData.enemies.push(e);
-            saveToStorage('enemies'); renderEnemiesList(); clearForm('enemy'); toast('Guardado', 'success');
+            const idx = gameData.enemies.findIndex(x => x.id === id);
+            if (idx >= 0) gameData.enemies[idx] = e; else gameData.enemies.push(e);
+            saveToFirebase(); renderEnemiesList(); clearForm('enemy'); toast('Guardado', 'success');
         }
 
-        function editEnemy(id) { const e = customData.enemies.find(x => x.id === id); if (!e) return; editingId = id; document.getElementById('enName').value = e.name; document.getElementById('enHealth').value = e.health || ''; document.getElementById('enDamage').value = e.damage || ''; document.getElementById('enDiff').value = e.difficulty || '10'; document.getElementById('enIcon').value = e.icon || ''; document.getElementById('enSprite').value = e.sprite || ''; document.getElementById('enEffect').value = e.effect || ''; document.getElementById('enHabitat').value = e.habitat || 'any'; document.getElementById('enLootMin').value = e.loot?.[0] || ''; document.getElementById('enLootMax').value = e.loot?.[1] || ''; document.getElementById('enDesc').value = e.desc || ''; document.querySelectorAll('#enDropsSelect input').forEach(c => c.checked = (e.drops || []).includes(c.value)); }
-        function deleteEnemy(id) { customData.enemies = customData.enemies.filter(x => x.id !== id); saveToStorage('enemies'); renderEnemiesList(); toast('Eliminado', 'info'); }
+        function editEnemy(id) { const e = gameData.enemies.find(x => x.id === id); if (!e) return; document.getElementById('enId').value = e.id; document.getElementById('enName').value = e.name; document.getElementById('enHealth').value = e.health || ''; document.getElementById('enDamage').value = e.damage || ''; document.getElementById('enDiff').value = e.difficulty || '10'; document.getElementById('enIcon').value = e.icon || ''; document.getElementById('enSprite').value = e.sprite || ''; document.getElementById('enEffect').value = e.effect || ''; document.getElementById('enHabitat').value = e.habitat || 'any'; document.getElementById('enLootMin').value = e.loot?.[0] || ''; document.getElementById('enLootMax').value = e.loot?.[1] || ''; document.getElementById('enDesc').value = e.desc || ''; setTimeout(() => document.querySelectorAll('#enDropsSelect input').forEach(c => c.checked = (e.drops || []).includes(c.value)), 50); }
+        function deleteEnemy(id) { if (!confirm('¿Eliminar?')) return; gameData.enemies = gameData.enemies.filter(x => x.id !== id); saveToFirebase(); renderEnemiesList(); toast('Eliminado', 'info'); }
 
+        // PETS
         function savePet() {
-            const p = { id: editingId || 'cp_' + Date.now(), name: document.getElementById('petName').value, health: parseInt(document.getElementById('petHealth').value) || 20, damage: document.getElementById('petDamage').value || '1d4', difficulty: parseInt(document.getElementById('petDiff').value) || 24, icon: document.getElementById('petIcon').value || '🐺', sprite: document.getElementById('petSprite').value || '', desc: document.getElementById('petDesc').value || 'Una criatura salvaje.' };
+            const id = document.getElementById('petId').value || 'p_' + Date.now();
+            const p = { id, name: document.getElementById('petName').value, health: parseInt(document.getElementById('petHealth').value) || 20, damage: document.getElementById('petDamage').value || '1d4', difficulty: parseInt(document.getElementById('petDiff').value) || 24, icon: document.getElementById('petIcon').value || '🐺', sprite: document.getElementById('petSprite').value || '', desc: document.getElementById('petDesc').value || '' };
             if (!p.name) { toast('Falta nombre', 'error'); return; }
-            if (editingId) { const idx = customData.pets.findIndex(x => x.id === editingId); if (idx >= 0) customData.pets[idx] = p; }
-            else customData.pets.push(p);
-            saveToStorage('pets'); renderPetsList(); clearForm('pet'); toast('Guardado', 'success');
+            const idx = gameData.pets.findIndex(x => x.id === id);
+            if (idx >= 0) gameData.pets[idx] = p; else gameData.pets.push(p);
+            saveToFirebase(); renderPetsList(); clearForm('pet'); toast('Guardado', 'success');
         }
 
-        function editPet(id) { const p = customData.pets.find(x => x.id === id); if (!p) return; editingId = id; document.getElementById('petName').value = p.name; document.getElementById('petHealth').value = p.health || ''; document.getElementById('petDamage').value = p.damage || ''; document.getElementById('petDiff').value = p.difficulty || '24'; document.getElementById('petIcon').value = p.icon || ''; document.getElementById('petSprite').value = p.sprite || ''; document.getElementById('petDesc').value = p.desc || ''; }
-        function deletePet(id) { customData.pets = customData.pets.filter(x => x.id !== id); saveToStorage('pets'); renderPetsList(); toast('Eliminado', 'info'); }
+        function editPet(id) { const p = gameData.pets.find(x => x.id === id); if (!p) return; document.getElementById('petId').value = p.id; document.getElementById('petName').value = p.name; document.getElementById('petHealth').value = p.health || ''; document.getElementById('petDamage').value = p.damage || ''; document.getElementById('petDiff').value = p.difficulty || '24'; document.getElementById('petIcon').value = p.icon || ''; document.getElementById('petSprite').value = p.sprite || ''; document.getElementById('petDesc').value = p.desc || ''; }
+        function deletePet(id) { if (!confirm('¿Eliminar?')) return; gameData.pets = gameData.pets.filter(x => x.id !== id); saveToFirebase(); renderPetsList(); toast('Eliminado', 'info'); }
 
+        // NPCS
         function saveNpc() {
+            const id = document.getElementById('npcId').value || 'n_' + Date.now();
             const sells = Array.from(document.querySelectorAll('#npcShopSelect input:checked')).map(c => c.value);
-            const n = { id: editingId || 'cn_' + Date.now(), name: document.getElementById('npcName').value, role: document.getElementById('npcRole').value, icon: document.getElementById('npcIcon').value || '🧔', sprite: document.getElementById('npcSprite').value || '', location: document.getElementById('npcLocation').value || '', dialogue: document.getElementById('npcDialogue').value || '', sells: sells };
+            const n = { id, name: document.getElementById('npcName').value, role: document.getElementById('npcRole').value, icon: document.getElementById('npcIcon').value || '🧔', sprite: document.getElementById('npcSprite').value || '', location: document.getElementById('npcLocation').value || '', dialogue: document.getElementById('npcDialogue').value || '', sells };
             if (!n.name) { toast('Falta nombre', 'error'); return; }
-            if (editingId) { const idx = customData.npcs.findIndex(x => x.id === editingId); if (idx >= 0) customData.npcs[idx] = n; }
-            else customData.npcs.push(n);
-            saveToStorage('npcs'); renderNpcsList(); clearForm('npc'); toast('Guardado', 'success');
+            const idx = gameData.npcs.findIndex(x => x.id === id);
+            if (idx >= 0) gameData.npcs[idx] = n; else gameData.npcs.push(n);
+            saveToFirebase(); renderNpcsList(); clearForm('npc'); toast('Guardado', 'success');
         }
 
-        function editNpc(id) { const n = customData.npcs.find(x => x.id === id); if (!n) return; editingId = id; document.getElementById('npcName').value = n.name; document.getElementById('npcRole').value = n.role || 'merchant'; document.getElementById('npcIcon').value = n.icon || ''; document.getElementById('npcSprite').value = n.sprite || ''; document.getElementById('npcLocation').value = n.location || ''; document.getElementById('npcDialogue').value = n.dialogue || ''; updateDropSelects(); setTimeout(() => { document.querySelectorAll('#npcShopSelect input').forEach(c => c.checked = (n.sells || []).includes(c.value)); }, 100); }
-        function deleteNpc(id) { customData.npcs = customData.npcs.filter(x => x.id !== id); saveToStorage('npcs'); renderNpcsList(); toast('Eliminado', 'info'); }
+        function editNpc(id) { const n = gameData.npcs.find(x => x.id === id); if (!n) return; document.getElementById('npcId').value = n.id; document.getElementById('npcName').value = n.name; document.getElementById('npcRole').value = n.role || 'merchant'; document.getElementById('npcIcon').value = n.icon || ''; document.getElementById('npcSprite').value = n.sprite || ''; document.getElementById('npcLocation').value = n.location || ''; document.getElementById('npcDialogue').value = n.dialogue || ''; setTimeout(() => document.querySelectorAll('#npcShopSelect input').forEach(c => c.checked = (n.sells || []).includes(c.value)), 50); }
+        function deleteNpc(id) { if (!confirm('¿Eliminar?')) return; gameData.npcs = gameData.npcs.filter(x => x.id !== id); saveToFirebase(); renderNpcsList(); toast('Eliminado', 'info'); }
 
         function renderAllLists() { renderWeaponsList(); renderArmorsList(); renderItemsList(); renderEnemiesList(); renderPetsList(); renderNpcsList(); }
 
-        function renderWeaponsList() { const all = [...BASE_WEAPONS, ...customData.weapons]; document.getElementById('weaponsList').innerHTML = all.map(w => `<div class="item-card"><span class="item-card-icon">${getSprite(w)}</span><div class="item-card-info"><div class="item-card-name">${w.name}</div><div class="item-card-stats">${w.damage} | ${w.value}MP ${w.id.startsWith('bw') ? '(base)' : ''}</div></div>${w.id.startsWith('cw') ? `<div class="item-card-actions"><button class="icon-btn" onclick="editWeapon('${w.id}')">✏️</button><button class="icon-btn delete" onclick="deleteWeapon('${w.id}')">🗑️</button></div>` : ''}</div>`).join(''); }
-        function renderArmorsList() { const all = [...BASE_ARMORS, ...customData.armors]; document.getElementById('armorsList').innerHTML = all.map(a => `<div class="item-card"><span class="item-card-icon">${getSprite(a)}</span><div class="item-card-info"><div class="item-card-name">${a.name}</div><div class="item-card-stats">Def:${a.defense} | ${a.value}MP ${a.id.startsWith('ba') ? '(base)' : ''}</div></div>${a.id.startsWith('ca') ? `<div class="item-card-actions"><button class="icon-btn" onclick="editArmor('${a.id}')">✏️</button><button class="icon-btn delete" onclick="deleteArmor('${a.id}')">🗑️</button></div>` : ''}</div>`).join(''); }
-        function renderItemsList() { const all = [...BASE_ITEMS, ...customData.items]; document.getElementById('itemsList').innerHTML = all.map(i => `<div class="item-card"><span class="item-card-icon">${getSprite(i)}</span><div class="item-card-info"><div class="item-card-name">${i.name}</div><div class="item-card-stats">${i.type} | ${i.value}MP ${i.id.startsWith('bi') ? '(base)' : ''}</div></div>${i.id.startsWith('ci') ? `<div class="item-card-actions"><button class="icon-btn" onclick="editItem('${i.id}')">✏️</button><button class="icon-btn delete" onclick="deleteItem('${i.id}')">🗑️</button></div>` : ''}</div>`).join(''); }
-        function renderEnemiesList() { const all = [...BASE_ENEMIES, ...customData.enemies]; document.getElementById('enemiesList').innerHTML = all.map(e => `<div class="item-card"><span class="item-card-icon">${getSprite(e)}</span><div class="item-card-info"><div class="item-card-name">${e.name}</div><div class="item-card-stats">HP:${e.health} | ${e.damage} | Dif:${e.difficulty} ${e.id.startsWith('be') ? '(base)' : ''}</div></div>${e.id.startsWith('ce') ? `<div class="item-card-actions"><button class="icon-btn" onclick="editEnemy('${e.id}')">✏️</button><button class="icon-btn delete" onclick="deleteEnemy('${e.id}')">🗑️</button></div>` : ''}</div>`).join(''); }
-        function renderPetsList() { const all = [...BASE_PETS, ...customData.pets]; document.getElementById('petsList').innerHTML = all.map(p => `<div class="item-card"><span class="item-card-icon">${getSprite(p)}</span><div class="item-card-info"><div class="item-card-name">${p.name}</div><div class="item-card-stats">HP:${p.health} | ${p.damage} | D${p.difficulty} ${p.id.startsWith('bp') ? '(base)' : ''}</div></div>${p.id.startsWith('cp') ? `<div class="item-card-actions"><button class="icon-btn" onclick="editPet('${p.id}')">✏️</button><button class="icon-btn delete" onclick="deletePet('${p.id}')">🗑️</button></div>` : ''}</div>`).join(''); }
-        function renderNpcsList() { const roleNames = { merchant: 'Comerciante', blacksmith: 'Herrero', alchemist: 'Alquimista', innkeeper: 'Tabernero', baker: 'Panadero', healer: 'Curandero', guard: 'Guardia', questgiver: 'Misiones', villager: 'Aldeano' }; const all = [...BASE_NPCS, ...customData.npcs]; document.getElementById('npcsList').innerHTML = all.map(n => `<div class="item-card"><span class="item-card-icon">${getSprite(n)}</span><div class="item-card-info"><div class="item-card-name">${n.name}</div><div class="item-card-stats">${roleNames[n.role] || n.role} ${n.id.startsWith('bn') ? '(base)' : ''}</div></div>${n.id.startsWith('cn') ? `<div class="item-card-actions"><button class="icon-btn" onclick="editNpc('${n.id}')">✏️</button><button class="icon-btn delete" onclick="deleteNpc('${n.id}')">🗑️</button></div>` : ''}</div>`).join(''); }
+        function renderWeaponsList() { document.getElementById('weaponsList').innerHTML = gameData.weapons.map(w => `<div class="item-card" onclick="editWeapon('${w.id}')"><span class="item-card-icon">${getSprite(w)}</span><div class="item-card-info"><div class="item-card-name">${w.name}</div><div class="item-card-stats">${w.damage} | ${w.value}MP</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();editWeapon('${w.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();deleteWeapon('${w.id}')">🗑️</button></div></div>`).join(''); }
+        function renderArmorsList() { document.getElementById('armorsList').innerHTML = gameData.armors.map(a => `<div class="item-card" onclick="editArmor('${a.id}')"><span class="item-card-icon">${getSprite(a)}</span><div class="item-card-info"><div class="item-card-name">${a.name}</div><div class="item-card-stats">Def:${a.defense} | ${a.value}MP</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();editArmor('${a.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();deleteArmor('${a.id}')">🗑️</button></div></div>`).join(''); }
+        function renderItemsList() { document.getElementById('itemsList').innerHTML = gameData.items.map(i => `<div class="item-card" onclick="editItem('${i.id}')"><span class="item-card-icon">${getSprite(i)}</span><div class="item-card-info"><div class="item-card-name">${i.name}</div><div class="item-card-stats">${i.type} | ${i.value}MP</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();editItem('${i.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();deleteItem('${i.id}')">🗑️</button></div></div>`).join(''); }
+        function renderEnemiesList() { document.getElementById('enemiesList').innerHTML = gameData.enemies.map(e => `<div class="item-card" onclick="editEnemy('${e.id}')"><span class="item-card-icon">${getSprite(e)}</span><div class="item-card-info"><div class="item-card-name">${e.name}</div><div class="item-card-stats">HP:${e.health} | ${e.damage} | Dif:${e.difficulty}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();editEnemy('${e.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();deleteEnemy('${e.id}')">🗑️</button></div></div>`).join(''); }
+        function renderPetsList() { document.getElementById('petsList').innerHTML = gameData.pets.map(p => `<div class="item-card" onclick="editPet('${p.id}')"><span class="item-card-icon">${getSprite(p)}</span><div class="item-card-info"><div class="item-card-name">${p.name}</div><div class="item-card-stats">HP:${p.health} | ${p.damage} | D${p.difficulty}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();editPet('${p.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();deletePet('${p.id}')">🗑️</button></div></div>`).join(''); }
+        function renderNpcsList() { const roleNames = { merchant: 'Comerciante', blacksmith: 'Herrero', alchemist: 'Alquimista', innkeeper: 'Tabernero', baker: 'Panadero', healer: 'Curandero', guard: 'Guardia', questgiver: 'Misiones', villager: 'Aldeano' }; document.getElementById('npcsList').innerHTML = gameData.npcs.map(n => `<div class="item-card" onclick="editNpc('${n.id}')"><span class="item-card-icon">${getSprite(n)}</span><div class="item-card-info"><div class="item-card-name">${n.name}</div><div class="item-card-stats">${roleNames[n.role] || n.role}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();editNpc('${n.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();deleteNpc('${n.id}')">🗑️</button></div></div>`).join(''); }
 
         function updateDropSelects() {
-            const all = [...getAllWeapons(), ...getAllArmors(), ...getAllItems()];
+            const all = [...gameData.weapons, ...gameData.armors, ...gameData.items];
             document.getElementById('enDropsSelect').innerHTML = all.map(it => `<label><input type="checkbox" value="${it.id}"> ${it.icon} ${it.name}</label>`).join('');
             document.getElementById('npcShopSelect').innerHTML = all.map(it => `<label><input type="checkbox" value="${it.id}"> ${it.icon} ${it.name}</label>`).join('');
         }
 
         // ==================== INIT ====================
         document.addEventListener('DOMContentLoaded', () => {
-            loadFromLocal();
+            const savedData = localStorage.getItem('rpgGameData');
+            if (savedData) { try { gameData = JSON.parse(savedData); } catch(e) {} }
             renderAllLists();
             updateDropSelects();
+            
             const saved = localStorage.getItem('rpgSave');
             if (saved) {
                 addStory('<span style="color:var(--gold);">Aventuras de Acero y Runas</span>', '');
                 addStory('Partida guardada encontrada.', 'system');
                 setActions([
                     { text: '🆕 Nuevo', fn: startNewGame, cls: 'primary' },
-                    { text: '📂 Continuar', fn: () => { const data = JSON.parse(saved); if (data.player) { game.player = Object.assign(new Player(), data.player); if (data.location) game.location = data.location; updateUI(); showExploreActions(); addStory('Partida cargada. Tu aventura continúa...', 'system'); } } }
+                    { text: '📂 Continuar', fn: () => { try { const data = JSON.parse(saved); if (data.player) { game.player = Object.assign(new Player(), data.player); if (data.location) game.location = data.location; updateUI(); showExploreActions(); addStory('Partida cargada.', 'system'); } } catch(e) { startNewGame(); } } }
                 ]);
             } else startNewGame();
         });
