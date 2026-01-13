@@ -8,13 +8,12 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
     <style>
-        :root{--bg-dark:#0a0908;--bg-panel:#1a1614;--bg-light:#2a2320;--bg-input:#151210;--gold:#d4a437;--gold-dim:#a67c00;--gold-bright:#ffd700;--red:#8b0000;--red-bright:#dc143c;--green:#2d5a27;--green-bright:#4caf50;--blue:#1e3a5f;--blue-bright:#4a9eff;--purple:#9c27b0;--orange:#ff6b35;--text:#e8dcc4;--text-dim:#8a8078;--border:#3d3530}
+        :root{--bg-dark:#0a0908;--bg-panel:#1a1614;--bg-light:#2a2320;--bg-input:#151210;--gold:#d4a437;--gold-dim:#a67c00;--gold-bright:#ffd700;--red:#8b0000;--red-bright:#dc143c;--green:#2d5a27;--green-bright:#4caf50;--blue:#1e3a5f;--blue-bright:#4a9eff;--purple:#9c27b0;--orange:#ff6b35;--cyan:#00bcd4;--text:#e8dcc4;--text-dim:#8a8078;--border:#3d3530}
         *{margin:0;padding:0;box-sizing:border-box}
         body{font-family:'Crimson Text',Georgia,serif;background:var(--bg-dark);color:var(--text);min-height:100vh}
         ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:3px}
         .hidden{display:none!important}
         
-        /* Navigation */
         .main-nav{display:flex;justify-content:center;background:var(--bg-panel);border-bottom:2px solid var(--gold-dim);position:sticky;top:0;z-index:100;padding:.25rem;gap:.25rem;flex-wrap:wrap}
         .nav-btn{font-family:'Cinzel',serif;font-size:.75rem;padding:.4rem 1rem;background:transparent;border:1px solid transparent;color:var(--text-dim);cursor:pointer;border-radius:3px;transition:all .2s}
         .nav-btn:hover{color:var(--gold);border-color:var(--gold-dim)}
@@ -25,94 +24,99 @@
         
         .tab-content{display:none;min-height:calc(100vh - 50px)}.tab-content.active{display:flex;flex-direction:column}
         
-        /* Game Layout - RESTRUCTURED: Actions TOP, Chronicles BOTTOM */
         .game-wrapper{display:flex;flex-direction:column;height:calc(100vh - 50px);max-width:1200px;margin:0 auto;padding:.5rem;gap:.5rem}
-        .game-top{display:grid;grid-template-columns:260px 1fr;gap:.5rem;flex-shrink:0}
-        .game-bottom{flex:1;min-height:180px;overflow:hidden}
+        .game-top{display:grid;grid-template-columns:280px 1fr;gap:.5rem;flex-shrink:0}
+        .game-bottom{flex:1;min-height:200px;overflow:hidden}
         
         .panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;overflow:hidden}
-        .panel-header{background:var(--bg-light);padding:.4rem .6rem;border-bottom:1px solid var(--border);font-family:'Cinzel',serif;font-size:.7rem;color:var(--gold);text-transform:uppercase;letter-spacing:.05em}
+        .panel-header{background:var(--bg-light);padding:.4rem .6rem;border-bottom:1px solid var(--border);font-family:'Cinzel',serif;font-size:.7rem;color:var(--gold);text-transform:uppercase;letter-spacing:.05em;display:flex;justify-content:space-between;align-items:center}
         .panel-body{padding:.5rem}
         
-        /* Character Panel */
         .char-panel{display:flex;flex-direction:column}
         .char-header{display:flex;align-items:center;gap:.5rem;padding:.5rem;background:var(--bg-dark);border-bottom:1px solid var(--border)}
-        .char-avatar{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--bg-light);border:2px solid var(--gold-dim);border-radius:6px;font-size:1.6rem}
+        .char-avatar{width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:var(--bg-light);border:2px solid var(--gold-dim);border-radius:6px;font-size:1.8rem}
         .char-avatar img{width:100%;height:100%;object-fit:contain}
-        .char-name{font-family:'Cinzel',serif;font-size:.95rem;color:var(--gold-bright)}
+        .char-name{font-family:'Cinzel',serif;font-size:1rem;color:var(--gold-bright)}
         .char-race{font-size:.65rem;color:var(--text-dim)}
-        .char-body{padding:.5rem;display:flex;flex-direction:column;gap:.35rem}
+        .char-body{padding:.5rem;display:flex;flex-direction:column;gap:.4rem}
         
-        .hp-container{background:var(--bg-dark);border:1px solid var(--border);border-radius:4px;height:18px;position:relative;overflow:hidden}
-        .hp-fill{height:100%;transition:width .4s;background:linear-gradient(180deg,var(--green-bright),var(--green))}
+        .hp-container{background:var(--bg-dark);border:1px solid var(--border);border-radius:4px;height:20px;position:relative;overflow:hidden}
+        .hp-fill{height:100%;transition:width .3s ease;background:linear-gradient(180deg,var(--green-bright),var(--green))}
         .hp-fill.medium{background:linear-gradient(180deg,var(--gold-bright),var(--gold-dim))}
         .hp-fill.low{background:linear-gradient(180deg,var(--orange),#cc4400)}
         .hp-fill.critical{background:linear-gradient(180deg,var(--red-bright),var(--red));animation:pulse 1s infinite}
         @keyframes pulse{50%{opacity:.7}}
-        .hp-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:bold;color:white;text-shadow:1px 1px 2px black}
+        .hp-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:bold;color:white;text-shadow:1px 1px 2px black}
         
-        .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:.2rem}
-        .stat-item{display:flex;justify-content:space-between;padding:.15rem .3rem;background:var(--bg-light);border-radius:3px;font-size:.6rem}
+        .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:.25rem}
+        .stat-item{display:flex;justify-content:space-between;padding:.2rem .35rem;background:var(--bg-light);border-radius:3px;font-size:.65rem}
         .stat-label{color:var(--text-dim)}.stat-value{color:var(--gold);font-weight:bold}
         
-        .equip-slot{display:flex;align-items:center;gap:.35rem;padding:.25rem;background:var(--bg-light);border:1px solid transparent;border-radius:4px;cursor:pointer;transition:all .2s}
+        .equip-slot{display:flex;align-items:center;gap:.4rem;padding:.3rem;background:var(--bg-light);border:1px solid transparent;border-radius:4px;cursor:pointer;transition:all .2s}
         .equip-slot:hover:not(.disabled){border-color:var(--gold-dim);background:var(--bg-dark)}
         .equip-slot.disabled{opacity:.5;cursor:not-allowed}
-        .equip-icon{width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:1.1rem}
+        .equip-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
         .equip-icon img{width:100%;height:100%;object-fit:contain}
-        .equip-name{font-size:.7rem}.equip-stats{font-size:.55rem;color:var(--text-dim)}
+        .equip-name{font-size:.75rem}.equip-stats{font-size:.6rem;color:var(--text-dim)}
         
-        .currency-row{display:flex;justify-content:center;gap:1rem;padding:.25rem;background:var(--bg-dark);border-radius:4px;font-size:.75rem}
+        .currency-row{display:flex;justify-content:center;gap:1rem;padding:.3rem;background:var(--bg-dark);border-radius:4px;font-size:.8rem}
         .coin-gold{color:var(--gold-bright)}.coin-silver{color:#c0c0c0}
         
-        .location-badge{text-align:center;padding:.2rem;border-radius:4px;font-size:.65rem;border:1px solid var(--border)}
-        .location-badge.safe{background:rgba(45,90,39,.3);border-color:var(--green);color:var(--green-bright)}
-        .location-badge.danger{background:rgba(139,0,0,.3);border-color:var(--red);color:var(--red-bright)}
+        /* Region Badge - Enhanced */
+        .region-badge{text-align:center;padding:.35rem;border-radius:4px;font-size:.7rem;border:1px solid var(--border);cursor:pointer;transition:all .2s}
+        .region-badge:hover{border-color:var(--gold-dim)}
+        .region-badge.safe{background:rgba(45,90,39,.3);border-color:var(--green);color:var(--green-bright)}
+        .region-badge.danger{background:rgba(139,0,0,.3);border-color:var(--red);color:var(--red-bright)}
+        .region-badge .region-icon{font-size:1rem;margin-right:.3rem}
+        .region-badge .region-name{font-weight:bold}
         
-        /* Main Area */
         .main-area{display:flex;flex-direction:column;gap:.5rem}
-        .actions-panel .panel-body{display:flex;flex-wrap:wrap;gap:.35rem;justify-content:center}
+        .actions-panel .panel-body{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center}
         
-        /* Combat */
+        /* Combat Arena - Enhanced */
         .combat-arena{background:linear-gradient(180deg,rgba(139,0,0,.2),transparent);border:2px solid var(--red)}
         .combat-arena .panel-header{background:linear-gradient(180deg,rgba(139,0,0,.4),var(--bg-panel));color:var(--red-bright)}
-        .combat-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:.5rem;align-items:center;padding:.5rem}
-        .combatant{background:var(--bg-dark);border:2px solid var(--border);border-radius:6px;padding:.4rem;text-align:center}
+        .combat-grid{display:grid;grid-template-columns:1fr auto 1fr;gap:.5rem;align-items:start;padding:.5rem}
+        .combatant{background:var(--bg-dark);border:2px solid var(--border);border-radius:6px;padding:.5rem;text-align:center}
         .combatant.player{border-color:var(--gold-dim)}.combatant.enemy{border-color:var(--red)}
-        .combatant-sprite{font-size:2.2rem;margin-bottom:.2rem}
-        .combatant-sprite img{width:56px;height:56px;object-fit:contain}
-        .combatant-name{font-family:'Cinzel',serif;font-size:.8rem;margin-bottom:.2rem}
-        .combatant-stats{font-size:.6rem;color:var(--text-dim);margin-bottom:.3rem}
-        .vs-divider{font-size:1.3rem;color:var(--gold)}
-        .combat-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:.35rem;padding:.5rem;border-top:1px solid var(--border)}
-        .combat-log{max-height:100px;overflow-y:auto;padding:.4rem;background:var(--bg-dark);border-top:1px solid var(--border);font-size:.7rem}
-        .log-entry{padding:.1rem 0;border-bottom:1px dashed rgba(255,255,255,.1)}
+        .combatant-sprite{font-size:2.5rem;margin-bottom:.25rem}
+        .combatant-sprite img{width:64px;height:64px;object-fit:contain}
+        .combatant-name{font-family:'Cinzel',serif;font-size:.85rem;margin-bottom:.2rem}
+        .combatant-stats{font-size:.65rem;color:var(--text-dim);margin-bottom:.35rem}
+        .vs-divider{font-size:1.5rem;color:var(--gold);align-self:center}
+        .combat-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem;padding:.5rem;border-top:1px solid var(--border)}
+        
+        /* Combat Log - Enhanced with damage breakdown */
+        .combat-log{max-height:140px;overflow-y:auto;padding:.5rem;background:var(--bg-dark);border-top:1px solid var(--border);font-size:.75rem}
+        .log-entry{padding:.2rem 0;border-bottom:1px dashed rgba(255,255,255,.1)}
+        .log-entry:last-child{border-bottom:none}
         .log-player{color:var(--gold)}.log-enemy{color:var(--red-bright)}.log-damage{color:var(--orange)}.log-heal{color:var(--green-bright)}.log-miss{color:var(--text-dim);font-style:italic}.log-crit{color:var(--gold-bright);font-weight:bold}
-        .effects-row{display:flex;flex-wrap:wrap;justify-content:center;gap:.15rem;margin-top:.2rem;min-height:16px}
-        .effect-tag{font-size:.5rem;padding:.08rem .2rem;border-radius:3px}
+        .log-calc{background:var(--bg-panel);padding:.2rem .4rem;border-radius:3px;margin:.15rem 0;font-family:monospace;font-size:.7rem;border-left:2px solid var(--orange)}
+        .log-turn{background:var(--bg-light);color:var(--gold);padding:.2rem .5rem;margin:.3rem -.5rem;text-align:center;font-family:'Cinzel',serif;font-size:.65rem}
+        
+        .effects-row{display:flex;flex-wrap:wrap;justify-content:center;gap:.2rem;margin-top:.25rem;min-height:18px}
+        .effect-tag{font-size:.55rem;padding:.1rem .25rem;border-radius:3px}
         .eff-bleed{background:rgba(139,0,0,.6);border:1px solid var(--red)}.eff-poison{background:rgba(0,100,0,.6);border:1px solid var(--green-bright)}.eff-fire{background:rgba(255,100,0,.5);border:1px solid orange}
         
-        /* Chronicles - BOTTOM with auto-scroll */
         .chronicles-panel{display:flex;flex-direction:column;height:100%}
-        .chronicles-content{flex:1;overflow-y:auto;padding:.5rem;display:flex;flex-direction:column;gap:.35rem}
-        .story-entry{padding:.4rem;border-radius:4px;animation:fadeIn .3s;font-size:.8rem;line-height:1.5}
+        .chronicles-content{flex:1;overflow-y:auto;padding:.5rem;display:flex;flex-direction:column;gap:.4rem}
+        .story-entry{padding:.5rem;border-radius:4px;animation:fadeIn .3s;font-size:.85rem;line-height:1.6}
         @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
         .story-narrative{background:linear-gradient(135deg,rgba(30,25,22,.95),rgba(45,38,33,.8));border-left:3px solid var(--gold-dim);font-style:italic}
         .story-combat{background:rgba(139,0,0,.15);border-left:3px solid var(--red)}
         .story-loot{background:rgba(212,164,55,.15);border-left:3px solid var(--gold)}
-        .story-system{background:rgba(74,158,255,.1);border-left:3px solid var(--blue-bright);font-size:.75rem}
+        .story-system{background:rgba(74,158,255,.1);border-left:3px solid var(--blue-bright);font-size:.8rem}
         .story-trap{background:rgba(255,107,53,.15);border-left:3px solid var(--orange)}
         .story-dialogue{background:rgba(156,39,176,.1);border-left:3px solid var(--purple)}
+        .story-region{background:rgba(0,188,212,.1);border-left:3px solid var(--cyan)}
         
-        /* Buttons */
-        .btn{font-family:'Cinzel',serif;font-size:.68rem;padding:.35rem .7rem;background:var(--bg-light);border:1px solid var(--gold-dim);color:var(--gold);cursor:pointer;border-radius:4px;transition:all .2s;white-space:nowrap}
+        .btn{font-family:'Cinzel',serif;font-size:.7rem;padding:.4rem .8rem;background:var(--bg-light);border:1px solid var(--gold-dim);color:var(--gold);cursor:pointer;border-radius:4px;transition:all .2s;white-space:nowrap}
         .btn:hover:not(:disabled){background:var(--gold-dim);color:var(--bg-dark);transform:translateY(-1px)}
         .btn:disabled{opacity:.5;cursor:not-allowed}
         .btn-primary{background:var(--gold-dim);color:var(--bg-dark)}
         .btn-danger{border-color:var(--red);color:var(--red-bright)}.btn-danger:hover:not(:disabled){background:var(--red);color:white}
-        .btn-sm{font-size:.6rem;padding:.2rem .4rem}
+        .btn-sm{font-size:.6rem;padding:.25rem .5rem}
         
-        /* Modals */
         .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:500;justify-content:center;align-items:center;padding:1rem;overflow-y:auto}
         .modal-overlay.active{display:flex}
         .modal{background:var(--bg-panel);border:2px solid var(--gold-dim);border-radius:8px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;animation:modalIn .2s}
@@ -124,48 +128,60 @@
         .modal-body{padding:.8rem}
         
         .item-detail{text-align:center}
-        .item-detail-icon{font-size:3rem;margin-bottom:.4rem}
-        .item-detail-icon img{width:64px;height:64px;object-fit:contain}
+        .item-detail-icon{font-size:3.5rem;margin-bottom:.5rem}
+        .item-detail-icon img{width:72px;height:72px;object-fit:contain}
         .item-detail-name{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--gold-bright)}
         .item-detail-type{color:var(--text-dim);font-size:.75rem;margin-bottom:.5rem}
-        .item-detail-desc{background:var(--bg-dark);padding:.5rem;border-radius:4px;text-align:left;margin-bottom:.5rem;font-size:.8rem}
-        .item-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:.4rem;margin-bottom:.5rem}
+        .item-detail-desc{background:var(--bg-dark);padding:.6rem;border-radius:4px;text-align:left;margin-bottom:.6rem;font-size:.8rem}
+        .item-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:.4rem;margin-bottom:.6rem}
         .item-stat-box{background:var(--bg-light);padding:.4rem;border-radius:4px}
         .item-stat-label{font-size:.55rem;color:var(--text-dim);text-transform:uppercase}
-        .item-stat-value{font-size:.9rem;color:var(--gold);font-family:'Cinzel',serif}
+        .item-stat-value{font-size:.95rem;color:var(--gold);font-family:'Cinzel',serif}
         .item-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem}
         
         .inventory-info{text-align:center;padding:.4rem;color:var(--text-dim);font-size:.75rem;border-bottom:1px solid var(--border)}
-        .inventory-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.3rem;padding:.6rem}
+        .inventory-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.35rem;padding:.6rem}
         .inv-slot{aspect-ratio:1;background:var(--bg-dark);border:1px solid var(--border);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;padding:.15rem}
         .inv-slot:hover{border-color:var(--gold-dim);transform:scale(1.05)}
         .inv-slot.empty{cursor:default}.inv-slot.empty:hover{transform:none;border-color:var(--border)}
-        .inv-slot-icon{font-size:1.3rem}.inv-slot-icon img{width:28px;height:28px;object-fit:contain}
-        .inv-slot-name{font-size:.45rem;text-align:center;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
-        .rarity-common{border-color:#555}.rarity-rare{border-color:var(--blue-bright)}.rarity-epic{border-color:var(--purple)}.rarity-legendary{border-color:var(--gold-bright);box-shadow:0 0 6px rgba(255,215,0,.4)}
+        .inv-slot-icon{font-size:1.4rem}.inv-slot-icon img{width:32px;height:32px;object-fit:contain}
+        .inv-slot-name{font-size:.5rem;text-align:center;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+        .rarity-common{border-color:#555}.rarity-rare{border-color:var(--blue-bright)}.rarity-epic{border-color:var(--purple)}.rarity-legendary{border-color:var(--gold-bright);box-shadow:0 0 8px rgba(255,215,0,.4)}
         
-        /* Editor */
-        .editor-container{max-width:1000px;margin:0 auto;padding:.8rem}
-        .editor-tabs{display:flex;flex-wrap:wrap;gap:.2rem;background:var(--bg-panel);padding:.4rem;border-radius:6px;margin-bottom:.6rem}
-        .editor-tab{padding:.35rem .7rem;background:transparent;border:1px solid var(--border);color:var(--text-dim);cursor:pointer;font-family:'Cinzel',serif;font-size:.65rem;border-radius:4px;transition:all .2s}
+        /* Region Select Modal */
+        .regions-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.5rem}
+        .region-card{background:var(--bg-dark);border:2px solid var(--border);border-radius:6px;padding:.6rem;cursor:pointer;transition:all .2s;text-align:center}
+        .region-card:hover{border-color:var(--gold-dim);transform:translateY(-2px)}
+        .region-card.safe{border-color:var(--green)}
+        .region-card.danger{border-color:var(--red)}
+        .region-card.current{border-color:var(--gold-bright);box-shadow:0 0 10px rgba(255,215,0,.3)}
+        .region-card-icon{font-size:2rem;margin-bottom:.25rem}
+        .region-card-name{font-family:'Cinzel',serif;font-size:.85rem;color:var(--gold)}
+        .region-card-type{font-size:.65rem;color:var(--text-dim)}
+        .region-card-enemies{font-size:.6rem;color:var(--text-dim);margin-top:.25rem}
+        
+        .editor-container{max-width:1100px;margin:0 auto;padding:.8rem}
+        .editor-tabs{display:flex;flex-wrap:wrap;gap:.25rem;background:var(--bg-panel);padding:.4rem;border-radius:6px;margin-bottom:.6rem}
+        .editor-tab{padding:.4rem .8rem;background:transparent;border:1px solid var(--border);color:var(--text-dim);cursor:pointer;font-family:'Cinzel',serif;font-size:.65rem;border-radius:4px;transition:all .2s}
         .editor-tab:hover{border-color:var(--gold-dim);color:var(--gold)}
         .editor-tab.active{background:var(--gold-dim);color:var(--bg-dark);border-color:var(--gold)}
         .editor-section{display:none;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:.8rem}
         .editor-section.active{display:block}
-        .editor-section h3{font-family:'Cinzel',serif;color:var(--gold);font-size:.9rem;margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
-        .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:.6rem;margin-bottom:.6rem}
+        .editor-section h3{font-family:'Cinzel',serif;color:var(--gold);font-size:.95rem;margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
+        .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:.6rem;margin-bottom:.6rem}
         .form-group{display:flex;flex-direction:column;gap:.2rem}
         .form-group label{font-size:.6rem;color:var(--text-dim);text-transform:uppercase}
-        .form-group input,.form-group select,.form-group textarea{background:var(--bg-input);border:1px solid var(--border);padding:.4rem;color:var(--text);font-size:.75rem;border-radius:4px;font-family:inherit}
+        .form-group input,.form-group select,.form-group textarea{background:var(--bg-input);border:1px solid var(--border);padding:.45rem;color:var(--text);font-size:.75rem;border-radius:4px;font-family:inherit}
         .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--gold-dim)}
-        .form-group textarea{resize:vertical;min-height:50px}
+        .form-group textarea{resize:vertical;min-height:55px}
         .form-actions{display:flex;gap:.4rem;justify-content:flex-end;padding-top:.6rem;border-top:1px solid var(--border);margin-top:.6rem}
-        .multi-select{background:var(--bg-input);border:1px solid var(--border);border-radius:4px;padding:.4rem;max-height:90px;overflow-y:auto;font-size:.7rem}
+        .multi-select{background:var(--bg-input);border:1px solid var(--border);border-radius:4px;padding:.4rem;max-height:100px;overflow-y:auto;font-size:.7rem}
         .multi-select label{display:flex;align-items:center;gap:.3rem;padding:.15rem;cursor:pointer}
-        .items-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:.4rem;margin-top:.8rem;max-height:260px;overflow-y:auto;padding:.2rem}
-        .item-card{background:var(--bg-dark);border:1px solid var(--border);border-radius:4px;padding:.4rem;display:flex;align-items:center;gap:.4rem;cursor:pointer;transition:all .2s}
+        .multi-select label:hover{background:var(--bg-light)}
+        .items-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:.4rem;margin-top:.8rem;max-height:280px;overflow-y:auto;padding:.2rem}
+        .item-card{background:var(--bg-dark);border:1px solid var(--border);border-radius:4px;padding:.45rem;display:flex;align-items:center;gap:.4rem;cursor:pointer;transition:all .2s}
         .item-card:hover{border-color:var(--gold-dim)}
-        .item-card-icon{font-size:1.2rem;width:28px;text-align:center}.item-card-icon img{width:28px;height:28px;object-fit:contain}
+        .item-card-icon{font-size:1.3rem;width:30px;text-align:center}.item-card-icon img{width:30px;height:30px;object-fit:contain}
         .item-card-info{flex:1;min-width:0}
         .item-card-name{font-size:.75rem;color:var(--gold);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         .item-card-stats{font-size:.6rem;color:var(--text-dim)}
@@ -174,12 +190,11 @@
         .icon-btn:hover{border-color:var(--gold-dim);color:var(--gold)}
         .icon-btn.delete:hover{border-color:var(--red);color:var(--red-bright)}
         
-        /* Rules */
-        .rules-container{max-width:950px;margin:0 auto;padding:.8rem}
+        .rules-container{max-width:1000px;margin:0 auto;padding:.8rem}
         .rules-header{text-align:center;margin-bottom:.8rem}
-        .rules-header h2{font-family:'Cinzel',serif;color:var(--gold);font-size:1.3rem}
-        .rules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:.6rem}
-        .rules-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:.6rem}
+        .rules-header h2{font-family:'Cinzel',serif;color:var(--gold);font-size:1.4rem}
+        .rules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:.6rem}
+        .rules-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:.65rem}
         .rules-card h4{font-family:'Cinzel',serif;color:var(--gold);font-size:.85rem;margin-bottom:.4rem;padding-bottom:.3rem;border-bottom:1px solid var(--border)}
         .rules-card p,.rules-card li{font-size:.75rem;margin-bottom:.2rem}
         .rules-card ul{padding-left:1rem}
@@ -188,21 +203,20 @@
         .rules-table th{background:var(--bg-light);color:var(--gold)}
         .rules-highlight{background:var(--bg-dark);border-left:3px solid var(--gold);padding:.4rem;margin:.4rem 0;font-size:.75rem}
         
-        /* Toast & Dice */
         .toast-container{position:fixed;top:2.5rem;right:.8rem;z-index:1000;display:flex;flex-direction:column;gap:.4rem}
-        .toast{padding:.4rem .8rem;border-radius:4px;font-size:.75rem;animation:toastIn .3s,toastOut .3s 2.5s forwards}
+        .toast{padding:.4rem .8rem;border-radius:4px;font-size:.75rem;animation:toastIn .3s,toastOut .3s 2.5s forwards;color:white}
         @keyframes toastIn{from{transform:translateX(100%);opacity:0}}@keyframes toastOut{to{transform:translateX(100%);opacity:0}}
         .toast.success{background:var(--green)}.toast.error{background:var(--red)}.toast.info{background:var(--blue)}
-        .dice-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.8);z-index:600;justify-content:center;align-items:center}
+        .dice-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:600;justify-content:center;align-items:center}
         .dice-overlay.active{display:flex}
-        .dice-display{background:var(--bg-panel);border:2px solid var(--gold-dim);border-radius:12px;padding:1.2rem 1.8rem;text-align:center}
-        .dice-icon{font-size:2.5rem;animation:diceRoll .4s}
+        .dice-display{background:var(--bg-panel);border:2px solid var(--gold-dim);border-radius:12px;padding:1.5rem 2rem;text-align:center}
+        .dice-icon{font-size:3rem;animation:diceRoll .4s}
         @keyframes diceRoll{0%{transform:rotate(0) scale(.5)}50%{transform:rotate(180deg) scale(1.2)}100%{transform:rotate(360deg) scale(1)}}
-        .dice-label{font-size:.75rem;color:var(--text-dim)}
-        .dice-result{font-family:'Cinzel',serif;font-size:1.8rem;color:var(--gold-bright)}
+        .dice-label{font-size:.8rem;color:var(--text-dim)}
+        .dice-result{font-family:'Cinzel',serif;font-size:2rem;color:var(--gold-bright)}
         .dice-result.crit{color:var(--red-bright);text-shadow:0 0 10px var(--red)}
         
-        @media(max-width:800px){.game-top{grid-template-columns:1fr}.char-panel{order:2}.main-area{order:1}.inventory-grid{grid-template-columns:repeat(4,1fr)}.combat-grid{grid-template-columns:1fr}.vs-divider{padding:.2rem 0}.rules-grid{grid-template-columns:1fr}}
+        @media(max-width:850px){.game-top{grid-template-columns:1fr}.char-panel{order:2}.main-area{order:1}.inventory-grid{grid-template-columns:repeat(4,1fr)}.combat-grid{grid-template-columns:1fr}.vs-divider{padding:.25rem 0}.rules-grid{grid-template-columns:1fr}.regions-grid{grid-template-columns:1fr}}
     </style>
 </head>
 <body>
@@ -213,7 +227,6 @@
         <button class="nav-btn" data-tab="editor">🛠️ Editor</button>
     </nav>
 
-    <!-- GAME TAB -->
     <div class="tab-content active" id="tab-game">
         <div class="game-wrapper">
             <div class="game-top">
@@ -224,7 +237,11 @@
                     </div>
                     <div class="char-body">
                         <div class="hp-container"><div class="hp-fill" id="hpFill"></div><div class="hp-text" id="hpText">0/0</div></div>
-                        <div class="location-badge safe" id="locationBadge">📍 Pueblo</div>
+                        <div class="region-badge safe" id="regionBadge" onclick="Regions.openSelector()">
+                            <span class="region-icon">🏘️</span>
+                            <span class="region-name">Pueblo</span>
+                            <div style="font-size:.55rem;color:var(--text-dim)">Click para viajar</div>
+                        </div>
                         <div class="stats-grid">
                             <div class="stat-item"><span class="stat-label">Armadura</span><span class="stat-value" id="statArmor">0</span></div>
                             <div class="stat-item"><span class="stat-label">Evasión</span><span class="stat-value" id="statEvasion">0</span></div>
@@ -238,7 +255,7 @@
                 </div>
                 <div class="main-area">
                     <div class="panel combat-arena hidden" id="combatArena">
-                        <div class="panel-header" style="display:flex;justify-content:space-between"><span>⚔️ COMBATE</span><span>Turno <span id="turnCounter">1</span></span></div>
+                        <div class="panel-header"><span>⚔️ COMBATE</span><span>Turno <span id="turnCounter">1</span></span></div>
                         <div class="combat-grid">
                             <div class="combatant player">
                                 <div class="combatant-sprite" id="playerSprite">🧙</div>
@@ -268,30 +285,52 @@
         </div>
     </div>
 
-    <!-- RULES TAB -->
     <div class="tab-content" id="tab-rules">
         <div class="rules-container">
-            <div class="rules-header"><h2>📜 Reglas Completas</h2></div>
+            <div class="rules-header"><h2>📜 Reglas del Juego</h2></div>
             <div class="rules-grid">
-                <div class="rules-card"><h4>🎭 1. Creación</h4><p><strong>Razas:</strong> Humano (+1HP), Elfo (+1Prec), Enano (+1Arm), Orco (+1Daño), Mediano (+1Eva)</p><p><strong>Inicio:</strong> 20 MP, 10 espacios</p></div>
-                <div class="rules-card"><h4>⚔️ 2. Combate</h4><div class="rules-highlight"><strong>Atacar:</strong> D20+prec ≥ dificultad<br><strong>Crítico (20):</strong> ×2 daño<br><strong>Esquivar:</strong> D20+eva ≥ 12</div></div>
-                <div class="rules-card"><h4>🩸 3. Efectos</h4><table class="rules-table"><tr><th>Efecto</th><th>Daño</th><th>Turnos</th></tr><tr><td>Sangrado</td><td>1</td><td>3</td></tr><tr><td>Veneno</td><td>2</td><td>2</td></tr><tr><td>Fuego</td><td>1d4</td><td>2</td></tr></table></div>
-                <div class="rules-card"><h4>🪤 4. Trampas</h4><div class="rules-highlight"><strong>Detectar:</strong> D20 ≥ dif<br><strong>Esquivar:</strong> D20+eva ≥ 12<br><strong>Desactivar:</strong> D20 ≥ 15</div></div>
-                <div class="rules-card"><h4>🎒 5. Equipo</h4><div class="rules-highlight">⚠️ Solo cambiar en <strong>zonas seguras</strong></div><p>Mochilas: +5/+10/+20 espacios</p></div>
-                <div class="rules-card"><h4>💰 6. Economía</h4><div class="rules-highlight"><strong>99 MP = 1 MO</strong></div><p>Vender: 50% valor</p></div>
-                <div class="rules-card"><h4>🐺 7. Domesticar</h4><p>Usa carne. Dados: D24/D30/D60/D100. Éxito: ≥60%</p></div>
-                <div class="rules-card"><h4>☠️ 8. Muerte</h4><div class="rules-highlight" style="border-color:var(--red)">HP=0: -50% monedas, pierdes items no equipados</div></div>
-                <div class="rules-card"><h4>🗺️ 9. Exploración</h4><ul><li>50% Enemigo</li><li>20% Trampa</li><li>15% Tesoro</li><li>10% Animal</li><li>5% Descanso</li></ul></div>
-                <div class="rules-card"><h4>🏘️ 10. Pueblo</h4><p>Herrero, Alquimista, Tabernero (5MP +50%HP), Curandero (10MP full)</p></div>
+                <div class="rules-card"><h4>⚔️ Cálculo de Daño</h4>
+                    <div class="rules-highlight"><strong>Fórmula:</strong><br>Daño Final = Daño Base − Armadura<br>(mínimo 1 de daño)</div>
+                    <p><strong>Ejemplo Jugador:</strong></p>
+                    <p>Arma 1d8 → tiras 6 + bono daño 1 = 7 base</p>
+                    <p>Enemigo tiene 2 armadura → 7 − 2 = <strong>5 daño</strong></p>
+                    <p><strong>Ejemplo Enemigo:</strong></p>
+                    <p>Enemigo ataca 1d6 → tira 4</p>
+                    <p>Tu armadura 3 → 4 − 3 = <strong>1 daño</strong></p>
+                </div>
+                <div class="rules-card"><h4>🎲 Tiradas de Ataque</h4>
+                    <div class="rules-highlight"><strong>Atacar:</strong> D20 + Precisión ≥ Dificultad<br><strong>Crítico (20):</strong> Daño ×2<br><strong>Pifia (1):</strong> Fallo automático</div>
+                    <table class="rules-table"><tr><th>Enemigo</th><th>Dificultad</th></tr><tr><td>Débil</td><td>6-8</td></tr><tr><td>Moderado</td><td>9-12</td></tr><tr><td>Fuerte</td><td>13-15</td></tr><tr><td>Épico</td><td>16-18</td></tr></table>
+                </div>
+                <div class="rules-card"><h4>🛡️ Esquivar</h4>
+                    <div class="rules-highlight"><strong>Esquivar:</strong> D20 + Evasión ≥ 12<br><strong>Defender:</strong> +4 Evasión temporal</div>
+                    <p>Si fallas el esquive, recibes daño completo menos tu armadura.</p>
+                </div>
+                <div class="rules-card"><h4>🗺️ Regiones</h4>
+                    <p>El mundo tiene múltiples regiones:</p>
+                    <ul>
+                        <li><strong>Seguras:</strong> Pueblos, ciudades</li>
+                        <li><strong>Peligrosas:</strong> Bosques, mazmorras, mares</li>
+                    </ul>
+                    <p>Los enemigos solo aparecen en sus regiones asignadas.</p>
+                </div>
+                <div class="rules-card"><h4>🩸 Efectos de Estado</h4>
+                    <table class="rules-table"><tr><th>Efecto</th><th>Daño</th><th>Turnos</th></tr><tr><td>Sangrado</td><td>1/turno</td><td>3</td></tr><tr><td>Veneno</td><td>2/turno</td><td>2</td></tr><tr><td>Fuego</td><td>1d4/turno</td><td>2</td></tr></table>
+                </div>
+                <div class="rules-card"><h4>💰 Economía</h4>
+                    <div class="rules-highlight"><strong>99 MP = 1 MO</strong></div>
+                    <p>Vender items: 50% del valor</p>
+                    <p>Al morir: pierdes 50% monedas y objetos no equipados</p>
+                </div>
             </div>
         </div>
     </div>
 
-    <!-- EDITOR TAB -->
     <div class="tab-content" id="tab-editor">
         <div class="editor-container">
             <div class="editor-tabs">
-                <button class="editor-tab active" data-editor="races">👤 Razas</button>
+                <button class="editor-tab active" data-editor="regions">🗺️ Regiones</button>
+                <button class="editor-tab" data-editor="races">👤 Razas</button>
                 <button class="editor-tab" data-editor="weapons">⚔️ Armas</button>
                 <button class="editor-tab" data-editor="armors">🛡️ Armaduras</button>
                 <button class="editor-tab" data-editor="items">🎒 Items</button>
@@ -300,7 +339,23 @@
                 <button class="editor-tab" data-editor="npcs">🧔 NPCs</button>
             </div>
             
-            <div class="editor-section active" id="editor-races">
+            <!-- REGIONS EDITOR -->
+            <div class="editor-section active" id="editor-regions">
+                <h3>🗺️ Editor de Regiones</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>ID</label><input type="text" id="region-id" placeholder="bosque_oscuro"></div>
+                    <div class="form-group"><label>Nombre</label><input type="text" id="region-name" placeholder="Bosque Oscuro"></div>
+                    <div class="form-group"><label>Icono</label><input type="text" id="region-icon" placeholder="🌲" maxlength="2"></div>
+                    <div class="form-group"><label>Tipo</label><select id="region-type"><option value="safe">Segura (pueblo, ciudad)</option><option value="danger">Peligrosa (explorable)</option></select></div>
+                </div>
+                <div class="form-group"><label>Descripción corta</label><input type="text" id="region-desc" placeholder="Un bosque antiguo y misterioso..."></div>
+                <div class="form-group"><label>Narrativas de exploración (una por línea)</label><textarea id="region-narratives" rows="3" placeholder="Los árboles se alzan como gigantes...&#10;Un sendero serpentea entre helechos..."></textarea></div>
+                <div class="form-actions"><button class="btn" onclick="Editor.clear('region')">🆕 Nuevo</button><button class="btn btn-primary" onclick="Editor.saveRegion()">💾 Guardar</button></div>
+                <div class="items-list" id="regions-list"></div>
+            </div>
+
+            <!-- RACES EDITOR -->
+            <div class="editor-section" id="editor-races">
                 <h3>👤 Editor de Razas</h3>
                 <div class="form-grid">
                     <div class="form-group"><label>ID</label><input type="text" id="race-id"></div>
@@ -314,10 +369,11 @@
                     <div class="form-group"><label>+Daño</label><input type="number" id="race-damage"></div>
                 </div>
                 <div class="form-group"><label>Descripción</label><textarea id="race-desc"></textarea></div>
-                <div class="form-actions"><button class="btn" onclick="Editor.clear('race')">🆕 Nuevo</button><button class="btn btn-primary" onclick="Editor.saveRace()">💾 Guardar</button></div>
+                <div class="form-actions"><button class="btn" onclick="Editor.clear('race')">🆕</button><button class="btn btn-primary" onclick="Editor.saveRace()">💾</button></div>
                 <div class="items-list" id="races-list"></div>
             </div>
 
+            <!-- WEAPONS EDITOR -->
             <div class="editor-section" id="editor-weapons">
                 <h3>⚔️ Editor de Armas</h3>
                 <div class="form-grid">
@@ -335,6 +391,7 @@
                 <div class="items-list" id="weapons-list"></div>
             </div>
 
+            <!-- ARMORS EDITOR -->
             <div class="editor-section" id="editor-armors">
                 <h3>🛡️ Editor de Armaduras</h3>
                 <div class="form-grid">
@@ -351,6 +408,7 @@
                 <div class="items-list" id="armors-list"></div>
             </div>
 
+            <!-- ITEMS EDITOR -->
             <div class="editor-section" id="editor-items">
                 <h3>🎒 Editor de Items</h3>
                 <div class="form-grid">
@@ -368,6 +426,7 @@
                 <div class="items-list" id="items-list"></div>
             </div>
 
+            <!-- ENEMIES EDITOR - Enhanced with regions -->
             <div class="editor-section" id="editor-enemies">
                 <h3>👹 Editor de Enemigos</h3>
                 <div class="form-grid">
@@ -375,20 +434,22 @@
                     <div class="form-group"><label>Nombre</label><input type="text" id="enemy-name"></div>
                     <div class="form-group"><label>Salud</label><input type="number" id="enemy-health"></div>
                     <div class="form-group"><label>Daño</label><input type="text" id="enemy-damage"></div>
-                    <div class="form-group"><label>Dificultad</label><input type="number" id="enemy-difficulty" min="1" max="20"></div>
+                    <div class="form-group"><label>Dificultad (1-20)</label><input type="number" id="enemy-difficulty" min="1" max="20"></div>
+                    <div class="form-group"><label>Armadura</label><input type="number" id="enemy-armor" placeholder="0"></div>
                     <div class="form-group"><label>Emoji</label><input type="text" id="enemy-icon" maxlength="2"></div>
                     <div class="form-group"><label>Sprite</label><input type="text" id="enemy-sprite"></div>
-                    <div class="form-group"><label>Efecto</label><select id="enemy-effect"><option value="">Ninguno</option><option value="bleed">Sangrado</option><option value="poison">Veneno</option><option value="fire">Fuego</option></select></div>
-                    <div class="form-group"><label>Hábitat</label><select id="enemy-habitat"><option value="any">Cualquiera</option><option value="forest">Bosque</option><option value="dungeon">Mazmorra</option><option value="mountain">Montaña</option><option value="swamp">Pantano</option><option value="ruins">Ruinas</option></select></div>
-                    <div class="form-group"><label>Loot Min</label><input type="number" id="enemy-loot-min"></div>
-                    <div class="form-group"><label>Loot Max</label><input type="number" id="enemy-loot-max"></div>
+                    <div class="form-group"><label>Efecto ataque</label><select id="enemy-effect"><option value="">Ninguno</option><option value="bleed">Sangrado</option><option value="poison">Veneno</option><option value="fire">Fuego</option></select></div>
+                    <div class="form-group"><label>Loot Min MP</label><input type="number" id="enemy-loot-min"></div>
+                    <div class="form-group"><label>Loot Max MP</label><input type="number" id="enemy-loot-max"></div>
                 </div>
-                <div class="form-group"><label>Narrativa</label><textarea id="enemy-desc"></textarea></div>
-                <div class="form-group"><label>Drops</label><div class="multi-select" id="enemy-drops"></div></div>
+                <div class="form-group"><label>Narrativa de encuentro</label><textarea id="enemy-desc" placeholder="El troll emerge de las sombras..."></textarea></div>
+                <div class="form-group"><label>⚠️ Regiones donde aparece (selecciona al menos una)</label><div class="multi-select" id="enemy-regions"></div></div>
+                <div class="form-group"><label>Drops posibles</label><div class="multi-select" id="enemy-drops"></div></div>
                 <div class="form-actions"><button class="btn" onclick="Editor.clear('enemy')">🆕</button><button class="btn btn-primary" onclick="Editor.saveEnemy()">💾</button></div>
                 <div class="items-list" id="enemies-list"></div>
             </div>
 
+            <!-- PETS EDITOR -->
             <div class="editor-section" id="editor-pets">
                 <h3>🐺 Editor de Mascotas</h3>
                 <div class="form-grid">
@@ -400,11 +461,13 @@
                     <div class="form-group"><label>Emoji</label><input type="text" id="pet-icon" maxlength="2"></div>
                     <div class="form-group"><label>Sprite</label><input type="text" id="pet-sprite"></div>
                 </div>
+                <div class="form-group"><label>Regiones donde aparece</label><div class="multi-select" id="pet-regions"></div></div>
                 <div class="form-group"><label>Descripción</label><textarea id="pet-desc"></textarea></div>
                 <div class="form-actions"><button class="btn" onclick="Editor.clear('pet')">🆕</button><button class="btn btn-primary" onclick="Editor.savePet()">💾</button></div>
                 <div class="items-list" id="pets-list"></div>
             </div>
 
+            <!-- NPCS EDITOR -->
             <div class="editor-section" id="editor-npcs">
                 <h3>🧔 Editor de NPCs</h3>
                 <div class="form-grid">
@@ -413,7 +476,7 @@
                     <div class="form-group"><label>Rol</label><select id="npc-role"><option value="merchant">Comerciante</option><option value="blacksmith">Herrero</option><option value="alchemist">Alquimista</option><option value="innkeeper">Tabernero</option><option value="healer">Curandero</option><option value="guard">Guardia</option><option value="villager">Aldeano</option></select></div>
                     <div class="form-group"><label>Emoji</label><input type="text" id="npc-icon" maxlength="2"></div>
                     <div class="form-group"><label>Sprite</label><input type="text" id="npc-sprite"></div>
-                    <div class="form-group"><label>Ubicación</label><input type="text" id="npc-location"></div>
+                    <div class="form-group"><label>Región</label><select id="npc-region"></select></div>
                 </div>
                 <div class="form-group"><label>Diálogo</label><textarea id="npc-dialogue"></textarea></div>
                 <div class="form-group"><label>Vende</label><div class="multi-select" id="npc-sells"></div></div>
@@ -428,216 +491,852 @@
         <div class="modal modal-lg"><div class="modal-header"><span class="modal-title">🎒 Inventario</span><button class="modal-close" data-close="inventoryModal">&times;</button></div>
         <div class="inventory-info" id="inventoryInfo">0/10</div><div class="inventory-grid" id="inventoryGrid"></div></div>
     </div>
+    
     <div class="modal-overlay" id="itemDetailModal">
         <div class="modal"><div class="modal-header"><span class="modal-title">Detalles</span><button class="modal-close" data-close="itemDetailModal">&times;</button></div>
         <div class="modal-body"><div class="item-detail"><div class="item-detail-icon" id="detailIcon">📦</div><div class="item-detail-name" id="detailName">Item</div><div class="item-detail-type" id="detailType">Tipo</div><div class="item-detail-desc" id="detailDesc">...</div><div class="item-stats-grid" id="detailStats"></div><div class="item-actions" id="detailActions"></div></div></div></div>
     </div>
-    <div class="modal-overlay" id="townModal">
-        <div class="modal"><div class="modal-header"><span class="modal-title">🏘️ Pueblo</span><button class="modal-close" data-close="townModal">&times;</button></div><div class="modal-body" id="townContent"></div></div>
+    
+    <div class="modal-overlay" id="regionModal">
+        <div class="modal modal-lg"><div class="modal-header"><span class="modal-title">🗺️ Viajar a otra Región</span><button class="modal-close" data-close="regionModal">&times;</button></div>
+        <div class="modal-body"><div class="regions-grid" id="regionsGrid"></div></div></div>
     </div>
+    
+    <div class="modal-overlay" id="townModal">
+        <div class="modal"><div class="modal-header"><span class="modal-title" id="townTitle">🏘️ Pueblo</span><button class="modal-close" data-close="townModal">&times;</button></div><div class="modal-body" id="townContent"></div></div>
+    </div>
+    
     <div class="modal-overlay" id="shopModal">
         <div class="modal modal-lg"><div class="modal-header"><span class="modal-title" id="shopTitle">🏪 Tienda</span><button class="modal-close" data-close="shopModal">&times;</button></div><div class="modal-body" id="shopContent"></div></div>
     </div>
+    
     <div class="dice-overlay" id="diceOverlay"><div class="dice-display"><div class="dice-icon">🎲</div><div class="dice-label" id="diceLabel">D20</div><div class="dice-result" id="diceResult">--</div></div></div>
     <div class="toast-container" id="toastContainer"></div>
 
-    <script>
-    const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
-    const roll=d=>{if(typeof d==='number')return d;const m=String(d).match(/(\d+)?d(\d+)([+-]\d+)?/i);if(!m)return parseInt(d)||0;let t=parseInt(m[3])||0;for(let i=0;i<(parseInt(m[1])||1);i++)t+=Math.floor(Math.random()*parseInt(m[2]))+1;return Math.max(1,t)};
-    const d20=()=>Math.floor(Math.random()*20)+1;
-    const dX=x=>Math.floor(Math.random()*x)+1;
-    const pick=a=>a[Math.floor(Math.random()*a.length)];
-    const hpClass=p=>p>60?'':p>30?'medium':p>15?'low':'critical';
-    const sprite=i=>i?.sprite?`<img src="${i.sprite}">`:(i?.icon||'📦');
-    const genId=p=>`${p}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
-    const toast=(m,t='info')=>{const e=document.createElement('div');e.className=`toast ${t}`;e.textContent=m;$('#toastContainer').appendChild(e);setTimeout(()=>e.remove(),3000)};
-    const openModal=id=>$(`#${id}`).classList.add('active');
-    const closeModal=id=>$(`#${id}`).classList.remove('active');
-    const showDice=async(r,s=20,c=false)=>{$('#diceLabel').textContent=`D${s}`;$('#diceResult').textContent=r;$('#diceResult').classList.toggle('crit',c);$('#diceOverlay').classList.add('active');await new Promise(r=>setTimeout(r,600));$('#diceOverlay').classList.remove('active')};
-    const scrollChron=()=>{const c=$('#chroniclesContent');c.scrollTop=c.scrollHeight};
+<script>
+// ==================== UTILITIES ====================
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+const roll=d=>{if(typeof d==='number')return d;const m=String(d).match(/(\d+)?d(\d+)([+-]\d+)?/i);if(!m)return parseInt(d)||0;let t=parseInt(m[3])||0;for(let i=0;i<(parseInt(m[1])||1);i++)t+=Math.floor(Math.random()*parseInt(m[2]))+1;return Math.max(1,t)};
+const d20=()=>Math.floor(Math.random()*20)+1;
+const dX=x=>Math.floor(Math.random()*x)+1;
+const pick=a=>a.length?a[Math.floor(Math.random()*a.length)]:null;
+const hpClass=p=>p>60?'':p>30?'medium':p>15?'low':'critical';
+const sprite=i=>i?.sprite?`<img src="${i.sprite}">`:(i?.icon||'📦');
+const genId=p=>`${p}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
+const toast=(m,t='info')=>{const e=document.createElement('div');e.className=`toast ${t}`;e.textContent=m;$('#toastContainer').appendChild(e);setTimeout(()=>e.remove(),3000)};
+const openModal=id=>$(`#${id}`).classList.add('active');
+const closeModal=id=>$(`#${id}`).classList.remove('active');
+const showDice=async(r,s=20,c=false)=>{$('#diceLabel').textContent=`D${s}`;$('#diceResult').textContent=r;$('#diceResult').classList.toggle('crit',c);$('#diceOverlay').classList.add('active');await new Promise(r=>setTimeout(r,600));$('#diceOverlay').classList.remove('active')};
+const scrollChron=()=>{const c=$('#chroniclesContent');c.scrollTop=c.scrollHeight};
 
-    // Data
-    const Data={
-        races:[{id:'human',name:'Humano',icon:'🧑',bonus:{health:1}},{id:'elf',name:'Elfo',icon:'🧝',bonus:{precision:1}},{id:'dwarf',name:'Enano',icon:'🧔',bonus:{armor:1}},{id:'orc',name:'Orco',icon:'👹',bonus:{damage:1}},{id:'halfling',name:'Mediano',icon:'🧒',bonus:{evasion:1}}],
-        weapons:[{id:'w1',name:'Daga',damage:'1d4',icon:'🗡️',value:10,rarity:'common'},{id:'w2',name:'Espada',damage:'1d6',icon:'⚔️',value:20,rarity:'common'},{id:'w3',name:'Hacha',damage:'1d6',icon:'🪓',value:20,rarity:'common'},{id:'w4',name:'Bastón',damage:'1d4',icon:'🪄',value:10,rarity:'common'}],
-        armors:[{id:'a1',name:'Túnica cuero',defense:1,icon:'🦺',value:15,rarity:'common'},{id:'a2',name:'Cuero reforzado',defense:2,icon:'🦺',value:30,rarity:'common'},{id:'a3',name:'Cota malla',defense:3,icon:'⛓️',value:75,rarity:'rare'},{id:'a4',name:'Túnica tela',defense:0,icon:'👕',value:5,rarity:'common'}],
-        items:[{id:'i1',name:'Poción',type:'potion',effect:'1d8',icon:'🧪',value:10,rarity:'common'},{id:'i2',name:'Antídoto',type:'antidote',icon:'💊',value:15,rarity:'common'},{id:'i3',name:'Bomba humo',type:'escape',icon:'💨',value:25,rarity:'common'},{id:'i4',name:'Carne',type:'food',effect:'1d4',icon:'🥩',value:5,rarity:'common'}],
-        enemies:[{id:'e1',name:'Rata',health:10,damage:'1d4',difficulty:6,icon:'🐀',loot:[5,10],drops:['i1'],habitat:'dungeon',desc:'Una rata enorme.'},{id:'e2',name:'Goblin',health:15,damage:'1d6',difficulty:8,icon:'👺',loot:[8,15],drops:['i1','w1'],habitat:'forest',desc:'Un goblin escuálido.'},{id:'e3',name:'Esqueleto',health:20,damage:'1d6',difficulty:10,icon:'💀',loot:[10,25],drops:['i1'],habitat:'ruins',desc:'Huesos que se alzan.'},{id:'e4',name:'Orco',health:35,damage:'1d8',difficulty:12,icon:'👹',loot:[20,40],drops:['w2'],habitat:'mountain',desc:'Un orco musculoso.'},{id:'e5',name:'Troll',health:50,damage:'2d6',difficulty:14,icon:'🧌',loot:[40,80],drops:['a2'],habitat:'swamp',desc:'El troll emerge.'}],
-        pets:[{id:'p1',name:'Lobo',health:20,damage:'1d6',difficulty:24,icon:'🐺'},{id:'p2',name:'Oso',health:35,damage:'1d8',difficulty:30,icon:'🐻'},{id:'p3',name:'Águila',health:15,damage:'1d4',difficulty:24,icon:'🦅'}],
-        npcs:[{id:'n1',name:'Grimbold',role:'blacksmith',icon:'🧔',dialogue:'¡Mis armas son las mejores!',sells:['w1','w2','w3']},{id:'n2',name:'Elara',role:'alchemist',icon:'🧙‍♀️',dialogue:'Mis pociones curan...',sells:['i1','i2']},{id:'n3',name:'Tobias',role:'innkeeper',icon:'🧑‍🍳',dialogue:'¡Cerveza fría!',sells:['i4']}],
-        traps:[{name:'Púas',damage:'1d6',effect:'bleed',detectDiff:10,dodgeDiff:12},{name:'Dardo',damage:'1d4',effect:'poison',detectDiff:12,dodgeDiff:10},{name:'Foso',damage:'2d6',effect:null,detectDiff:8,dodgeDiff:14},{name:'Runa',damage:'2d8',effect:'fire',detectDiff:14,dodgeDiff:12}],
-        locations:{danger:[{name:'Bosque Sombrío',habitat:'forest'},{name:'Ruinas',habitat:'ruins'},{name:'Pantano',habitat:'swamp'},{name:'Caverna',habitat:'dungeon'},{name:'Montaña',habitat:'mountain'}],safe:[{name:'Claro'},{name:'Refugio'}]},
-        find(t,id){return this[t]?.find(x=>x.id===id)},
-        findItem(id){return this.find('weapons',id)||this.find('armors',id)||this.find('items',id)},
-        save(){localStorage.setItem('rpg_data',JSON.stringify({races:this.races,weapons:this.weapons,armors:this.armors,items:this.items,enemies:this.enemies,pets:this.pets,npcs:this.npcs}));if(FB.db&&FB.ok)FB.db.ref('gameData').set({races:this.races,weapons:this.weapons,armors:this.armors,items:this.items,enemies:this.enemies,pets:this.pets,npcs:this.npcs})},
-        load(){const s=localStorage.getItem('rpg_data');if(s)try{Object.assign(this,JSON.parse(s))}catch(e){}}
-    };
+// ==================== GAME DATA ====================
+const Data={
+    regions:[
+        {id:'pueblo',name:'Pueblo Inicio',icon:'🏘️',type:'safe',desc:'Un tranquilo pueblo de comerciantes.',narratives:['El sol brilla sobre las casas de piedra.','Aldeanos van y vienen por la plaza.']},
+        {id:'bosque',name:'Bosque Sombrío',icon:'🌲',type:'danger',desc:'Un bosque antiguo lleno de criaturas.',narratives:['Los árboles se alzan como gigantes silenciosos.','Un sendero serpentea entre helechos gigantes.','La luz apenas penetra el dosel de hojas.']},
+        {id:'mazmorra',name:'Mazmorras Antiguas',icon:'🏚️',type:'danger',desc:'Ruinas subterráneas llenas de peligros.',narratives:['El eco de tus pasos resuena en la oscuridad.','Antorchas titilantes iluminan paredes de piedra.','El aire huele a humedad y muerte.']},
+        {id:'montana',name:'Paso de Montaña',icon:'⛰️',type:'danger',desc:'Cumbres heladas y vientos cortantes.',narratives:['El viento aúlla entre los picos nevados.','Rocas sueltas amenazan con ceder.','Las nubes ocultan el camino adelante.']},
+        {id:'pantano',name:'Pantano Maldito',icon:'🌿',type:'danger',desc:'Aguas estancadas y gases venenosos.',narratives:['El agua burbujea con gases nocivos.','Cada paso es una lucha contra el lodo.','Extrañas luces flotan en la niebla.']},
+        {id:'mar',name:'Alta Mar',icon:'🌊',type:'danger',desc:'Aguas profundas llenas de misterios.',narratives:['Las olas mecen tu embarcación.','El horizonte se extiende infinito.','Algo se mueve bajo las aguas oscuras.']},
+        {id:'desierto',name:'Desierto Ardiente',icon:'🏜️',type:'danger',desc:'Dunas interminables bajo un sol implacable.',narratives:['El calor distorsiona el horizonte.','La arena se mueve como un ser vivo.','Un oasis parece brillar a lo lejos...']}
+    ],
+    races:[
+        {id:'human',name:'Humano',icon:'🧑',bonus:{health:1},desc:'Versátiles y adaptables.'},
+        {id:'elf',name:'Elfo',icon:'🧝',bonus:{precision:1},desc:'Ágiles y precisos.'},
+        {id:'dwarf',name:'Enano',icon:'🧔',bonus:{armor:1},desc:'Resistentes y tercos.'},
+        {id:'orc',name:'Orco',icon:'👹',bonus:{damage:1},desc:'Fuertes y agresivos.'},
+        {id:'halfling',name:'Mediano',icon:'🧒',bonus:{evasion:1},desc:'Pequeños y escurridizos.'}
+    ],
+    weapons:[
+        {id:'w1',name:'Daga',damage:'1d4',icon:'🗡️',value:10,rarity:'common',desc:'Pequeña pero letal.'},
+        {id:'w2',name:'Espada',damage:'1d6',icon:'⚔️',value:20,rarity:'common',desc:'El arma del aventurero.'},
+        {id:'w3',name:'Hacha',damage:'1d6',icon:'🪓',value:20,rarity:'common',desc:'Hacha de combate.'},
+        {id:'w4',name:'Bastón',damage:'1d4',icon:'🪄',value:10,rarity:'common',desc:'Bastón arcano.'},
+        {id:'w5',name:'Espada Larga',damage:'1d8',icon:'⚔️',value:50,rarity:'rare',desc:'Acero de calidad superior.'},
+        {id:'w6',name:'Tridente',damage:'1d8',icon:'🔱',value:45,rarity:'rare',desc:'Arma de las profundidades.'}
+    ],
+    armors:[
+        {id:'a1',name:'Túnica cuero',defense:1,icon:'🦺',value:15,rarity:'common'},
+        {id:'a2',name:'Cuero reforzado',defense:2,icon:'🦺',value:30,rarity:'common'},
+        {id:'a3',name:'Cota de malla',defense:3,icon:'⛓️',value:75,rarity:'rare'},
+        {id:'a4',name:'Túnica tela',defense:0,icon:'👕',value:5,rarity:'common'},
+        {id:'a5',name:'Armadura de placas',defense:5,icon:'🛡️',value:150,rarity:'epic'}
+    ],
+    items:[
+        {id:'i1',name:'Poción menor',type:'potion',effect:'1d8',icon:'🧪',value:10,rarity:'common',desc:'Cura 1d8 HP.'},
+        {id:'i2',name:'Antídoto',type:'antidote',icon:'💊',value:15,rarity:'common',desc:'Cura veneno.'},
+        {id:'i3',name:'Bomba humo',type:'escape',icon:'💨',value:25,rarity:'common',desc:'Escape del combate.'},
+        {id:'i4',name:'Carne',type:'food',effect:'1d4',icon:'🥩',value:5,rarity:'common',desc:'Cura y domestica.'},
+        {id:'i5',name:'Poción mayor',type:'potion',effect:'2d8',icon:'🧪',value:35,rarity:'rare',desc:'Cura 2d8 HP.'}
+    ],
+    enemies:[
+        {id:'e1',name:'Rata Gigante',health:10,damage:'1d4',difficulty:6,armor:0,icon:'🐀',loot:[5,10],drops:['i1'],regions:['mazmorra'],desc:'Una rata del tamaño de un perro.'},
+        {id:'e2',name:'Goblin',health:15,damage:'1d6',difficulty:8,armor:0,icon:'👺',loot:[8,15],drops:['i1','w1'],regions:['bosque','mazmorra'],desc:'Un goblin escuálido salta de los arbustos.'},
+        {id:'e3',name:'Esqueleto',health:20,damage:'1d6',difficulty:10,armor:1,icon:'💀',loot:[10,25],drops:['i1'],regions:['mazmorra'],desc:'Huesos que crujen mientras se alza.'},
+        {id:'e4',name:'Orco Guerrero',health:35,damage:'1d8',difficulty:12,armor:2,icon:'👹',loot:[20,40],drops:['w2'],regions:['bosque','montana'],desc:'Un orco musculoso bloquea el paso.'},
+        {id:'e5',name:'Troll del Pantano',health:50,damage:'2d6',difficulty:14,armor:2,icon:'🧌',loot:[40,80],drops:['a2'],regions:['pantano'],desc:'El troll emerge del lodo putrefacto.'},
+        {id:'e6',name:'Sirena',health:30,damage:'1d8',difficulty:12,armor:0,icon:'🧜‍♀️',loot:[30,60],drops:['i5'],regions:['mar'],desc:'Una hermosa y letal sirena emerge de las aguas.',effect:'poison'},
+        {id:'e7',name:'Kraken Menor',health:60,damage:'2d8',difficulty:15,armor:3,icon:'🦑',loot:[60,120],drops:['w6'],regions:['mar'],desc:'Tentáculos emergen de las profundidades.'},
+        {id:'e8',name:'Escorpión Gigante',health:25,damage:'1d6',difficulty:10,armor:2,icon:'🦂',loot:[15,30],drops:['i2'],regions:['desierto'],desc:'Un escorpión del tamaño de un caballo.',effect:'poison'},
+        {id:'e9',name:'Elemental de Arena',health:40,damage:'1d10',difficulty:13,armor:1,icon:'🌪️',loot:[35,70],drops:[],regions:['desierto'],desc:'La arena cobra forma y te ataca.'},
+        {id:'e10',name:'Yeti',health:45,damage:'2d6',difficulty:14,armor:2,icon:'❄️',loot:[40,80],drops:['a3'],regions:['montana'],desc:'Un rugido resuena entre las cumbres nevadas.'}
+    ],
+    pets:[
+        {id:'p1',name:'Lobo',health:20,damage:'1d6',difficulty:24,icon:'🐺',regions:['bosque','montana'],desc:'Un lobo solitario.'},
+        {id:'p2',name:'Oso',health:35,damage:'1d8',difficulty:30,icon:'🐻',regions:['bosque','montana'],desc:'Un oso pardo.'},
+        {id:'p3',name:'Águila',health:15,damage:'1d4',difficulty:24,icon:'🦅',regions:['montana'],desc:'Un águila majestuosa.'},
+        {id:'p4',name:'Delfín',health:25,damage:'1d6',difficulty:30,icon:'🐬',regions:['mar'],desc:'Un delfín amigable.'}
+    ],
+    npcs:[
+        {id:'n1',name:'Grimbold',role:'blacksmith',icon:'🧔',region:'pueblo',dialogue:'¡Mis armas son las mejores del reino!',sells:['w1','w2','w3','w5']},
+        {id:'n2',name:'Elara',role:'alchemist',icon:'🧙‍♀️',region:'pueblo',dialogue:'Mis pociones pueden curar... o matar.',sells:['i1','i2','i5']},
+        {id:'n3',name:'Tobias',role:'innkeeper',icon:'🧑‍🍳',region:'pueblo',dialogue:'¡Siéntate, amigo! Una cerveza fría.',sells:['i4']},
+        {id:'n4',name:'Marina',role:'merchant',icon:'👩‍🦰',region:'mar',dialogue:'Bienvenido a bordo. Tengo mercancía especial.',sells:['w6','i1','i5']}
+    ],
+    traps:[
+        {name:'Púas ocultas',damage:'1d6',effect:'bleed',detectDiff:10,dodgeDiff:12},
+        {name:'Dardo venenoso',damage:'1d4',effect:'poison',detectDiff:12,dodgeDiff:10},
+        {name:'Foso oculto',damage:'2d6',effect:null,detectDiff:8,dodgeDiff:14},
+        {name:'Runa explosiva',damage:'2d8',effect:'fire',detectDiff:14,dodgeDiff:12}
+    ],
+    find(t,id){return this[t]?.find(x=>x.id===id)},
+    findItem(id){return this.find('weapons',id)||this.find('armors',id)||this.find('items',id)},
+    getRegion(id){return this.regions.find(r=>r.id===id)||this.regions[0]},
+    getEnemiesForRegion(regionId){return this.enemies.filter(e=>(e.regions||[]).includes(regionId))},
+    getPetsForRegion(regionId){return this.pets.filter(p=>!p.regions||p.regions.length===0||(p.regions||[]).includes(regionId))},
+    getNpcsForRegion(regionId){return this.npcs.filter(n=>n.region===regionId)},
+    save(){
+        const data={regions:this.regions,races:this.races,weapons:this.weapons,armors:this.armors,items:this.items,enemies:this.enemies,pets:this.pets,npcs:this.npcs};
+        localStorage.setItem('rpg_data',JSON.stringify(data));
+        if(FB.db&&FB.ok)FB.db.ref('gameData').set(data);
+    },
+    load(){const s=localStorage.getItem('rpg_data');if(s)try{const d=JSON.parse(s);Object.keys(d).forEach(k=>{if(this[k])this[k]=d[k]})}catch(e){}}
+};
 
-    // Firebase
-    const FB={db:null,ok:false,init(){try{firebase.initializeApp({apiKey:"AIzaSyAV4eSg9QjyE08zwtFsvjAomuMYVcNik9k",databaseURL:"https://rpggo-756a7-default-rtdb.firebaseio.com",projectId:"rpggo-756a7"});this.db=firebase.database();this.db.ref('.info/connected').on('value',s=>{this.ok=s.val()===true;$('#fbStatus').classList.toggle('connected',this.ok);$('#fbStatusText').textContent=this.ok?'✓':'✗';if(this.ok)this.load()})}catch(e){}},load(){if(!this.db)return;this.db.ref('gameData').once('value').then(s=>{const d=s.val();if(d){Object.keys(d).forEach(k=>{if(Data[k])Data[k]=d[k]});Editor.renderAll()}})}};
+// ==================== FIREBASE ====================
+const FB={db:null,ok:false,init(){try{firebase.initializeApp({apiKey:"AIzaSyAV4eSg9QjyE08zwtFsvjAomuMYVcNik9k",databaseURL:"https://rpggo-756a7-default-rtdb.firebaseio.com",projectId:"rpggo-756a7"});this.db=firebase.database();this.db.ref('.info/connected').on('value',s=>{this.ok=s.val()===true;$('#fbStatus').classList.toggle('connected',this.ok);$('#fbStatusText').textContent=this.ok?'✓':'✗';if(this.ok)this.load()})}catch(e){}},load(){if(!this.db)return;this.db.ref('gameData').once('value').then(s=>{const d=s.val();if(d){Object.keys(d).forEach(k=>{if(Data[k])Data[k]=d[k]});Editor.renderAll()}})}};
 
-    // Game State
-    let G={p:null,combat:false,enemy:null,turn:0,loc:{name:'Pueblo',type:'safe'},item:null};
+// ==================== GAME STATE ====================
+let G={p:null,combat:false,enemy:null,turn:0,region:null,item:null};
 
-    const Story={add(t,c=''){const e=document.createElement('div');e.className=`story-entry ${c?'story-'+c:''}`;e.innerHTML=t;$('#chroniclesContent').appendChild(e);setTimeout(scrollChron,50)},clear(){$('#chroniclesContent').innerHTML=''}};
+// ==================== STORY/CHRONICLES ====================
+const Story={
+    add(t,c=''){const e=document.createElement('div');e.className=`story-entry ${c?'story-'+c:''}`;e.innerHTML=t;$('#chroniclesContent').appendChild(e);setTimeout(scrollChron,50)},
+    clear(){$('#chroniclesContent').innerHTML=''}
+};
 
-    const Game={
-        init(){this.load()||this.new()},
-        new(){
-            const race=pick(Data.races),weapon={...pick(Data.weapons.slice(0,4)),uid:genId('i')},armor={...pick(Data.armors.slice(0,4)),uid:genId('i')},item={...pick(Data.items),uid:genId('i')};
-            G.p={name:pick(['Aldric','Brynn','Cedric','Dara','Freya','Gideon','Kira','Mira']),race,maxHp:20+(race.bonus.health||0),hp:20+(race.bonus.health||0),weapon,armor,inv:[item],maxSlots:10,gold:0,silver:20,effects:[],pet:null,defending:false};
-            G.combat=false;G.enemy=null;G.turn=0;G.loc={name:'Pueblo',type:'safe'};
-            Story.clear();Story.add(`<strong style="color:var(--gold)">⚔️ Nueva Aventura ⚔️</strong>`);
-            Story.add(`Eres <strong>${G.p.name}</strong>, ${race.name} ${race.icon}.`,'narrative');
-            Story.add(`Equipado: ${weapon.name}, ${armor.name}. ${G.p.silver} MP.`,'system');
-            this.updateUI();this.exploreActions()
-        },
-        save(){localStorage.setItem('rpg_save',JSON.stringify({p:G.p,loc:G.loc}));toast('Guardado','success')},
-        load(){const s=localStorage.getItem('rpg_save');if(!s)return false;try{const d=JSON.parse(s);G.p=d.p;G.loc=d.loc||{name:'Pueblo',type:'safe'};G.combat=false;Story.add('Partida cargada.','system');this.updateUI();this.exploreActions();return true}catch(e){return false}},
-        updateUI(){
-            const p=G.p;if(!p)return;
-            $('#charAvatar').innerHTML=p.race.sprite?`<img src="${p.race.sprite}">`:p.race.icon;
-            $('#charName').textContent=p.name;$('#charRace').textContent=`${p.race.name} (+${Object.entries(p.race.bonus).filter(([k,v])=>v).map(([k,v])=>`${v}${k[0].toUpperCase()}`).join('')||'?'})`;
-            const hp=(p.hp/p.maxHp)*100;$('#hpFill').style.width=hp+'%';$('#hpFill').className=`hp-fill ${hpClass(hp)}`;$('#hpText').textContent=`${p.hp}/${p.maxHp}`;
-            $('#locationBadge').textContent=`📍 ${G.loc.name}`;$('#locationBadge').className=`location-badge ${G.loc.type}`;
-            $('#statArmor').textContent=this.armor();$('#statEvasion').textContent=p.race.bonus.evasion||0;$('#statPrecision').textContent=p.race.bonus.precision||0;$('#statDamage').textContent=p.race.bonus.damage||0;
-            $('#weaponIcon').innerHTML=sprite(p.weapon);$('#weaponName').textContent=p.weapon?.name||'Puños';$('#weaponStats').textContent=`Daño: ${p.weapon?.damage||'1d2'}`;
-            $('#armorIcon').innerHTML=sprite(p.armor);$('#armorName').textContent=p.armor?.name||'Sin armadura';$('#armorStats').textContent=`Def: ${p.armor?.defense||0}`;
-            $('#goldAmount').textContent=p.gold;$('#silverAmount').textContent=p.silver;
-            const canEq=!G.combat&&G.loc.type==='safe';$('#weaponSlot').classList.toggle('disabled',!canEq);$('#armorSlot').classList.toggle('disabled',!canEq)
-        },
-        armor(){return(G.p.armor?.defense||0)+(G.p.race.bonus.armor||0)},
-        setActions(acts){const c=$('#actionsContainer');c.innerHTML='';acts.forEach(a=>{const b=document.createElement('button');b.className=`btn ${a.cls||''}`;b.textContent=a.text;b.disabled=a.disabled||false;b.onclick=a.fn;c.appendChild(b)})},
-        exploreActions(){this.setActions([{text:'🗺️ Explorar',fn:()=>Explore.start(),cls:'btn-primary'},{text:'🏘️ Pueblo',fn:()=>Town.visit()},{text:'🎒 Inventario',fn:()=>Inv.open()},{text:'💾 Guardar',fn:()=>this.save()}])}
-    };
+// ==================== REGIONS SYSTEM ====================
+const Regions={
+    openSelector(){
+        if(G.combat){toast('No puedes viajar en combate','error');return}
+        const grid=$('#regionsGrid');
+        grid.innerHTML='';
+        Data.regions.forEach(r=>{
+            const enemies=Data.getEnemiesForRegion(r.id);
+            const isCurrent=G.region&&G.region.id===r.id;
+            const div=document.createElement('div');
+            div.className=`region-card ${r.type} ${isCurrent?'current':''}`;
+            div.innerHTML=`
+                <div class="region-card-icon">${r.icon}</div>
+                <div class="region-card-name">${r.name}</div>
+                <div class="region-card-type">${r.type==='safe'?'🏠 Zona Segura':'⚠️ Zona Peligrosa'}</div>
+                ${r.type==='danger'?`<div class="region-card-enemies">👹 ${enemies.length} enemigos</div>`:''}
+                ${isCurrent?'<div style="color:var(--gold);font-size:.6rem;margin-top:.2rem">📍 Estás aquí</div>':''}
+            `;
+            div.onclick=()=>this.travelTo(r);
+            grid.appendChild(div);
+        });
+        openModal('regionModal');
+    },
+    travelTo(region){
+        closeModal('regionModal');
+        if(G.region&&G.region.id===region.id){
+            toast('Ya estás aquí','info');
+            return;
+        }
+        G.region=region;
+        Story.add(`<strong>🗺️ Viajando a ${region.name}</strong>`,'region');
+        Story.add(`${region.icon} ${region.desc}`,'narrative');
+        Game.updateUI();
+        
+        if(region.type==='safe'){
+            const npcs=Data.getNpcsForRegion(region.id);
+            if(npcs.length>0){
+                setTimeout(()=>Town.visit(region),500);
+            }else{
+                Story.add('Es un lugar tranquilo. Puedes descansar aquí.','system');
+                Game.exploreActions();
+            }
+        }else{
+            Story.add('Esta zona es peligrosa. ¡Prepárate para explorar!','system');
+            Game.exploreActions();
+        }
+    }
+};
 
-    const Explore={
-        start(){
-            Story.add(pick(['Te adentras en lo desconocido...','El camino se bifurca...','Una brisa cargada de presagios...']),'narrative');
-            Game.setActions([{text:'...',disabled:true}]);
-            setTimeout(()=>{
-                const danger=Math.random()<0.7;const loc=pick(danger?Data.locations.danger:Data.locations.safe);
-                G.loc={name:loc.name,type:danger?'danger':'safe',habitat:loc.habitat};
-                Story.add(`<strong>${loc.name}</strong>`,'narrative');Game.updateUI();
-                setTimeout(()=>{if(!danger){this.safe();return}const r=dX(100);if(r<=50)this.enemy();else if(r<=70)this.trap();else if(r<=85)this.treasure();else if(r<=95)this.pet();else this.safe()},1000)
-            },800)
-        },
-        enemy(){
-            const pool=Data.enemies.filter(e=>e.habitat===G.loc.habitat||e.habitat==='any'||!e.habitat);
-            const en=pick(pool.length?pool:Data.enemies);
-            Story.add(en.desc||`Un ${en.name} aparece.`,'narrative');
-            setTimeout(()=>{Story.add(`<strong>¡${en.name} ataca!</strong>`,'combat');Game.setActions([{text:'⚔️ Luchar',fn:()=>Combat.start(en),cls:'btn-primary'},{text:'💨 Huir',fn:()=>this.flee(en),cls:'btn-danger'}])},600)
-        },
-        async flee(en){const r=d20();await showDice(r,20,r>=14);Story.add(`Huida: ${r} vs 14`,'system');if(r>=14){Story.add('¡Escapas!','narrative');G.loc={name:'Sendero',type:'safe'};Game.updateUI();Game.exploreActions()}else{Story.add('¡No escapas!','combat');Combat.start(en)}},
-        async trap(){
-            const trap=pick(Data.traps);Story.add('Algo no está bien...','narrative');
-            setTimeout(async()=>{Story.add(`<strong>¡Trampa!</strong> ${trap.name}`,'trap');const det=d20();await showDice(det,20,det>=trap.detectDiff);Story.add(`Percepción: ${det} vs ${trap.detectDiff}`,'system');
-            if(det>=trap.detectDiff){Story.add('¡La detectas!','system');Game.setActions([{text:'🏃 Esquivar',fn:async()=>{const r=d20()+(G.p.race.bonus.evasion||0);await showDice(r,20,r>=trap.dodgeDiff);Story.add(`Esquive: ${r} vs ${trap.dodgeDiff}`,'system');if(r>=trap.dodgeDiff){Story.add('¡Te apartas!','loot');Game.exploreActions()}else{this.trapDmg(trap,true)}},cls:'btn-primary'},{text:'🔧 Desactivar',fn:async()=>{const r=d20();await showDice(r,20,r>=15);Story.add(`Desactivar: ${r} vs 15`,'system');if(r>=15){const mp=dX(15)+5;G.p.silver+=mp;Story.add(`+${mp} MP`,'loot')}else if(r>=10){Story.add('Te apartas.','system')}else{Story.add('¡Activas la trampa!','trap');this.trapDmg(trap,false);return}Game.updateUI();Game.exploreActions()}}])}else{Story.add('No la ves...','trap');this.trapDmg(trap,false)}},800)
-        },
-        trapDmg(trap,reduced){let dmg=roll(trap.damage);if(reduced)dmg=Math.ceil(dmg*0.5);const arm=Math.floor(Game.armor()/2);const f=Math.max(1,dmg-arm);G.p.hp-=f;Story.add(`${trap.name}: <span style="color:var(--red-bright)">${f} daño</span>`,'combat');if(trap.effect)Combat.applyEff(G.p,trap.effect);Game.updateUI();if(G.p.hp<=0){Story.add('<strong style="color:var(--red-bright)">Has muerto...</strong>','combat');Game.setActions([{text:'🔄 Nuevo',fn:()=>Game.new(),cls:'btn-primary'}])}else Game.exploreActions()},
-        treasure(){Story.add('¡Algo brilla!','narrative');setTimeout(()=>{const mp=dX(30)+10;G.p.silver+=mp;while(G.p.silver>=99){G.p.silver-=99;G.p.gold++}Story.add(`+${mp} MP`,'loot');if(Math.random()<0.3&&G.p.inv.length<G.p.maxSlots){const it={...pick(Data.items),uid:genId('i')};G.p.inv.push(it);Story.add(`+${it.name}`,'loot')}Game.updateUI();Game.exploreActions()},800)},
-        pet(){if(G.p.pet){this.safe();return}const pet=pick(Data.pets);Story.add(`Un ${pet.name} aparece.`,'narrative');const meat=G.p.inv.some(i=>i.type==='food');Game.setActions([{text:'🥩 Domesticar',fn:async()=>{const idx=G.p.inv.findIndex(i=>i.type==='food');if(idx>=0)G.p.inv.splice(idx,1);Story.add(`Ofreces comida...`,'narrative');const r=dX(pet.difficulty);const th=Math.ceil(pet.difficulty*0.6);await showDice(r,pet.difficulty,r>=th);Story.add(`D${pet.difficulty}: ${r} (necesitas ${th}+)`,'system');if(r>=th){G.p.pet={...pet,hp:pet.health,maxHp:pet.health};Story.add(`<strong style="color:var(--green-bright)">¡${pet.name} es tu compañero!</strong>`,'loot');toast('Compañero','success')}else{Story.add(`Se aleja.`,'narrative')}Game.updateUI();Game.exploreActions()},disabled:!meat,cls:meat?'btn-primary':''},{text:'⚔️ Cazar',fn:()=>Combat.start({...pet,health:pet.health,difficulty:10,loot:[5,15],drops:['i4']})},{text:'🚶 Dejar',fn:()=>{Story.add('Te alejas.','narrative');Game.exploreActions()}}])},
-        safe(){Story.add('Encuentras un lugar tranquilo.','narrative');G.loc={name:'Refugio',type:'safe'};const h=Math.floor(G.p.maxHp*0.3);G.p.hp=Math.min(G.p.maxHp,G.p.hp+h);G.p.effects=[];Story.add(`<span style="color:var(--green-bright)">+${h} HP</span>. Zona segura.`,'system');Game.updateUI();Game.exploreActions()}
-    };
+// ==================== MAIN GAME ====================
+const Game={
+    init(){this.load()||this.new()},
+    new(){
+        const race=pick(Data.races);
+        const weapon={...pick(Data.weapons.slice(0,4)),uid:genId('i')};
+        const armor={...pick(Data.armors.slice(0,4)),uid:genId('i')};
+        const item={...pick(Data.items),uid:genId('i')};
+        G.p={name:pick(['Aldric','Brynn','Cedric','Dara','Freya','Gideon','Kira','Mira','Orion','Theron']),race,maxHp:20+(race.bonus.health||0),hp:20+(race.bonus.health||0),weapon,armor,inv:[item],maxSlots:10,gold:0,silver:20,effects:[],pet:null,defending:false};
+        G.combat=false;G.enemy=null;G.turn=0;
+        G.region=Data.getRegion('pueblo');
+        Story.clear();
+        Story.add(`<strong style="color:var(--gold);font-size:1.1rem">⚔️ Aventuras de Acero y Runas ⚔️</strong>`);
+        Story.add(`Eres <strong>${G.p.name}</strong>, ${race.name} ${race.icon}, en busca de gloria.`,'narrative');
+        Story.add(`Equipado: ${weapon.name} (${weapon.damage}), ${armor.name} (Def:${armor.defense})`,'system');
+        Story.add(`Comienzas en ${G.region.icon} <strong>${G.region.name}</strong>.`,'region');
+        this.updateUI();this.exploreActions();
+    },
+    save(){localStorage.setItem('rpg_save',JSON.stringify({p:G.p,region:G.region}));toast('Guardado','success')},
+    load(){
+        const s=localStorage.getItem('rpg_save');
+        if(!s)return false;
+        try{
+            const d=JSON.parse(s);
+            G.p=d.p;
+            G.region=d.region?Data.getRegion(d.region.id):Data.getRegion('pueblo');
+            G.combat=false;
+            Story.add('Partida cargada. Tu aventura continúa...','system');
+            this.updateUI();this.exploreActions();
+            return true;
+        }catch(e){return false}
+    },
+    updateUI(){
+        const p=G.p;if(!p)return;
+        $('#charAvatar').innerHTML=p.race.sprite?`<img src="${p.race.sprite}">`:p.race.icon;
+        $('#charName').textContent=p.name;
+        $('#charRace').textContent=`${p.race.name} (${this.bonusStr(p.race.bonus)})`;
+        const hp=(p.hp/p.maxHp)*100;
+        $('#hpFill').style.width=hp+'%';
+        $('#hpFill').className=`hp-fill ${hpClass(hp)}`;
+        $('#hpText').textContent=`${p.hp}/${p.maxHp}`;
+        // Region badge
+        const rb=$('#regionBadge');
+        rb.className=`region-badge ${G.region.type}`;
+        rb.innerHTML=`<span class="region-icon">${G.region.icon}</span><span class="region-name">${G.region.name}</span><div style="font-size:.55rem;color:var(--text-dim)">Click para viajar</div>`;
+        // Stats
+        $('#statArmor').textContent=this.armor();
+        $('#statEvasion').textContent=p.race.bonus.evasion||0;
+        $('#statPrecision').textContent=p.race.bonus.precision||0;
+        $('#statDamage').textContent=p.race.bonus.damage||0;
+        // Equipment
+        $('#weaponIcon').innerHTML=sprite(p.weapon);
+        $('#weaponName').textContent=p.weapon?.name||'Puños';
+        $('#weaponStats').textContent=`Daño: ${p.weapon?.damage||'1d2'}`;
+        $('#armorIcon').innerHTML=sprite(p.armor);
+        $('#armorName').textContent=p.armor?.name||'Sin armadura';
+        $('#armorStats').textContent=`Def: ${p.armor?.defense||0}`;
+        // Currency
+        $('#goldAmount').textContent=p.gold;
+        $('#silverAmount').textContent=p.silver;
+        // Equip slots state
+        const canEq=!G.combat&&G.region.type==='safe';
+        $('#weaponSlot').classList.toggle('disabled',!canEq);
+        $('#armorSlot').classList.toggle('disabled',!canEq);
+    },
+    bonusStr(b){const parts=[];if(b.health)parts.push(`+${b.health}HP`);if(b.armor)parts.push(`+${b.armor}Arm`);if(b.evasion)parts.push(`+${b.evasion}Eva`);if(b.precision)parts.push(`+${b.precision}Prec`);if(b.damage)parts.push(`+${b.damage}Dmg`);return parts.join(' ')||'Sin bonus'},
+    armor(){return(G.p.armor?.defense||0)+(G.p.race.bonus.armor||0)},
+    setActions(acts){const c=$('#actionsContainer');c.innerHTML='';acts.forEach(a=>{const b=document.createElement('button');b.className=`btn ${a.cls||''}`;b.textContent=a.text;b.disabled=a.disabled||false;b.onclick=a.fn;c.appendChild(b)})},
+    exploreActions(){
+        const actions=[{text:'🗺️ Viajar',fn:()=>Regions.openSelector()}];
+        if(G.region.type==='danger'){
+            actions.unshift({text:'⚔️ Explorar',fn:()=>Explore.start(),cls:'btn-primary'});
+        }else{
+            const npcs=Data.getNpcsForRegion(G.region.id);
+            if(npcs.length>0)actions.push({text:'🏘️ Ver NPCs',fn:()=>Town.visit(G.region)});
+        }
+        actions.push({text:'🎒 Inventario',fn:()=>Inv.open()});
+        actions.push({text:'💾 Guardar',fn:()=>this.save()});
+        this.setActions(actions);
+    }
+};
 
-    const Combat={
-        start(en){G.combat=true;G.enemy={...en,hp:en.health,maxHp:en.health,effects:[]};G.turn=1;$('#combatArena').classList.remove('hidden');$('#combatLog').innerHTML='';this.updateUI();Game.updateUI();Game.setActions([{text:'En combate...',disabled:true}])},
-        updateUI(){
-            const p=G.p,e=G.enemy;$('#turnCounter').textContent=G.turn;
-            $('#playerSprite').innerHTML=sprite({icon:p.race.icon,sprite:p.race.sprite});$('#playerCombatName').textContent=p.name;$('#playerCombatDmg').textContent=p.weapon?.damage||'1d2';$('#playerCombatDef').textContent=Game.armor();
-            const pp=(p.hp/p.maxHp)*100;$('#playerCombatHpFill').style.width=pp+'%';$('#playerCombatHpFill').className=`hp-fill ${hpClass(pp)}`;$('#playerCombatHpText').textContent=`${p.hp}/${p.maxHp}`;
-            $('#playerEffects').innerHTML=p.effects.map(ef=>`<span class="effect-tag eff-${ef.type}">${ef.type} ${ef.turns}</span>`).join('');
-            $('#enemySprite').innerHTML=sprite(e);$('#enemyCombatName').textContent=e.name;$('#enemyCombatDmg').textContent=e.damage;$('#enemyCombatDiff').textContent=e.difficulty;
-            const ep=(e.hp/e.maxHp)*100;$('#enemyCombatHpFill').style.width=ep+'%';$('#enemyCombatHpFill').className=`hp-fill ${hpClass(ep)}`;$('#enemyCombatHpText').textContent=`${e.hp}/${e.maxHp}`;
-            $('#enemyEffects').innerHTML=(e.effects||[]).map(ef=>`<span class="effect-tag eff-${ef.type}">${ef.type} ${ef.turns}</span>`).join('');
-            const ca=$('#combatActions');ca.innerHTML='';[{text:'⚔️ Atacar',fn:()=>this.attack(),cls:'btn-primary'},{text:'🎒 Item',fn:()=>Inv.open()},{text:'🛡️ Defender',fn:()=>this.defend()},{text:'💨 Huir',fn:()=>this.flee(),cls:'btn-danger'}].forEach(a=>{const b=document.createElement('button');b.className=`btn ${a.cls||''}`;b.textContent=a.text;b.onclick=a.fn;ca.appendChild(b)})
-        },
-        log(t,c=''){$('#combatLog').innerHTML+=`<div class="log-entry ${c}">${t}</div>`;$('#combatLog').scrollTop=999999},
-        async attack(){
-            const p=G.p,e=G.enemy,r=d20(),prec=p.race.bonus.precision||0,total=r+prec,crit=r===20;
-            await showDice(r,20,crit);this.log(`<span class="log-player">${p.name}</span>: ${r}${prec?`+${prec}`:''}=${total} vs ${e.difficulty}`);
-            if(r===1){this.log('<span class="log-miss">¡Pifia!</span>')}
-            else if(total>=e.difficulty){let dmg=roll(p.weapon?.damage||'1d2')+(p.race.bonus.damage||0);if(crit){dmg*=2;this.log('<span class="log-crit">¡CRÍTICO!</span>')}e.hp-=dmg;this.log(`<span class="log-damage">${dmg} daño</span>`);if(p.weapon?.effect)this.applyEff(e,p.weapon.effect);if(p.pet){const pd=roll(p.pet.damage);e.hp-=pd;this.log(`${p.pet.icon}: ${pd}`)}if(e.hp<=0){this.victory();return}}
-            else{this.log('<span class="log-miss">Fallo</span>')}this.updateUI();await this.enemyTurn()
-        },
-        defend(){G.p.defending=true;this.log(`<span class="log-player">${G.p.name}</span> defiende (+4 eva)`);this.enemyTurn()},
-        async flee(){const r=d20();await showDice(r,20,r>=12);if(r>=12){this.log(`Huida: ${r} <span class="log-heal">¡Escape!</span>`);this.escape()}else{this.log(`Huida: ${r} <span class="log-miss">Fallido</span>`);await this.enemyTurn()}},
-        async enemyTurn(){
-            const p=G.p,e=G.enemy;this.processEff(e);this.updateUI();if(e.hp<=0){this.victory();return}
-            const dr=d20(),eva=(p.race.bonus.evasion||0)+(p.defending?4:0),td=dr+eva;
-            this.log(`<span class="log-enemy">${e.name}</span> ataca`);this.log(`Esquive: ${dr}${eva?`+${eva}`:''}=${td} vs 12`);
-            if(td>=12){this.log('<span class="log-heal">¡Esquivado!</span>')}
-            else{let dmg=roll(e.damage);const crit=Math.random()<0.1;if(crit){dmg=Math.ceil(dmg*1.25);this.log('<span class="log-crit">Crítico!</span>')}const arm=Game.armor();const f=Math.max(1,dmg-arm);p.hp-=f;this.log(`<span class="log-damage">${f} daño</span>`);if(e.effect)this.applyEff(p,e.effect)}
-            this.processEff(p);p.defending=false;G.turn++;this.updateUI();Game.updateUI();if(p.hp<=0)this.defeat()
-        },
-        applyEff(t,type){const effs={bleed:{dmg:1,turns:3,max:3},poison:{dmg:2,turns:2,max:2},fire:{dmg:'1d4',turns:2,max:1}};const ef=effs[type];if(!ef)return;if(!t.effects)t.effects=[];const ex=t.effects.find(e=>e.type===type);if(ex){if(ex.stacks<ef.max)ex.stacks++;ex.turns=ef.turns}else t.effects.push({type,dmg:ef.dmg,turns:ef.turns,stacks:1})},
-        processEff(t){if(!t.effects?.length)return;let d=0;t.effects.forEach(ef=>{d+=(typeof ef.dmg==='string'?roll(ef.dmg):ef.dmg)*(ef.stacks||1);ef.turns--});t.effects=t.effects.filter(e=>e.turns>0);if(d>0)t.hp-=d},
-        victory(){const e=G.enemy;$('#combatArena').classList.add('hidden');G.combat=false;Story.add(`<strong style="color:var(--green-bright)">¡Victoria!</strong> vs ${e.name}`,'loot');if(e.loot){const mp=dX(e.loot[1]-e.loot[0])+e.loot[0];G.p.silver+=mp;while(G.p.silver>=99){G.p.silver-=99;G.p.gold++}Story.add(`+${mp} MP`,'loot')}if(e.drops)e.drops.forEach(did=>{if(Math.random()<0.3&&G.p.inv.length<G.p.maxSlots){const it=Data.findItem(did);if(it){G.p.inv.push({...it,uid:genId('i')});Story.add(`+${it.name}`,'loot')}}});G.loc={name:'Campo',type:'safe'};G.enemy=null;Game.updateUI();Game.exploreActions()},
-        defeat(){$('#combatArena').classList.add('hidden');G.combat=false;Story.add('<strong style="color:var(--red-bright)">Has caído...</strong>','combat');Game.setActions([{text:'🔄 Nuevo',fn:()=>Game.new(),cls:'btn-primary'}])},
-        escape(){$('#combatArena').classList.add('hidden');G.combat=false;G.enemy=null;G.loc={name:'Sendero',type:'safe'};Story.add('Escapas.','system');Game.updateUI();Game.exploreActions()}
-    };
+// ==================== EXPLORATION ====================
+const Explore={
+    start(){
+        if(G.region.type==='safe'){toast('Esta zona es segura','info');return}
+        const narratives=G.region.narratives||['Exploras la zona...'];
+        Story.add(pick(narratives),'narrative');
+        Game.setActions([{text:'...',disabled:true}]);
+        setTimeout(()=>{
+            const r=dX(100);
+            if(r<=55)this.enemy();
+            else if(r<=75)this.trap();
+            else if(r<=88)this.treasure();
+            else if(r<=96)this.pet();
+            else this.safe();
+        },800);
+    },
+    enemy(){
+        const pool=Data.getEnemiesForRegion(G.region.id);
+        if(pool.length===0){Story.add('No hay peligros aquí por ahora...','system');Game.exploreActions();return}
+        const en=pick(pool);
+        Story.add(en.desc||`Un ${en.name} aparece.`,'narrative');
+        setTimeout(()=>{
+            Story.add(`<strong>¡${en.name} ${en.icon} se prepara para atacar!</strong>`,'combat');
+            Game.setActions([
+                {text:'⚔️ ¡Luchar!',fn:()=>Combat.start(en),cls:'btn-primary'},
+                {text:'💨 Huir',fn:()=>this.flee(en),cls:'btn-danger'}
+            ]);
+        },600);
+    },
+    async flee(en){
+        const r=d20();await showDice(r,20,r>=14);
+        Story.add(`Huida: <strong>${r}</strong> vs 14`,'system');
+        if(r>=14){Story.add('¡Escapas antes del combate!','narrative');Game.exploreActions()}
+        else{Story.add('¡No logras escapar! El combate es inevitable.','combat');Combat.start(en)}
+    },
+    async trap(){
+        const trap=pick(Data.traps);
+        Story.add('Algo no está bien... tus instintos se activan.','narrative');
+        setTimeout(async()=>{
+            Story.add(`<strong>¡Trampa!</strong> ${trap.name}`,'trap');
+            const det=d20();await showDice(det,20,det>=trap.detectDiff);
+            Story.add(`Percepción: <strong>${det}</strong> vs ${trap.detectDiff}`,'system');
+            if(det>=trap.detectDiff){
+                Story.add('¡Detectas la trampa a tiempo!','system');
+                Game.setActions([
+                    {text:'🏃 Esquivar',fn:async()=>{
+                        const r=d20()+(G.p.race.bonus.evasion||0);
+                        await showDice(r,20,r>=trap.dodgeDiff);
+                        Story.add(`Esquive: <strong>${r}</strong> vs ${trap.dodgeDiff}`,'system');
+                        if(r>=trap.dodgeDiff){Story.add('¡Te apartas a tiempo!','loot');Game.exploreActions()}
+                        else this.trapDmg(trap,true);
+                    },cls:'btn-primary'},
+                    {text:'🔧 Desactivar',fn:async()=>{
+                        const r=d20();await showDice(r,20,r>=15);
+                        Story.add(`Desactivar: <strong>${r}</strong> vs 15`,'system');
+                        if(r>=15){const mp=dX(15)+5;G.p.silver+=mp;Story.add(`¡Éxito! Recuperas <strong>+${mp} MP</strong> en componentes.`,'loot')}
+                        else if(r>=10){Story.add('No funciona. Te apartas con cuidado.','system')}
+                        else{Story.add('¡Activas la trampa accidentalmente!','trap');this.trapDmg(trap,false);return}
+                        Game.updateUI();Game.exploreActions();
+                    }}
+                ]);
+            }else{
+                Story.add('No la detectas a tiempo...','trap');
+                this.trapDmg(trap,false);
+            }
+        },800);
+    },
+    trapDmg(trap,reduced){
+        let dmg=roll(trap.damage);
+        if(reduced)dmg=Math.ceil(dmg*0.5);
+        const arm=Math.floor(Game.armor()/2);
+        const final=Math.max(1,dmg-arm);
+        Story.add(`<div class="log-calc">⚙️ ${trap.name}: ${dmg} daño base − ${arm} armadura = <strong>${final} daño</strong></div>`,'');
+        G.p.hp-=final;
+        if(trap.effect)Combat.applyEff(G.p,trap.effect);
+        Game.updateUI();
+        if(G.p.hp<=0){
+            Story.add('<strong style="color:var(--red-bright)">💀 Has muerto...</strong>','combat');
+            Game.setActions([{text:'🔄 Nuevo Personaje',fn:()=>Game.new(),cls:'btn-primary'}]);
+        }else Game.exploreActions();
+    },
+    treasure(){
+        Story.add('¡Algo brilla entre los escombros!','narrative');
+        setTimeout(()=>{
+            const mp=dX(30)+10;
+            G.p.silver+=mp;
+            while(G.p.silver>=99){G.p.silver-=99;G.p.gold++}
+            Story.add(`Encuentras <strong>+${mp} MP</strong>`,'loot');
+            if(Math.random()<0.3&&G.p.inv.length<G.p.maxSlots){
+                const it={...pick(Data.items),uid:genId('i')};
+                G.p.inv.push(it);
+                Story.add(`También encuentras: <strong>${it.icon} ${it.name}</strong>`,'loot');
+            }
+            Game.updateUI();Game.exploreActions();
+        },800);
+    },
+    pet(){
+        if(G.p.pet){this.safe();return}
+        const pool=Data.getPetsForRegion(G.region.id);
+        if(pool.length===0){this.treasure();return}
+        const pet=pick(pool);
+        Story.add(`${pet.icon} ${pet.desc||`Un ${pet.name} aparece.`}`,'narrative');
+        const meat=G.p.inv.some(i=>i.type==='food');
+        Game.setActions([
+            {text:'🥩 Domesticar',fn:async()=>{
+                const idx=G.p.inv.findIndex(i=>i.type==='food');
+                if(idx>=0)G.p.inv.splice(idx,1);
+                Story.add(`Ofreces comida al ${pet.name}...`,'narrative');
+                const r=dX(pet.difficulty);
+                const th=Math.ceil(pet.difficulty*0.6);
+                await showDice(r,pet.difficulty,r>=th);
+                Story.add(`D${pet.difficulty}: <strong>${r}</strong> (necesitas ${th}+)`,'system');
+                if(r>=th){
+                    G.p.pet={...pet,hp:pet.health,maxHp:pet.health};
+                    Story.add(`<strong style="color:var(--green-bright)">¡${pet.name} es ahora tu compañero!</strong>`,'loot');
+                    toast('¡Compañero obtenido!','success');
+                }else Story.add(`El ${pet.name} toma la comida y se aleja.`,'narrative');
+                Game.updateUI();Game.exploreActions();
+            },disabled:!meat,cls:meat?'btn-primary':''},
+            {text:'⚔️ Cazar',fn:()=>Combat.start({...pet,health:pet.health,difficulty:10,armor:0,loot:[5,15],drops:['i4']})},
+            {text:'🚶 Dejar ir',fn:()=>{Story.add('Te alejas silenciosamente.','narrative');Game.exploreActions()}}
+        ]);
+    },
+    safe(){
+        Story.add('Encuentras un lugar tranquilo para descansar.','narrative');
+        const h=Math.floor(G.p.maxHp*0.3);
+        G.p.hp=Math.min(G.p.maxHp,G.p.hp+h);
+        G.p.effects=[];
+        Story.add(`<span style="color:var(--green-bright)">+${h} HP restaurados.</span> Estados curados.`,'system');
+        Game.updateUI();Game.exploreActions();
+    }
+};
 
-    const Inv={
-        open(){this.render();openModal('inventoryModal')},
-        render(){$('#inventoryInfo').textContent=`${G.p.inv.length}/${G.p.maxSlots}`;const g=$('#inventoryGrid');g.innerHTML='';G.p.inv.forEach(it=>{const s=document.createElement('div');s.className=`inv-slot rarity-${it.rarity||'common'}`;s.innerHTML=`<div class="inv-slot-icon">${sprite(it)}</div><div class="inv-slot-name">${it.name}</div>`;s.onclick=()=>this.detail(it,'inv');g.appendChild(s)});for(let i=G.p.inv.length;i<G.p.maxSlots;i++){const s=document.createElement('div');s.className='inv-slot empty';s.innerHTML='<div class="inv-slot-name" style="color:var(--text-dim)">vacío</div>';g.appendChild(s)}},
-        detail(it,ctx){
-            G.item=it;$('#detailIcon').innerHTML=sprite(it);$('#detailName').textContent=it.name;$('#detailType').textContent=it.damage?'Arma':it.defense!==undefined?'Armadura':it.type||'Item';$('#detailDesc').textContent=it.desc||'Sin descripción.';
-            let st='';if(it.damage)st+=`<div class="item-stat-box"><div class="item-stat-label">Daño</div><div class="item-stat-value">${it.damage}</div></div>`;if(it.defense!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Def</div><div class="item-stat-value">${it.defense}</div></div>`;if(it.effect&&(it.type==='potion'||it.type==='food'))st+=`<div class="item-stat-box"><div class="item-stat-label">Cura</div><div class="item-stat-value">${it.effect}</div></div>`;if(it.value)st+=`<div class="item-stat-box"><div class="item-stat-label">Valor</div><div class="item-stat-value">${it.value}MP</div></div>`;$('#detailStats').innerHTML=st;
-            const canEq=!G.combat&&G.loc.type==='safe';let acts='';
-            if(ctx.startsWith('eq-')){if(canEq)acts=`<button class="btn btn-danger" onclick="Inv.unequip('${ctx.split('-')[1]}')">❌ Desequipar</button>`;else acts='<span style="color:var(--text-dim)">Solo zona segura</span>'}
-            else{if(it.damage&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('weapon')">⚔️ Equipar</button>`;if(it.defense!==undefined&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('armor')">🛡️ Equipar</button>`;if(it.type==='potion'||it.type==='food')acts+=`<button class="btn btn-primary" onclick="Inv.use()">✨ Usar</button>`;if(it.type==='antidote')acts+=`<button class="btn btn-primary" onclick="Inv.use()">💊 Usar</button>`;if(it.type==='escape'&&G.combat)acts+=`<button class="btn btn-primary" onclick="Inv.use()">💨 Usar</button>`;if(it.type==='backpack')acts+=`<button class="btn btn-primary" onclick="Inv.use()">🎒 Usar</button>`}
-            acts+=`<button class="btn" onclick="closeModal('itemDetailModal')">Cerrar</button>`;$('#detailActions').innerHTML=acts;openModal('itemDetailModal')
-        },
-        equip(slot){const it=G.item;if(!it?.uid)return;closeModal('itemDetailModal');if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon=it}else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor=it}G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);Story.add(`Equipas ${it.name}.`,'system');toast('Equipado','success');Game.updateUI();this.render()},
-        unequip(slot){if(G.p.inv.length>=G.p.maxSlots){toast('Inventario lleno','error');return}closeModal('itemDetailModal');if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon={name:'Puños',damage:'1d2',icon:'✊'}}else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor={name:'Sin armadura',defense:0,icon:'👤'}}Story.add('Guardas tu equipo.','system');toast('Desequipado','info');Game.updateUI()},
-        use(){const it=G.item;if(!it?.uid)return;closeModal('itemDetailModal');closeModal('inventoryModal');if(it.type==='potion'||it.type==='food'){const h=roll(it.effect||'1d4');const a=Math.min(h,G.p.maxHp-G.p.hp);G.p.hp+=a;Story.add(`${it.name}: <span style="color:var(--green-bright)">+${a} HP</span>`,'system')}else if(it.type==='antidote'){G.p.effects=G.p.effects.filter(e=>e.type!=='poison');Story.add('Veneno curado.','system')}else if(it.type==='escape'&&G.combat){G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);Story.add('¡Bomba de humo!','narrative');Combat.escape();return}else if(it.type==='backpack'){const s=parseInt(it.effect)||5;G.p.maxSlots+=s;Story.add(`+${s} espacios.`,'system')}G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);Game.updateUI();if(G.combat)Combat.updateUI()}
-    };
+// ==================== COMBAT SYSTEM - ENHANCED ====================
+const Combat={
+    start(en){
+        G.combat=true;
+        G.enemy={...en,hp:en.health,maxHp:en.health,armor:en.armor||0,effects:[]};
+        G.turn=1;
+        $('#combatArena').classList.remove('hidden');
+        $('#combatLog').innerHTML=`<div class="log-turn">══ TURNO 1 ══</div>`;
+        this.updateUI();
+        Game.updateUI();
+        Game.setActions([{text:'En combate...',disabled:true}]);
+    },
+    updateUI(){
+        const p=G.p,e=G.enemy;
+        $('#turnCounter').textContent=G.turn;
+        // Player
+        $('#playerSprite').innerHTML=sprite({icon:p.race.icon,sprite:p.race.sprite});
+        $('#playerCombatName').textContent=p.name;
+        $('#playerCombatDmg').textContent=p.weapon?.damage||'1d2';
+        $('#playerCombatDef').textContent=Game.armor();
+        const pp=(p.hp/p.maxHp)*100;
+        $('#playerCombatHpFill').style.width=pp+'%';
+        $('#playerCombatHpFill').className=`hp-fill ${hpClass(pp)}`;
+        $('#playerCombatHpText').textContent=`${p.hp}/${p.maxHp}`;
+        $('#playerEffects').innerHTML=p.effects.map(ef=>`<span class="effect-tag eff-${ef.type}">${ef.type} ${ef.turns}t</span>`).join('');
+        // Enemy
+        $('#enemySprite').innerHTML=sprite(e);
+        $('#enemyCombatName').textContent=e.name;
+        $('#enemyCombatDmg').textContent=e.damage;
+        $('#enemyCombatDiff').textContent=e.difficulty;
+        const ep=(e.hp/e.maxHp)*100;
+        $('#enemyCombatHpFill').style.width=ep+'%';
+        $('#enemyCombatHpFill').className=`hp-fill ${hpClass(ep)}`;
+        $('#enemyCombatHpText').textContent=`${e.hp}/${e.maxHp}`;
+        $('#enemyEffects').innerHTML=(e.effects||[]).map(ef=>`<span class="effect-tag eff-${ef.type}">${ef.type} ${ef.turns}t</span>`).join('');
+        // Actions
+        const ca=$('#combatActions');
+        ca.innerHTML='';
+        [{text:'⚔️ Atacar',fn:()=>this.attack(),cls:'btn-primary'},{text:'🎒 Item',fn:()=>Inv.open()},{text:'🛡️ Defender',fn:()=>this.defend()},{text:'💨 Huir',fn:()=>this.flee(),cls:'btn-danger'}].forEach(a=>{
+            const b=document.createElement('button');
+            b.className=`btn ${a.cls||''}`;
+            b.textContent=a.text;
+            b.onclick=a.fn;
+            ca.appendChild(b);
+        });
+    },
+    log(t,c=''){$('#combatLog').innerHTML+=`<div class="log-entry ${c}">${t}</div>`;$('#combatLog').scrollTop=999999},
+    logCalc(base,armor,final,target){
+        this.log(`<div class="log-calc">⚙️ ${base} daño base − ${armor} armadura = <strong>${final} daño</strong> a ${target}</div>`);
+    },
+    async attack(){
+        const p=G.p,e=G.enemy;
+        const r=d20(),prec=p.race.bonus.precision||0,total=r+prec,crit=r===20;
+        await showDice(r,20,crit);
+        this.log(`<span class="log-player">${p.name}</span> ataca: D20=${r}${prec?`+${prec}`:''} = <strong>${total}</strong> vs ${e.difficulty}`);
+        
+        if(r===1){
+            this.log('<span class="log-miss">¡Pifia! Fallo automático.</span>');
+        }else if(total>=e.difficulty){
+            let dmgBase=roll(p.weapon?.damage||'1d2')+(p.race.bonus.damage||0);
+            if(crit){dmgBase*=2;this.log('<span class="log-crit">¡¡CRÍTICO!! Daño x2</span>');}
+            const enemyArmor=e.armor||0;
+            const dmgFinal=Math.max(1,dmgBase-enemyArmor);
+            this.logCalc(dmgBase,enemyArmor,dmgFinal,e.name);
+            e.hp-=dmgFinal;
+            this.log(`<span class="log-damage">${e.name} recibe ${dmgFinal} de daño.</span>`);
+            if(p.weapon?.effect)this.applyEff(e,p.weapon.effect);
+            // Pet attack
+            if(p.pet){
+                const petDmg=roll(p.pet.damage);
+                const petFinal=Math.max(1,petDmg-enemyArmor);
+                this.log(`${p.pet.icon} ${p.pet.name} ataca: ${petDmg} − ${enemyArmor} = <span class="log-damage">${petFinal}</span>`);
+                e.hp-=petFinal;
+            }
+            if(e.hp<=0){this.victory();return}
+        }else{
+            this.log('<span class="log-miss">El ataque falla.</span>');
+        }
+        this.updateUI();
+        await this.enemyTurn();
+    },
+    defend(){
+        G.p.defending=true;
+        this.log(`<span class="log-player">${G.p.name}</span> se prepara para defenderse. <span class="log-heal">+4 Evasión</span>`);
+        this.enemyTurn();
+    },
+    async flee(){
+        const r=d20();await showDice(r,20,r>=12);
+        this.log(`Intento de huida: D20=${r} vs 12`);
+        if(r>=12){this.log('<span class="log-heal">¡Escape exitoso!</span>');this.escape()}
+        else{this.log('<span class="log-miss">¡No logras escapar!</span>');await this.enemyTurn()}
+    },
+    async enemyTurn(){
+        const p=G.p,e=G.enemy;
+        this.processEff(e);this.updateUI();
+        if(e.hp<=0){this.victory();return}
+        G.turn++;
+        this.log(`<div class="log-turn">══ TURNO ${G.turn} ══</div>`);
+        
+        // Enemy attacks
+        const dr=d20(),eva=(p.race.bonus.evasion||0)+(p.defending?4:0),td=dr+eva;
+        this.log(`<span class="log-enemy">${e.name}</span> ataca a ${p.name}`);
+        this.log(`Esquive: D20=${dr}${eva?`+${eva}`:''} = <strong>${td}</strong> vs 12`);
+        
+        if(td>=12){
+            this.log('<span class="log-heal">¡Esquivado!</span>');
+        }else{
+            let dmgBase=roll(e.damage);
+            const crit=Math.random()<0.1;
+            if(crit){dmgBase=Math.ceil(dmgBase*1.25);this.log('<span class="log-crit">¡Golpe crítico enemigo!</span>');}
+            const playerArmor=Game.armor();
+            const dmgFinal=Math.max(1,dmgBase-playerArmor);
+            this.logCalc(dmgBase,playerArmor,dmgFinal,p.name);
+            p.hp-=dmgFinal;
+            this.log(`<span class="log-damage">${p.name} recibe ${dmgFinal} de daño.</span>`);
+            if(e.effect)this.applyEff(p,e.effect);
+        }
+        this.processEff(p);
+        p.defending=false;
+        this.updateUI();Game.updateUI();
+        if(p.hp<=0)this.defeat();
+    },
+    applyEff(t,type){
+        const effs={bleed:{dmg:1,turns:3,max:3},poison:{dmg:2,turns:2,max:2},fire:{dmg:'1d4',turns:2,max:1}};
+        const ef=effs[type];if(!ef)return;
+        if(!t.effects)t.effects=[];
+        const ex=t.effects.find(e=>e.type===type);
+        if(ex){if(ex.stacks<ef.max)ex.stacks++;ex.turns=ef.turns}
+        else t.effects.push({type,dmg:ef.dmg,turns:ef.turns,stacks:1});
+        this.log(`<span style="color:var(--orange)">Efecto aplicado: ${type}</span>`);
+    },
+    processEff(t){
+        if(!t.effects?.length)return;
+        let total=0;
+        t.effects.forEach(ef=>{
+            const d=(typeof ef.dmg==='string'?roll(ef.dmg):ef.dmg)*(ef.stacks||1);
+            total+=d;ef.turns--;
+        });
+        t.effects=t.effects.filter(e=>e.turns>0);
+        if(total>0){
+            t.hp-=total;
+            this.log(`<span style="color:var(--orange)">Daño por efectos: ${total}</span>`);
+        }
+    },
+    victory(){
+        const e=G.enemy;
+        $('#combatArena').classList.add('hidden');
+        G.combat=false;
+        Story.add(`<strong style="color:var(--green-bright)">🎉 ¡Victoria!</strong> Has derrotado a ${e.name}.`,'loot');
+        if(e.loot){
+            const mp=dX(e.loot[1]-e.loot[0])+e.loot[0];
+            G.p.silver+=mp;
+            while(G.p.silver>=99){G.p.silver-=99;G.p.gold++}
+            Story.add(`Obtienes <strong>+${mp} MP</strong>`,'loot');
+        }
+        if(e.drops)e.drops.forEach(did=>{
+            if(Math.random()<0.3&&G.p.inv.length<G.p.maxSlots){
+                const it=Data.findItem(did);
+                if(it){G.p.inv.push({...it,uid:genId('i')});Story.add(`Encuentras: <strong>${it.icon} ${it.name}</strong>`,'loot')}
+            }
+        });
+        G.enemy=null;
+        Game.updateUI();Game.exploreActions();
+    },
+    defeat(){
+        $('#combatArena').classList.add('hidden');
+        G.combat=false;
+        Story.add('<strong style="color:var(--red-bright)">💀 Has sido derrotado...</strong>','combat');
+        Game.setActions([{text:'🔄 Nuevo Personaje',fn:()=>Game.new(),cls:'btn-primary'}]);
+    },
+    escape(){
+        $('#combatArena').classList.add('hidden');
+        G.combat=false;G.enemy=null;
+        Story.add('Logras escapar del combate.','system');
+        Game.updateUI();Game.exploreActions();
+    }
+};
 
-    const Town={
-        npc:null,
-        visit(){G.loc={name:'Pueblo',type:'safe'};Game.updateUI();Story.add('Llegas al pueblo.','narrative');const roles={merchant:'Comerciante',blacksmith:'Herrero',alchemist:'Alquimista',innkeeper:'Tabernero',healer:'Curandero',guard:'Guardia',villager:'Aldeano'};let h='<div style="display:grid;gap:.4rem">';Data.npcs.forEach(n=>{h+=`<div class="item-card" onclick="Town.interact('${n.id}')"><span class="item-card-icon">${sprite(n)}</span><div class="item-card-info"><div class="item-card-name">${n.name}</div><div class="item-card-stats">${roles[n.role]||n.role}</div></div></div>`});h+='</div>';$('#townContent').innerHTML=h;openModal('townModal')},
-        interact(id){const n=Data.find('npcs',id);if(!n)return;closeModal('townModal');this.npc=n;Story.add(`<strong>${n.name}</strong>: "${n.dialogue||'¡Saludos!'}"`,`dialogue`);if(n.sells?.length)setTimeout(()=>this.shop(n),400);else if(n.role==='healer'){if(G.p.silver>=10){G.p.silver-=10;G.p.hp=G.p.maxHp;G.p.effects=[];Story.add('Curación. (-10MP)','system')}else Story.add('"No tienes dinero."','dialogue');Game.updateUI()}else if(n.role==='innkeeper'){if(G.p.silver>=5){G.p.silver-=5;const h=Math.floor(G.p.maxHp*0.5);G.p.hp=Math.min(G.p.maxHp,G.p.hp+h);Story.add(`Descansas. +${h}HP (-5MP)`,'system')}Game.updateUI()}},
-        shop(n){$('#shopTitle').textContent=`🏪 ${n.name}`;let h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem"><div><h4 style="color:var(--gold);margin-bottom:.4rem">En venta</h4><div style="display:grid;gap:.2rem;max-height:180px;overflow-y:auto">';(n.sells||[]).forEach(iid=>{const it=Data.findItem(iid);if(it){const can=G.p.silver>=it.value&&G.p.inv.length<G.p.maxSlots;h+=`<div class="item-card" style="opacity:${can?1:.5}"><span class="item-card-icon">${sprite(it)}</span><div class="item-card-info"><div class="item-card-name">${it.name}</div><div class="item-card-stats">${it.value}MP</div></div><button class="btn btn-sm" onclick="Town.buy('${it.id}')" ${can?'':'disabled'}>Comprar</button></div>`}});h+='</div></div><div><h4 style="color:var(--gold);margin-bottom:.4rem">Vender</h4><div style="display:grid;gap:.2rem;max-height:180px;overflow-y:auto">';G.p.inv.forEach(it=>{const sp=Math.floor((it.value||10)*0.5);h+=`<div class="item-card"><span class="item-card-icon">${sprite(it)}</span><div class="item-card-info"><div class="item-card-name">${it.name}</div><div class="item-card-stats">${sp}MP</div></div><button class="btn btn-sm" onclick="Town.sell('${it.uid}',${sp})">Vender</button></div>`});h+=`</div></div></div><div style="text-align:center;margin-top:.6rem;color:var(--text-dim)">${G.p.gold}MO ${G.p.silver}MP</div>`;$('#shopContent').innerHTML=h;openModal('shopModal')},
-        buy(iid){const it=Data.findItem(iid);if(!it||G.p.silver<it.value||G.p.inv.length>=G.p.maxSlots)return;G.p.silver-=it.value;G.p.inv.push({...it,uid:genId('i')});Story.add(`Compras ${it.name}`,'system');toast('Comprado','success');Game.updateUI();if(this.npc)this.shop(this.npc)},
-        sell(uid,price){const it=G.p.inv.find(i=>i.uid===uid);if(!it)return;G.p.inv=G.p.inv.filter(i=>i.uid!==uid);G.p.silver+=price;while(G.p.silver>=99){G.p.silver-=99;G.p.gold++}Story.add(`Vendes ${it.name}`,'system');toast('Vendido','success');Game.updateUI();if(this.npc)this.shop(this.npc)}
-    };
+// ==================== INVENTORY ====================
+const Inv={
+    open(){this.render();openModal('inventoryModal')},
+    render(){
+        $('#inventoryInfo').textContent=`${G.p.inv.length}/${G.p.maxSlots} espacios`;
+        const g=$('#inventoryGrid');g.innerHTML='';
+        G.p.inv.forEach(it=>{
+            const s=document.createElement('div');
+            s.className=`inv-slot rarity-${it.rarity||'common'}`;
+            s.innerHTML=`<div class="inv-slot-icon">${sprite(it)}</div><div class="inv-slot-name">${it.name}</div>`;
+            s.onclick=()=>this.detail(it,'inv');
+            g.appendChild(s);
+        });
+        for(let i=G.p.inv.length;i<G.p.maxSlots;i++){
+            const s=document.createElement('div');s.className='inv-slot empty';
+            s.innerHTML='<div class="inv-slot-name" style="color:var(--text-dim)">vacío</div>';
+            g.appendChild(s);
+        }
+    },
+    detail(it,ctx){
+        G.item=it;
+        $('#detailIcon').innerHTML=sprite(it);
+        $('#detailName').textContent=it.name;
+        $('#detailType').textContent=it.damage?'Arma':it.defense!==undefined?'Armadura':it.type||'Item';
+        $('#detailDesc').textContent=it.desc||'Sin descripción.';
+        let st='';
+        if(it.damage)st+=`<div class="item-stat-box"><div class="item-stat-label">Daño</div><div class="item-stat-value">${it.damage}</div></div>`;
+        if(it.defense!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Defensa</div><div class="item-stat-value">${it.defense}</div></div>`;
+        if(it.effect&&(it.type==='potion'||it.type==='food'))st+=`<div class="item-stat-box"><div class="item-stat-label">Cura</div><div class="item-stat-value">${it.effect}</div></div>`;
+        if(it.value)st+=`<div class="item-stat-box"><div class="item-stat-label">Valor</div><div class="item-stat-value">${it.value} MP</div></div>`;
+        $('#detailStats').innerHTML=st;
+        
+        const canEq=!G.combat&&G.region.type==='safe';
+        let acts='';
+        if(ctx.startsWith('eq-')){
+            if(canEq)acts=`<button class="btn btn-danger" onclick="Inv.unequip('${ctx.split('-')[1]}')">❌ Desequipar</button>`;
+            else acts='<span style="color:var(--text-dim)">Solo en zona segura</span>';
+        }else{
+            if(it.damage&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('weapon')">⚔️ Equipar</button>`;
+            if(it.defense!==undefined&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('armor')">🛡️ Equipar</button>`;
+            if(it.type==='potion'||it.type==='food')acts+=`<button class="btn btn-primary" onclick="Inv.use()">✨ Usar</button>`;
+            if(it.type==='antidote')acts+=`<button class="btn btn-primary" onclick="Inv.use()">💊 Usar</button>`;
+            if(it.type==='escape'&&G.combat)acts+=`<button class="btn btn-primary" onclick="Inv.use()">💨 Usar</button>`;
+            if(it.type==='backpack')acts+=`<button class="btn btn-primary" onclick="Inv.use()">🎒 Usar</button>`;
+        }
+        acts+=`<button class="btn" onclick="closeModal('itemDetailModal')">Cerrar</button>`;
+        $('#detailActions').innerHTML=acts;
+        openModal('itemDetailModal');
+    },
+    equip(slot){
+        const it=G.item;if(!it?.uid)return;
+        closeModal('itemDetailModal');
+        if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon=it}
+        else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor=it}
+        G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);
+        Story.add(`Equipas ${it.icon} ${it.name}.`,'system');
+        toast('Equipado','success');Game.updateUI();this.render();
+    },
+    unequip(slot){
+        if(G.p.inv.length>=G.p.maxSlots){toast('Inventario lleno','error');return}
+        closeModal('itemDetailModal');
+        if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon={name:'Puños',damage:'1d2',icon:'✊'}}
+        else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor={name:'Sin armadura',defense:0,icon:'👤'}}
+        Story.add('Guardas tu equipo.','system');toast('Desequipado','info');Game.updateUI();
+    },
+    use(){
+        const it=G.item;if(!it?.uid)return;
+        closeModal('itemDetailModal');closeModal('inventoryModal');
+        if(it.type==='potion'||it.type==='food'){
+            const h=roll(it.effect||'1d4');
+            const a=Math.min(h,G.p.maxHp-G.p.hp);
+            G.p.hp+=a;
+            Story.add(`${it.icon} ${it.name}: <span style="color:var(--green-bright)">+${a} HP</span>`,'system');
+        }else if(it.type==='antidote'){
+            G.p.effects=G.p.effects.filter(e=>e.type!=='poison');
+            Story.add('Veneno curado.','system');
+        }else if(it.type==='escape'&&G.combat){
+            G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);
+            Story.add('¡Bomba de humo! Escapas del combate.','narrative');
+            Combat.escape();return;
+        }else if(it.type==='backpack'){
+            const s=parseInt(it.effect)||5;G.p.maxSlots+=s;
+            Story.add(`+${s} espacios de inventario.`,'system');
+        }
+        G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);
+        Game.updateUI();if(G.combat)Combat.updateUI();
+    }
+};
 
-    const Editor={
-        clear(t){const f={race:['race-id','race-name','race-icon','race-sprite','race-hp','race-armor','race-evasion','race-precision','race-damage','race-desc'],weapon:['weapon-id','weapon-name','weapon-damage','weapon-icon','weapon-sprite','weapon-value','weapon-desc'],armor:['armor-id','armor-name','armor-defense','armor-icon','armor-sprite','armor-value','armor-desc'],item:['item-id','item-name','item-icon','item-sprite','item-effect','item-value','item-desc'],enemy:['enemy-id','enemy-name','enemy-health','enemy-damage','enemy-difficulty','enemy-icon','enemy-sprite','enemy-loot-min','enemy-loot-max','enemy-desc'],pet:['pet-id','pet-name','pet-health','pet-damage','pet-difficulty','pet-icon','pet-sprite','pet-desc'],npc:['npc-id','npc-name','npc-icon','npc-sprite','npc-location','npc-dialogue']};(f[t]||[]).forEach(id=>{const e=$(`#${id}`);if(e)e.value=''})},
-        saveRace(){const r={id:$('#race-id').value||genId('race'),name:$('#race-name').value,icon:$('#race-icon').value||'👤',sprite:$('#race-sprite').value||'',bonus:{health:parseInt($('#race-hp').value)||0,armor:parseInt($('#race-armor').value)||0,evasion:parseInt($('#race-evasion').value)||0,precision:parseInt($('#race-precision').value)||0,damage:parseInt($('#race-damage').value)||0},desc:$('#race-desc').value||''};if(!r.name){toast('Falta nombre','error');return}const i=Data.races.findIndex(x=>x.id===r.id);if(i>=0)Data.races[i]=r;else Data.races.push(r);Data.save();this.renderRaces();this.clear('race');toast('Guardado','success')},
-        editRace(id){const r=Data.find('races',id);if(!r)return;$('#race-id').value=r.id;$('#race-name').value=r.name;$('#race-icon').value=r.icon||'';$('#race-sprite').value=r.sprite||'';$('#race-hp').value=r.bonus?.health||'';$('#race-armor').value=r.bonus?.armor||'';$('#race-evasion').value=r.bonus?.evasion||'';$('#race-precision').value=r.bonus?.precision||'';$('#race-damage').value=r.bonus?.damage||'';$('#race-desc').value=r.desc||''},
-        deleteRace(id){if(!confirm('¿Eliminar?'))return;Data.races=Data.races.filter(r=>r.id!==id);Data.save();this.renderRaces();toast('Eliminado','info')},
-        saveWeapon(){const w={id:$('#weapon-id').value||genId('w'),name:$('#weapon-name').value,damage:$('#weapon-damage').value||'1d4',icon:$('#weapon-icon').value||'⚔️',sprite:$('#weapon-sprite').value||'',rarity:$('#weapon-rarity').value,value:parseInt($('#weapon-value').value)||10,effect:$('#weapon-effect').value||null,desc:$('#weapon-desc').value||''};if(!w.name){toast('Falta nombre','error');return}const i=Data.weapons.findIndex(x=>x.id===w.id);if(i>=0)Data.weapons[i]=w;else Data.weapons.push(w);Data.save();this.renderWeapons();this.updateDrops();this.clear('weapon');toast('Guardado','success')},
-        saveArmor(){const a={id:$('#armor-id').value||genId('a'),name:$('#armor-name').value,defense:parseInt($('#armor-defense').value)||0,icon:$('#armor-icon').value||'🛡️',sprite:$('#armor-sprite').value||'',rarity:$('#armor-rarity').value,value:parseInt($('#armor-value').value)||10,desc:$('#armor-desc').value||''};if(!a.name){toast('Falta nombre','error');return}const i=Data.armors.findIndex(x=>x.id===a.id);if(i>=0)Data.armors[i]=a;else Data.armors.push(a);Data.save();this.renderArmors();this.updateDrops();this.clear('armor');toast('Guardado','success')},
-        saveItem(){const it={id:$('#item-id').value||genId('i'),name:$('#item-name').value,type:$('#item-type').value,icon:$('#item-icon').value||'📦',sprite:$('#item-sprite').value||'',effect:$('#item-effect').value||'',value:parseInt($('#item-value').value)||10,rarity:$('#item-rarity').value,desc:$('#item-desc').value||''};if(!it.name){toast('Falta nombre','error');return}const i=Data.items.findIndex(x=>x.id===it.id);if(i>=0)Data.items[i]=it;else Data.items.push(it);Data.save();this.renderItems();this.updateDrops();this.clear('item');toast('Guardado','success')},
-        saveEnemy(){const drops=Array.from($$('#enemy-drops input:checked')).map(c=>c.value);const e={id:$('#enemy-id').value||genId('e'),name:$('#enemy-name').value,health:parseInt($('#enemy-health').value)||20,damage:$('#enemy-damage').value||'1d6',difficulty:parseInt($('#enemy-difficulty').value)||10,icon:$('#enemy-icon').value||'👹',sprite:$('#enemy-sprite').value||'',effect:$('#enemy-effect').value||null,habitat:$('#enemy-habitat').value||'any',loot:[parseInt($('#enemy-loot-min').value)||5,parseInt($('#enemy-loot-max').value)||20],drops,desc:$('#enemy-desc').value||''};if(!e.name){toast('Falta nombre','error');return}const i=Data.enemies.findIndex(x=>x.id===e.id);if(i>=0)Data.enemies[i]=e;else Data.enemies.push(e);Data.save();this.renderEnemies();this.clear('enemy');toast('Guardado','success')},
-        savePet(){const p={id:$('#pet-id').value||genId('p'),name:$('#pet-name').value,health:parseInt($('#pet-health').value)||20,damage:$('#pet-damage').value||'1d4',difficulty:parseInt($('#pet-difficulty').value)||24,icon:$('#pet-icon').value||'🐺',sprite:$('#pet-sprite').value||'',desc:$('#pet-desc').value||''};if(!p.name){toast('Falta nombre','error');return}const i=Data.pets.findIndex(x=>x.id===p.id);if(i>=0)Data.pets[i]=p;else Data.pets.push(p);Data.save();this.renderPets();this.clear('pet');toast('Guardado','success')},
-        saveNpc(){const sells=Array.from($$('#npc-sells input:checked')).map(c=>c.value);const n={id:$('#npc-id').value||genId('n'),name:$('#npc-name').value,role:$('#npc-role').value,icon:$('#npc-icon').value||'🧔',sprite:$('#npc-sprite').value||'',location:$('#npc-location').value||'',dialogue:$('#npc-dialogue').value||'',sells};if(!n.name){toast('Falta nombre','error');return}const i=Data.npcs.findIndex(x=>x.id===n.id);if(i>=0)Data.npcs[i]=n;else Data.npcs.push(n);Data.save();this.renderNpcs();this.clear('npc');toast('Guardado','success')},
-        edit(t,p,id){const it=Data.find(t,id);if(!it)return;Object.keys(it).forEach(k=>{const e=$(`#${p}-${k}`);if(e)e.value=it[k]||''})},
-        del(t,id){if(!confirm('¿Eliminar?'))return;Data[t]=Data[t].filter(x=>x.id!==id);Data.save();this.renderAll();toast('Eliminado','info')},
-        renderAll(){this.renderRaces();this.renderWeapons();this.renderArmors();this.renderItems();this.renderEnemies();this.renderPets();this.renderNpcs();this.updateDrops()},
-        renderRaces(){$('#races-list').innerHTML=Data.races.map(r=>`<div class="item-card" onclick="Editor.editRace('${r.id}')"><span class="item-card-icon">${sprite(r)}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats">${Object.entries(r.bonus||{}).filter(([k,v])=>v).map(([k,v])=>`+${v}${k[0].toUpperCase()}`).join(' ')||'-'}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRace('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRace('${r.id}')">🗑️</button></div></div>`).join('')},
-        renderWeapons(){$('#weapons-list').innerHTML=Data.weapons.map(w=>`<div class="item-card" onclick="Editor.edit('weapons','weapon','${w.id}')"><span class="item-card-icon">${sprite(w)}</span><div class="item-card-info"><div class="item-card-name">${w.name}</div><div class="item-card-stats">${w.damage}|${w.value}MP</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('weapons','weapon','${w.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('weapons','${w.id}')">🗑️</button></div></div>`).join('')},
-        renderArmors(){$('#armors-list').innerHTML=Data.armors.map(a=>`<div class="item-card" onclick="Editor.edit('armors','armor','${a.id}')"><span class="item-card-icon">${sprite(a)}</span><div class="item-card-info"><div class="item-card-name">${a.name}</div><div class="item-card-stats">Def:${a.defense}|${a.value}MP</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('armors','armor','${a.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('armors','${a.id}')">🗑️</button></div></div>`).join('')},
-        renderItems(){$('#items-list').innerHTML=Data.items.map(i=>`<div class="item-card" onclick="Editor.edit('items','item','${i.id}')"><span class="item-card-icon">${sprite(i)}</span><div class="item-card-info"><div class="item-card-name">${i.name}</div><div class="item-card-stats">${i.type}|${i.value}MP</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('items','item','${i.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('items','${i.id}')">🗑️</button></div></div>`).join('')},
-        renderEnemies(){$('#enemies-list').innerHTML=Data.enemies.map(e=>`<div class="item-card" onclick="Editor.editEnemy('${e.id}')"><span class="item-card-icon">${sprite(e)}</span><div class="item-card-info"><div class="item-card-name">${e.name}</div><div class="item-card-stats">HP:${e.health}|${e.damage}|Dif:${e.difficulty}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editEnemy('${e.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('enemies','${e.id}')">🗑️</button></div></div>`).join('')},
-        editEnemy(id){const e=Data.find('enemies',id);if(!e)return;$('#enemy-id').value=e.id;$('#enemy-name').value=e.name;$('#enemy-health').value=e.health||'';$('#enemy-damage').value=e.damage||'';$('#enemy-difficulty').value=e.difficulty||'';$('#enemy-icon').value=e.icon||'';$('#enemy-sprite').value=e.sprite||'';$('#enemy-effect').value=e.effect||'';$('#enemy-habitat').value=e.habitat||'any';$('#enemy-loot-min').value=e.loot?.[0]||'';$('#enemy-loot-max').value=e.loot?.[1]||'';$('#enemy-desc').value=e.desc||'';setTimeout(()=>$$('#enemy-drops input').forEach(c=>c.checked=(e.drops||[]).includes(c.value)),50)},
-        renderPets(){$('#pets-list').innerHTML=Data.pets.map(p=>`<div class="item-card" onclick="Editor.edit('pets','pet','${p.id}')"><span class="item-card-icon">${sprite(p)}</span><div class="item-card-info"><div class="item-card-name">${p.name}</div><div class="item-card-stats">HP:${p.health}|${p.damage}|D${p.difficulty}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('pets','pet','${p.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('pets','${p.id}')">🗑️</button></div></div>`).join('')},
-        renderNpcs(){const roles={merchant:'Comerciante',blacksmith:'Herrero',alchemist:'Alquimista',innkeeper:'Tabernero',healer:'Curandero',guard:'Guardia',villager:'Aldeano'};$('#npcs-list').innerHTML=Data.npcs.map(n=>`<div class="item-card" onclick="Editor.editNpc('${n.id}')"><span class="item-card-icon">${sprite(n)}</span><div class="item-card-info"><div class="item-card-name">${n.name}</div><div class="item-card-stats">${roles[n.role]||n.role}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editNpc('${n.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('npcs','${n.id}')">🗑️</button></div></div>`).join('')},
-        editNpc(id){const n=Data.find('npcs',id);if(!n)return;$('#npc-id').value=n.id;$('#npc-name').value=n.name;$('#npc-role').value=n.role||'merchant';$('#npc-icon').value=n.icon||'';$('#npc-sprite').value=n.sprite||'';$('#npc-location').value=n.location||'';$('#npc-dialogue').value=n.dialogue||'';setTimeout(()=>$$('#npc-sells input').forEach(c=>c.checked=(n.sells||[]).includes(c.value)),50)},
-        updateDrops(){const all=[...Data.weapons,...Data.armors,...Data.items];const h=all.map(it=>`<label><input type="checkbox" value="${it.id}"> ${it.icon||'📦'} ${it.name}</label>`).join('');$('#enemy-drops').innerHTML=h;$('#npc-sells').innerHTML=h}
-    };
+// ==================== TOWN / NPCs ====================
+const Town={
+    npc:null,
+    visit(region){
+        const npcs=Data.getNpcsForRegion(region.id);
+        if(npcs.length===0){toast('No hay NPCs aquí','info');return}
+        $('#townTitle').textContent=`${region.icon} ${region.name}`;
+        const roles={merchant:'Comerciante',blacksmith:'Herrero',alchemist:'Alquimista',innkeeper:'Tabernero',healer:'Curandero',guard:'Guardia',villager:'Aldeano'};
+        let h='<div style="display:grid;gap:.5rem">';
+        npcs.forEach(n=>{h+=`<div class="item-card" onclick="Town.interact('${n.id}')"><span class="item-card-icon">${sprite(n)}</span><div class="item-card-info"><div class="item-card-name">${n.name}</div><div class="item-card-stats">${roles[n.role]||n.role}</div></div></div>`});
+        h+='</div>';
+        $('#townContent').innerHTML=h;
+        openModal('townModal');
+    },
+    interact(id){
+        const n=Data.find('npcs',id);if(!n)return;
+        closeModal('townModal');this.npc=n;
+        Story.add(`<strong>${n.name}</strong>: "${n.dialogue||'¡Saludos!'}"`,`dialogue`);
+        if(n.sells?.length)setTimeout(()=>this.shop(n),400);
+        else if(n.role==='healer'){
+            if(G.p.silver>=10){G.p.silver-=10;G.p.hp=G.p.maxHp;G.p.effects=[];Story.add('Curación completa. <span style="color:var(--text-dim)">(-10 MP)</span>','system')}
+            else Story.add('"No tienes suficiente dinero."','dialogue');
+            Game.updateUI();
+        }else if(n.role==='innkeeper'){
+            if(G.p.silver>=5){G.p.silver-=5;const h=Math.floor(G.p.maxHp*0.5);G.p.hp=Math.min(G.p.maxHp,G.p.hp+h);Story.add(`Descansas. <span style="color:var(--green-bright)">+${h} HP</span> <span style="color:var(--text-dim)">(-5 MP)</span>`,'system')}
+            Game.updateUI();
+        }
+    },
+    shop(n){
+        $('#shopTitle').textContent=`🏪 ${n.name}`;
+        let h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:1rem"><div><h4 style="color:var(--gold);margin-bottom:.5rem;font-size:.85rem">En venta</h4><div style="display:grid;gap:.3rem;max-height:200px;overflow-y:auto">';
+        (n.sells||[]).forEach(iid=>{
+            const it=Data.findItem(iid);
+            if(it){
+                const can=G.p.silver>=it.value&&G.p.inv.length<G.p.maxSlots;
+                h+=`<div class="item-card" style="opacity:${can?1:.5}"><span class="item-card-icon">${sprite(it)}</span><div class="item-card-info"><div class="item-card-name">${it.name}</div><div class="item-card-stats">${it.value} MP</div></div><button class="btn btn-sm" onclick="Town.buy('${it.id}')" ${can?'':'disabled'}>Comprar</button></div>`;
+            }
+        });
+        h+='</div></div><div><h4 style="color:var(--gold);margin-bottom:.5rem;font-size:.85rem">Vender</h4><div style="display:grid;gap:.3rem;max-height:200px;overflow-y:auto">';
+        G.p.inv.forEach(it=>{const sp=Math.floor((it.value||10)*0.5);h+=`<div class="item-card"><span class="item-card-icon">${sprite(it)}</span><div class="item-card-info"><div class="item-card-name">${it.name}</div><div class="item-card-stats">${sp} MP</div></div><button class="btn btn-sm" onclick="Town.sell('${it.uid}',${sp})">Vender</button></div>`});
+        h+=`</div></div></div><div style="text-align:center;margin-top:.75rem;color:var(--text-dim);font-size:.8rem">💰 ${G.p.gold} MO ${G.p.silver} MP</div>`;
+        $('#shopContent').innerHTML=h;openModal('shopModal');
+    },
+    buy(iid){
+        const it=Data.findItem(iid);
+        if(!it||G.p.silver<it.value||G.p.inv.length>=G.p.maxSlots)return;
+        G.p.silver-=it.value;G.p.inv.push({...it,uid:genId('i')});
+        Story.add(`Compras ${it.icon} ${it.name}.`,'system');
+        toast('Comprado','success');Game.updateUI();if(this.npc)this.shop(this.npc);
+    },
+    sell(uid,price){
+        const it=G.p.inv.find(i=>i.uid===uid);if(!it)return;
+        G.p.inv=G.p.inv.filter(i=>i.uid!==uid);
+        G.p.silver+=price;while(G.p.silver>=99){G.p.silver-=99;G.p.gold++}
+        Story.add(`Vendes ${it.icon} ${it.name}.`,'system');
+        toast('Vendido','success');Game.updateUI();if(this.npc)this.shop(this.npc);
+    }
+};
 
-    // INIT
-    document.addEventListener('DOMContentLoaded',()=>{
-        FB.init();Data.load();Editor.renderAll();Game.init();
-        $$('.nav-btn').forEach(b=>b.addEventListener('click',()=>{$$('.nav-btn').forEach(x=>x.classList.remove('active'));$$('.tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(`#tab-${b.dataset.tab}`).classList.add('active')}));
-        $$('.editor-tab').forEach(t=>t.addEventListener('click',()=>{$$('.editor-tab').forEach(x=>x.classList.remove('active'));$$('.editor-section').forEach(x=>x.classList.remove('active'));t.classList.add('active');$(`#editor-${t.dataset.editor}`).classList.add('active');if(t.dataset.editor==='enemies'||t.dataset.editor==='npcs')Editor.updateDrops()}));
-        $$('.modal-close').forEach(b=>b.addEventListener('click',()=>closeModal(b.dataset.close)));
-        $$('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('active')}));
-        $('#weaponSlot').addEventListener('click',()=>{if(G.combat||G.loc.type!=='safe'){toast('Solo zona segura','error');return}if(G.p.weapon?.uid)Inv.detail(G.p.weapon,'eq-weapon')});
-        $('#armorSlot').addEventListener('click',()=>{if(G.combat||G.loc.type!=='safe'){toast('Solo zona segura','error');return}if(G.p.armor?.uid)Inv.detail(G.p.armor,'eq-armor')});
-    });
-    </script>
+// ==================== EDITOR ====================
+const Editor={
+    clear(t){
+        const fields={
+            region:['region-id','region-name','region-icon','region-desc','region-narratives'],
+            race:['race-id','race-name','race-icon','race-sprite','race-hp','race-armor','race-evasion','race-precision','race-damage','race-desc'],
+            weapon:['weapon-id','weapon-name','weapon-damage','weapon-icon','weapon-sprite','weapon-value','weapon-desc'],
+            armor:['armor-id','armor-name','armor-defense','armor-icon','armor-sprite','armor-value','armor-desc'],
+            item:['item-id','item-name','item-icon','item-sprite','item-effect','item-value','item-desc'],
+            enemy:['enemy-id','enemy-name','enemy-health','enemy-damage','enemy-difficulty','enemy-armor','enemy-icon','enemy-sprite','enemy-loot-min','enemy-loot-max','enemy-desc'],
+            pet:['pet-id','pet-name','pet-health','pet-damage','pet-difficulty','pet-icon','pet-sprite','pet-desc'],
+            npc:['npc-id','npc-name','npc-icon','npc-sprite','npc-dialogue']
+        };
+        (fields[t]||[]).forEach(id=>{const e=$(`#${id}`);if(e)e.value=''});
+        $$('.multi-select input').forEach(c=>c.checked=false);
+    },
+    // REGIONS
+    saveRegion(){
+        const narratives=$('#region-narratives').value.split('\n').filter(n=>n.trim());
+        const r={id:$('#region-id').value||genId('reg'),name:$('#region-name').value,icon:$('#region-icon').value||'🗺️',type:$('#region-type').value,desc:$('#region-desc').value||'',narratives};
+        if(!r.name){toast('Falta nombre','error');return}
+        const i=Data.regions.findIndex(x=>x.id===r.id);
+        if(i>=0)Data.regions[i]=r;else Data.regions.push(r);
+        Data.save();this.renderRegions();this.updateSelects();this.clear('region');toast('Región guardada','success');
+    },
+    editRegion(id){
+        const r=Data.find('regions',id);if(!r)return;
+        $('#region-id').value=r.id;$('#region-name').value=r.name;$('#region-icon').value=r.icon||'';$('#region-type').value=r.type||'danger';$('#region-desc').value=r.desc||'';$('#region-narratives').value=(r.narratives||[]).join('\n');
+    },
+    deleteRegion(id){if(!confirm('¿Eliminar región?'))return;Data.regions=Data.regions.filter(r=>r.id!==id);Data.save();this.renderRegions();this.updateSelects();toast('Eliminado','info')},
+    // RACES
+    saveRace(){
+        const r={id:$('#race-id').value||genId('race'),name:$('#race-name').value,icon:$('#race-icon').value||'👤',sprite:$('#race-sprite').value||'',bonus:{health:parseInt($('#race-hp').value)||0,armor:parseInt($('#race-armor').value)||0,evasion:parseInt($('#race-evasion').value)||0,precision:parseInt($('#race-precision').value)||0,damage:parseInt($('#race-damage').value)||0},desc:$('#race-desc').value||''};
+        if(!r.name){toast('Falta nombre','error');return}
+        const i=Data.races.findIndex(x=>x.id===r.id);if(i>=0)Data.races[i]=r;else Data.races.push(r);
+        Data.save();this.renderRaces();this.clear('race');toast('Guardado','success');
+    },
+    editRace(id){const r=Data.find('races',id);if(!r)return;$('#race-id').value=r.id;$('#race-name').value=r.name;$('#race-icon').value=r.icon||'';$('#race-sprite').value=r.sprite||'';$('#race-hp').value=r.bonus?.health||'';$('#race-armor').value=r.bonus?.armor||'';$('#race-evasion').value=r.bonus?.evasion||'';$('#race-precision').value=r.bonus?.precision||'';$('#race-damage').value=r.bonus?.damage||'';$('#race-desc').value=r.desc||''},
+    deleteRace(id){if(!confirm('¿Eliminar?'))return;Data.races=Data.races.filter(r=>r.id!==id);Data.save();this.renderRaces();toast('Eliminado','info')},
+    // WEAPONS
+    saveWeapon(){const w={id:$('#weapon-id').value||genId('w'),name:$('#weapon-name').value,damage:$('#weapon-damage').value||'1d4',icon:$('#weapon-icon').value||'⚔️',sprite:$('#weapon-sprite').value||'',rarity:$('#weapon-rarity').value,value:parseInt($('#weapon-value').value)||10,effect:$('#weapon-effect').value||null,desc:$('#weapon-desc').value||''};if(!w.name){toast('Falta nombre','error');return}const i=Data.weapons.findIndex(x=>x.id===w.id);if(i>=0)Data.weapons[i]=w;else Data.weapons.push(w);Data.save();this.renderWeapons();this.updateSelects();this.clear('weapon');toast('Guardado','success')},
+    // ARMORS
+    saveArmor(){const a={id:$('#armor-id').value||genId('a'),name:$('#armor-name').value,defense:parseInt($('#armor-defense').value)||0,icon:$('#armor-icon').value||'🛡️',sprite:$('#armor-sprite').value||'',rarity:$('#armor-rarity').value,value:parseInt($('#armor-value').value)||10,desc:$('#armor-desc').value||''};if(!a.name){toast('Falta nombre','error');return}const i=Data.armors.findIndex(x=>x.id===a.id);if(i>=0)Data.armors[i]=a;else Data.armors.push(a);Data.save();this.renderArmors();this.updateSelects();this.clear('armor');toast('Guardado','success')},
+    // ITEMS
+    saveItem(){const it={id:$('#item-id').value||genId('i'),name:$('#item-name').value,type:$('#item-type').value,icon:$('#item-icon').value||'📦',sprite:$('#item-sprite').value||'',effect:$('#item-effect').value||'',value:parseInt($('#item-value').value)||10,rarity:$('#item-rarity').value,desc:$('#item-desc').value||''};if(!it.name){toast('Falta nombre','error');return}const i=Data.items.findIndex(x=>x.id===it.id);if(i>=0)Data.items[i]=it;else Data.items.push(it);Data.save();this.renderItems();this.updateSelects();this.clear('item');toast('Guardado','success')},
+    // ENEMIES
+    saveEnemy(){
+        const regions=Array.from($$('#enemy-regions input:checked')).map(c=>c.value);
+        const drops=Array.from($$('#enemy-drops input:checked')).map(c=>c.value);
+        if(regions.length===0){toast('Selecciona al menos una región','error');return}
+        const e={id:$('#enemy-id').value||genId('e'),name:$('#enemy-name').value,health:parseInt($('#enemy-health').value)||20,damage:$('#enemy-damage').value||'1d6',difficulty:parseInt($('#enemy-difficulty').value)||10,armor:parseInt($('#enemy-armor').value)||0,icon:$('#enemy-icon').value||'👹',sprite:$('#enemy-sprite').value||'',effect:$('#enemy-effect').value||null,loot:[parseInt($('#enemy-loot-min').value)||5,parseInt($('#enemy-loot-max').value)||20],regions,drops,desc:$('#enemy-desc').value||''};
+        if(!e.name){toast('Falta nombre','error');return}
+        const i=Data.enemies.findIndex(x=>x.id===e.id);if(i>=0)Data.enemies[i]=e;else Data.enemies.push(e);
+        Data.save();this.renderEnemies();this.clear('enemy');toast('Guardado','success');
+    },
+    editEnemy(id){
+        const e=Data.find('enemies',id);if(!e)return;
+        $('#enemy-id').value=e.id;$('#enemy-name').value=e.name;$('#enemy-health').value=e.health||'';$('#enemy-damage').value=e.damage||'';$('#enemy-difficulty').value=e.difficulty||'';$('#enemy-armor').value=e.armor||'';$('#enemy-icon').value=e.icon||'';$('#enemy-sprite').value=e.sprite||'';$('#enemy-effect').value=e.effect||'';$('#enemy-loot-min').value=e.loot?.[0]||'';$('#enemy-loot-max').value=e.loot?.[1]||'';$('#enemy-desc').value=e.desc||'';
+        setTimeout(()=>{$$('#enemy-regions input').forEach(c=>c.checked=(e.regions||[]).includes(c.value));$$('#enemy-drops input').forEach(c=>c.checked=(e.drops||[]).includes(c.value))},50);
+    },
+    // PETS
+    savePet(){
+        const regions=Array.from($$('#pet-regions input:checked')).map(c=>c.value);
+        const p={id:$('#pet-id').value||genId('p'),name:$('#pet-name').value,health:parseInt($('#pet-health').value)||20,damage:$('#pet-damage').value||'1d4',difficulty:parseInt($('#pet-difficulty').value)||24,icon:$('#pet-icon').value||'🐺',sprite:$('#pet-sprite').value||'',regions,desc:$('#pet-desc').value||''};
+        if(!p.name){toast('Falta nombre','error');return}
+        const i=Data.pets.findIndex(x=>x.id===p.id);if(i>=0)Data.pets[i]=p;else Data.pets.push(p);
+        Data.save();this.renderPets();this.clear('pet');toast('Guardado','success');
+    },
+    editPet(id){const p=Data.find('pets',id);if(!p)return;$('#pet-id').value=p.id;$('#pet-name').value=p.name;$('#pet-health').value=p.health||'';$('#pet-damage').value=p.damage||'';$('#pet-difficulty').value=p.difficulty||'';$('#pet-icon').value=p.icon||'';$('#pet-sprite').value=p.sprite||'';$('#pet-desc').value=p.desc||'';setTimeout(()=>$$('#pet-regions input').forEach(c=>c.checked=(p.regions||[]).includes(c.value)),50)},
+    // NPCS
+    saveNpc(){
+        const sells=Array.from($$('#npc-sells input:checked')).map(c=>c.value);
+        const n={id:$('#npc-id').value||genId('n'),name:$('#npc-name').value,role:$('#npc-role').value,icon:$('#npc-icon').value||'🧔',sprite:$('#npc-sprite').value||'',region:$('#npc-region').value,dialogue:$('#npc-dialogue').value||'',sells};
+        if(!n.name){toast('Falta nombre','error');return}
+        const i=Data.npcs.findIndex(x=>x.id===n.id);if(i>=0)Data.npcs[i]=n;else Data.npcs.push(n);
+        Data.save();this.renderNpcs();this.clear('npc');toast('Guardado','success');
+    },
+    editNpc(id){const n=Data.find('npcs',id);if(!n)return;$('#npc-id').value=n.id;$('#npc-name').value=n.name;$('#npc-role').value=n.role||'merchant';$('#npc-icon').value=n.icon||'';$('#npc-sprite').value=n.sprite||'';$('#npc-region').value=n.region||'';$('#npc-dialogue').value=n.dialogue||'';setTimeout(()=>$$('#npc-sells input').forEach(c=>c.checked=(n.sells||[]).includes(c.value)),50)},
+    // Generic
+    edit(t,p,id){const it=Data.find(t,id);if(!it)return;Object.keys(it).forEach(k=>{const e=$(`#${p}-${k}`);if(e)e.value=it[k]||''})},
+    del(t,id){if(!confirm('¿Eliminar?'))return;Data[t]=Data[t].filter(x=>x.id!==id);Data.save();this.renderAll();toast('Eliminado','info')},
+    // Renders
+    renderAll(){this.renderRegions();this.renderRaces();this.renderWeapons();this.renderArmors();this.renderItems();this.renderEnemies();this.renderPets();this.renderNpcs();this.updateSelects()},
+    renderRegions(){$('#regions-list').innerHTML=Data.regions.map(r=>`<div class="item-card" onclick="Editor.editRegion('${r.id}')"><span class="item-card-icon">${r.icon}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats">${r.type==='safe'?'🏠 Segura':'⚠️ Peligrosa'}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRegion('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRegion('${r.id}')">🗑️</button></div></div>`).join('')},
+    renderRaces(){$('#races-list').innerHTML=Data.races.map(r=>`<div class="item-card" onclick="Editor.editRace('${r.id}')"><span class="item-card-icon">${sprite(r)}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats">${Game.bonusStr(r.bonus||{})}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRace('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRace('${r.id}')">🗑️</button></div></div>`).join('')},
+    renderWeapons(){$('#weapons-list').innerHTML=Data.weapons.map(w=>`<div class="item-card" onclick="Editor.edit('weapons','weapon','${w.id}')"><span class="item-card-icon">${sprite(w)}</span><div class="item-card-info"><div class="item-card-name">${w.name}</div><div class="item-card-stats">${w.damage} | ${w.value}MP</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('weapons','weapon','${w.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('weapons','${w.id}')">🗑️</button></div></div>`).join('')},
+    renderArmors(){$('#armors-list').innerHTML=Data.armors.map(a=>`<div class="item-card" onclick="Editor.edit('armors','armor','${a.id}')"><span class="item-card-icon">${sprite(a)}</span><div class="item-card-info"><div class="item-card-name">${a.name}</div><div class="item-card-stats">Def:${a.defense} | ${a.value}MP</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('armors','armor','${a.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('armors','${a.id}')">🗑️</button></div></div>`).join('')},
+    renderItems(){$('#items-list').innerHTML=Data.items.map(i=>`<div class="item-card" onclick="Editor.edit('items','item','${i.id}')"><span class="item-card-icon">${sprite(i)}</span><div class="item-card-info"><div class="item-card-name">${i.name}</div><div class="item-card-stats">${i.type} | ${i.value}MP</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('items','item','${i.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('items','${i.id}')">🗑️</button></div></div>`).join('')},
+    renderEnemies(){$('#enemies-list').innerHTML=Data.enemies.map(e=>`<div class="item-card" onclick="Editor.editEnemy('${e.id}')"><span class="item-card-icon">${sprite(e)}</span><div class="item-card-info"><div class="item-card-name">${e.name}</div><div class="item-card-stats">HP:${e.health} | ${e.damage} | Dif:${e.difficulty} | Arm:${e.armor||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editEnemy('${e.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('enemies','${e.id}')">🗑️</button></div></div>`).join('')},
+    renderPets(){$('#pets-list').innerHTML=Data.pets.map(p=>`<div class="item-card" onclick="Editor.editPet('${p.id}')"><span class="item-card-icon">${sprite(p)}</span><div class="item-card-info"><div class="item-card-name">${p.name}</div><div class="item-card-stats">HP:${p.health} | ${p.damage} | D${p.difficulty}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editPet('${p.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('pets','${p.id}')">🗑️</button></div></div>`).join('')},
+    renderNpcs(){const roles={merchant:'Comerciante',blacksmith:'Herrero',alchemist:'Alquimista',innkeeper:'Tabernero',healer:'Curandero',guard:'Guardia',villager:'Aldeano'};$('#npcs-list').innerHTML=Data.npcs.map(n=>`<div class="item-card" onclick="Editor.editNpc('${n.id}')"><span class="item-card-icon">${sprite(n)}</span><div class="item-card-info"><div class="item-card-name">${n.name}</div><div class="item-card-stats">${roles[n.role]||n.role} | ${Data.getRegion(n.region)?.name||'?'}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editNpc('${n.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('npcs','${n.id}')">🗑️</button></div></div>`).join('')},
+    updateSelects(){
+        // Regions for enemies
+        const dangerRegions=Data.regions.filter(r=>r.type==='danger');
+        const regHtml=dangerRegions.map(r=>`<label><input type="checkbox" value="${r.id}"> ${r.icon} ${r.name}</label>`).join('');
+        $('#enemy-regions').innerHTML=regHtml;
+        $('#pet-regions').innerHTML=regHtml;
+        // Region select for NPCs
+        const safeRegions=Data.regions.filter(r=>r.type==='safe');
+        $('#npc-region').innerHTML=safeRegions.map(r=>`<option value="${r.id}">${r.icon} ${r.name}</option>`).join('');
+        // Items for drops/sells
+        const allItems=[...Data.weapons,...Data.armors,...Data.items];
+        const itemsHtml=allItems.map(it=>`<label><input type="checkbox" value="${it.id}"> ${it.icon||'📦'} ${it.name}</label>`).join('');
+        $('#enemy-drops').innerHTML=itemsHtml;
+        $('#npc-sells').innerHTML=itemsHtml;
+    }
+};
+
+// ==================== INIT ====================
+document.addEventListener('DOMContentLoaded',()=>{
+    FB.init();Data.load();Editor.renderAll();Game.init();
+    // Nav tabs
+    $$('.nav-btn').forEach(b=>b.addEventListener('click',()=>{$$('.nav-btn').forEach(x=>x.classList.remove('active'));$$('.tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(`#tab-${b.dataset.tab}`).classList.add('active')}));
+    // Editor tabs
+    $$('.editor-tab').forEach(t=>t.addEventListener('click',()=>{$$('.editor-tab').forEach(x=>x.classList.remove('active'));$$('.editor-section').forEach(x=>x.classList.remove('active'));t.classList.add('active');$(`#editor-${t.dataset.editor}`).classList.add('active');Editor.updateSelects()}));
+    // Modal close
+    $$('.modal-close').forEach(b=>b.addEventListener('click',()=>closeModal(b.dataset.close)));
+    $$('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('active')}));
+    // Equipment clicks
+    $('#weaponSlot').addEventListener('click',()=>{if(G.combat||G.region.type!=='safe'){toast('Solo en zona segura','error');return}if(G.p.weapon?.uid)Inv.detail(G.p.weapon,'eq-weapon')});
+    $('#armorSlot').addEventListener('click',()=>{if(G.combat||G.region.type!=='safe'){toast('Solo en zona segura','error');return}if(G.p.armor?.uid)Inv.detail(G.p.armor,'eq-armor')});
+});
+</script>
 </body>
 </html>
