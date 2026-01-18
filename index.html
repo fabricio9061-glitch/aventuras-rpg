@@ -1150,6 +1150,8 @@ const Combat={
     start(enemies,duringTravel=false){
         this.duringTravel=duringTravel;
         G.combat=true;G.enemies=enemies;G.turn=0;G.p.defending=false;
+        // Plugin hook: inicio de combate
+        if(typeof Plugins!=='undefined')Plugins.trigger('onCombatStart');
         $('#combatArena').classList.remove('hidden');
         $('#combatLog').innerHTML='';
         Game.updateUI(); // This will hide HP bar and actions panel
@@ -1157,20 +1159,50 @@ const Combat={
     },
     calcTurnOrder(){const combatants=[];combatants.push({type:'player',entity:G.p,speed:Game.speed(),init:d20()});if(G.p.pet&&G.p.pet.hp>0)combatants.push({type:'pet',entity:G.p.pet,speed:G.p.pet.speed||12,init:d20()});G.enemies.filter(e=>e.hp>0).forEach(e=>{combatants.push({type:'enemy',entity:e,speed:e.speed||10,init:d20()})});combatants.sort((a,b)=>{if(b.speed!==a.speed)return b.speed-a.speed;return b.init-a.init});return combatants},
     newTurn(){G.turn++;G.p.defending=false;G.turnOrder=this.calcTurnOrder();G.currentActor=0;this.log(`<div class="log-turn">══ TURNO ${G.turn} ══</div>`);let orderHtml='<div class="log-order">';G.turnOrder.forEach((c,i)=>{const cls=c.type==='player'?'player':c.type==='pet'?'pet':'enemy';orderHtml+=`<span class="log-order-tag ${cls}">${i+1}.${c.entity.name} ⚡${c.speed}</span>`});orderHtml+='</div>';this.log(orderHtml);this.updateUI();this.nextActor()},
-    async nextActor(){const aliveEnemies=G.enemies.filter(e=>e.hp>0);if(aliveEnemies.length===0){this.victory();return}if(G.p.hp<=0){this.defeat();return}while(G.currentActor<G.turnOrder.length){const actor=G.turnOrder[G.currentActor];if((actor.type==='player'&&G.p.hp>0)||(actor.type==='pet'&&G.p.pet?.hp>0)||(actor.type==='enemy'&&actor.entity.hp>0))break;G.currentActor++}if(G.currentActor>=G.turnOrder.length){this.processAllEffects();await delay(300);this.newTurn();return}const actor=G.turnOrder[G.currentActor];this.highlightActor(actor);if(actor.type==='player')this.showPlayerActions();else if(actor.type==='pet')await this.petAction();else await this.enemyAction(actor.entity)},
+    async nextActor(){const aliveEnemies=G.enemies.filter(e=>e.hp>0);if(aliveEnemies.length===0){this.victory();return}if(G.p.hp<=0){this.defeat();return}while(G.currentActor<G.turnOrder.length){const actor=G.turnOrder[G.currentActor];if((actor.type==='player'&&G.p.hp>0)||(actor.type==='pet'&&G.p.pet?.hp>0)||(actor.type==='enemy'&&actor.entity.hp>0))break;G.currentActor++}if(G.currentActor>=G.turnOrder.length){this.processAllEffects();await delay(300);this.newTurn();return}const actor=G.turnOrder[G.currentActor];this.highlightActor(actor);
+        // Plugin hooks: inicio de turno
+        if(typeof Plugins!=='undefined'){
+            const entity=actor.type==='player'?G.p:actor.type==='pet'?G.p.pet:actor.entity;
+            Plugins.trigger('onTurnStart',entity,actor.type==='player');
+            Plugins.processEquippedEffects(entity,'onTurnStart');
+            if(actor.type==='player')Plugins.processEquippedEffects(G.p,'onTurnStart');
+            this.updateUI();Game.updateUI();
+        }
+        if(actor.type==='player')this.showPlayerActions();else if(actor.type==='pet')await this.petAction();else await this.enemyAction(actor.entity)},
     highlightActor(actor){$$('.combatant').forEach(c=>c.classList.remove('active'));const el=actor.type==='player'?$(`.combatant.player`):actor.type==='pet'?$(`.combatant.pet`):$(`[data-uid="${actor.entity.uid}"]`);if(el)el.classList.add('active')},
     showPlayerActions(){const ca=$('#combatActions');ca.innerHTML='';const aliveEnemies=G.enemies.filter(e=>e.hp>0);if(aliveEnemies.length>1){ca.innerHTML=`<div style="width:100%;text-align:center;font-size:.65rem;color:var(--text-dim);margin-bottom:.2rem">Objetivo:</div>`;const targetDiv=document.createElement('div');targetDiv.className='target-select';aliveEnemies.forEach(e=>{const btn=document.createElement('button');btn.className='target-btn';btn.innerHTML=`${e.icon} ${e.name}`;btn.onclick=()=>this.playerAttack(e);targetDiv.appendChild(btn)});ca.appendChild(targetDiv)}else{const atk=document.createElement('button');atk.className='btn btn-primary';atk.textContent='⚔️ Atacar';atk.onclick=()=>this.playerAttack(aliveEnemies[0]);ca.appendChild(atk)}[{text:'🛡️ Defender',fn:()=>this.playerDefend()},{text:'🎒 Item',fn:()=>Inv.open()},{text:'💨 Huir',fn:()=>this.playerFlee(),cls:'btn-danger'}].forEach(a=>{const b=document.createElement('button');b.className=`btn ${a.cls||''}`;b.textContent=a.text;b.onclick=a.fn;ca.appendChild(b)})},
-    async playerAttack(target){const p=G.p;const atkRoll=d20();const prec=p.race.bonus.precision||0;const total=atkRoll+prec;const isCrit=atkRoll===20;const isPifia=atkRoll===1;await showDice(atkRoll,20,isCrit);this.log(`<span class="log-player">${p.name}</span> → <span class="log-enemy">${target.name}</span>`);this.log(`┌ Ataque: D20=<strong>${atkRoll}</strong>${prec?`+${prec}`:''} = ${total} vs ${target.difficulty}`);if(isPifia){this.log(`└ <span class="log-miss">¡PIFIA! Fallo automático</span>`)}else if(total>=target.difficulty||isCrit){const dmgRoll=rollDetailed(p.weapon?.damage||'1d2');const bonus=p.race.bonus.damage||0;let baseDmg=dmgRoll.total+bonus;this.log(`├ Daño: ${dmgRoll.dice}=[${dmgRoll.rolls}]${bonus?`+${bonus}`:''} = ${baseDmg}`);if(isCrit){baseDmg*=2;this.log(`├ <span class="log-crit">¡CRÍTICO! x2 = ${baseDmg}</span>`)}const armor=target.armor||0;const finalDmg=Math.max(0,baseDmg-armor);if(finalDmg>0){this.log(`<div class="log-calc">⚔️ ${baseDmg} − ${armor} arm = <strong>${finalDmg}</strong></div>`);target.hp-=finalDmg;this.log(`└ <span class="log-damage">${target.name} -${finalDmg} HP (${Math.max(0,target.hp)}/${target.maxHp})</span>`)}else{this.log(`<div class="log-calc blocked">🛡️ ${baseDmg} − ${armor} arm = 0 BLOQUEADO</div>`);this.log(`└ <span class="log-miss">${target.name} bloquea</span>`)}if(p.weapon?.effect&&finalDmg>0)this.applyEff(target,p.weapon.effect);if(target.hp<=0)this.log(`<span class="log-damage">💀 ${target.name} derrotado!</span>`)}else{this.log(`└ <span class="log-miss">Falla</span>`)}this.updateUI();G.currentActor++;await delay(350);this.nextActor()},
+    async playerAttack(target){const p=G.p;const atkRoll=d20();const prec=p.race.bonus.precision||0;const total=atkRoll+prec;const isCrit=atkRoll===20;const isPifia=atkRoll===1;await showDice(atkRoll,20,isCrit);this.log(`<span class="log-player">${p.name}</span> → <span class="log-enemy">${target.name}</span>`);this.log(`┌ Ataque: D20=<strong>${atkRoll}</strong>${prec?`+${prec}`:''} = ${total} vs ${target.difficulty}`);if(isPifia){this.log(`└ <span class="log-miss">¡PIFIA! Fallo automático</span>`);if(typeof Plugins!=='undefined')Plugins.trigger('onAttack',p,target,0,false)}else if(total>=target.difficulty||isCrit){const dmgRoll=rollDetailed(p.weapon?.damage||'1d2');const bonus=p.race.bonus.damage||0;let baseDmg=dmgRoll.total+bonus;
+        // Plugin: modificar daño por efectos (ej: furia)
+        const fury=(p.effects||[]).find(e=>e.type==='fury');if(fury){const furyBonus=Math.floor(baseDmg*0.5);baseDmg+=furyBonus;this.log(`├ 🔥 Furia: +${furyBonus}`)}
+        this.log(`├ Daño: ${dmgRoll.dice}=[${dmgRoll.rolls}]${bonus?`+${bonus}`:''} = ${baseDmg}`);if(isCrit){baseDmg*=2;this.log(`├ <span class="log-crit">¡CRÍTICO! x2 = ${baseDmg}</span>`)}const armor=target.armor||0;let finalDmg=Math.max(0,baseDmg-armor);
+        // Plugin hook: modificar daño final
+        if(typeof Plugins!=='undefined')finalDmg=Plugins.trigger('onAttack',p,target,finalDmg,true)||finalDmg;
+        if(finalDmg>0){this.log(`<div class="log-calc">⚔️ ${baseDmg} − ${armor} arm = <strong>${finalDmg}</strong></div>`);target.hp-=finalDmg;this.log(`└ <span class="log-damage">${target.name} -${finalDmg} HP (${Math.max(0,target.hp)}/${target.maxHp})</span>`);
+        // Plugin: efectos al causar daño (vampirismo, etc)
+        if(typeof Plugins!=='undefined'){const special=Plugins.getSpecialItem(p.weapon?.id);if(special&&special.onDealDamage)special.onDealDamage(p,target,finalDmg)}}else{this.log(`<div class="log-calc blocked">🛡️ ${baseDmg} − ${armor} arm = 0 BLOQUEADO</div>`);this.log(`└ <span class="log-miss">${target.name} bloquea</span>`)}if(p.weapon?.effect&&finalDmg>0)this.applyEff(target,p.weapon.effect);if(target.hp<=0)this.log(`<span class="log-damage">💀 ${target.name} derrotado!</span>`)}else{this.log(`└ <span class="log-miss">Falla</span>`);if(typeof Plugins!=='undefined')Plugins.trigger('onAttack',p,target,0,false)}this.updateUI();G.currentActor++;await delay(350);this.nextActor()},
     playerDefend(){G.p.defending=true;this.log(`<span class="log-player">${G.p.name}</span> defiende <span class="log-heal">+4 Eva</span>`);G.currentActor++;this.updateUI();this.nextActor()},
     async playerFlee(){const r=d20();await showDice(r,20,r>=12);this.log(`Huida: D20=${r} vs 12`);if(r>=12){this.log('<span class="log-heal">¡Escape!</span>');this.escape()}else{this.log('<span class="log-miss">¡No escapas!</span>');G.currentActor++;await delay(300);this.nextActor()}},
     async petAction(){const pet=G.p.pet;const aliveEnemies=G.enemies.filter(e=>e.hp>0);if(aliveEnemies.length===0)return;const target=pick(aliveEnemies);const dmgRoll=rollDetailed(pet.damage);const baseDmg=dmgRoll.total;const armor=target.armor||0;const finalDmg=Math.max(0,baseDmg-armor);this.log(`<span class="log-pet">${pet.icon} ${pet.name}</span> → <span class="log-enemy">${target.name}</span>`);this.log(`├ Daño: ${dmgRoll.dice}=[${dmgRoll.rolls}] = ${baseDmg}`);if(finalDmg>0){this.log(`<div class="log-calc">⚔️ ${baseDmg} − ${armor} = ${finalDmg}</div>`);target.hp-=finalDmg;this.log(`└ <span class="log-damage">${target.name} -${finalDmg} (${Math.max(0,target.hp)}/${target.maxHp})</span>`);if(target.hp<=0)this.log(`<span class="log-damage">💀 ${target.name} derrotado!</span>`)}else{this.log(`<div class="log-calc blocked">🛡️ ${baseDmg} − ${armor} = 0 BLOQUEADO</div>`)}this.updateUI();G.currentActor++;await delay(350);this.nextActor()},
-    async enemyAction(enemy){const p=G.p;const evaBonus=(p.race.bonus.evasion||0)+(p.defending?4:0);const dodgeRoll=d20();const dodgeTotal=dodgeRoll+evaBonus;this.log(`<span class="log-enemy">${enemy.name}</span> → <span class="log-player">${p.name}</span>`);this.log(`┌ Esquive: D20=${dodgeRoll}${evaBonus?`+${evaBonus}`:''} = ${dodgeTotal} vs 12`);if(dodgeTotal>=12){this.log(`└ <span class="log-heal">¡Esquivado!</span>`)}else{const dmgRoll=rollDetailed(enemy.damage);let baseDmg=dmgRoll.total;const isCrit=Math.random()<0.1;this.log(`├ Daño: ${dmgRoll.dice}=[${dmgRoll.rolls}] = ${baseDmg}`);if(isCrit){baseDmg=Math.ceil(baseDmg*1.25);this.log(`├ <span class="log-crit">¡Crítico! x1.25 = ${baseDmg}</span>`)}const playerArmor=Game.armor();const finalDmg=Math.max(0,baseDmg-playerArmor);if(finalDmg>0){this.log(`<div class="log-calc">⚔️ ${baseDmg} − ${playerArmor} arm = ${finalDmg}</div>`);p.hp-=finalDmg;this.log(`└ <span class="log-damage">${p.name} -${finalDmg} HP (${Math.max(0,p.hp)}/${p.maxHp})</span>`);if(enemy.effect)this.applyEff(p,enemy.effect)}else{this.log(`<div class="log-calc blocked">🛡️ ${baseDmg} − ${playerArmor} = 0 BLOQUEADO</div>`);this.log(`└ <span class="log-heal">${p.name} bloquea</span>`)}}this.updateUI();Game.updateUI();G.currentActor++;if(p.hp<=0){this.defeat();return}await delay(350);this.nextActor()},
+    async enemyAction(enemy){const p=G.p;const evaBonus=(p.race.bonus.evasion||0)+(p.defending?4:0);const dodgeRoll=d20();const dodgeTotal=dodgeRoll+evaBonus;this.log(`<span class="log-enemy">${enemy.name}</span> → <span class="log-player">${p.name}</span>`);this.log(`┌ Esquive: D20=${dodgeRoll}${evaBonus?`+${evaBonus}`:''} = ${dodgeTotal} vs 12`);if(dodgeTotal>=12){this.log(`└ <span class="log-heal">¡Esquivado!</span>`)}else{const dmgRoll=rollDetailed(enemy.damage);let baseDmg=dmgRoll.total;const isCrit=Math.random()<0.1;this.log(`├ Daño: ${dmgRoll.dice}=[${dmgRoll.rolls}] = ${baseDmg}`);if(isCrit){baseDmg=Math.ceil(baseDmg*1.25);this.log(`├ <span class="log-crit">¡Crítico! x1.25 = ${baseDmg}</span>`)}const playerArmor=Game.armor();let finalDmg=Math.max(0,baseDmg-playerArmor);
+        // Plugin: hooks de daño recibido (escudo de espinas, etc)
+        if(typeof Plugins!=='undefined'&&finalDmg>0){
+            const special=Plugins.getSpecialItem(p.armor?.id);
+            if(special&&special.onTakeDamage)special.onTakeDamage(p,enemy,finalDmg);
+            // Efectos de escudo mágico
+            (p.effects||[]).filter(e=>e.type==='shield').forEach(eff=>{
+                const custom=Plugins.customEffects[eff.type];
+                if(custom&&custom.onTakeDamage)finalDmg=custom.onTakeDamage(p,eff,finalDmg);
+            });
+        }
+        if(finalDmg>0){this.log(`<div class="log-calc">⚔️ ${baseDmg} − ${playerArmor} arm = ${finalDmg}</div>`);p.hp-=finalDmg;this.log(`└ <span class="log-damage">${p.name} -${finalDmg} HP (${Math.max(0,p.hp)}/${p.maxHp})</span>`);if(enemy.effect)this.applyEff(p,enemy.effect)}else{this.log(`<div class="log-calc blocked">🛡️ ${baseDmg} − ${playerArmor} = 0 BLOQUEADO</div>`);this.log(`└ <span class="log-heal">${p.name} bloquea</span>`)}}this.updateUI();Game.updateUI();G.currentActor++;if(p.hp<=0){this.defeat();return}await delay(350);this.nextActor()},
     applyEff(t,type){const effs={bleed:{dmg:1,turns:3},poison:{dmg:2,turns:2},fire:{dmg:'1d4',turns:2}};const ef=effs[type];if(!ef)return;if(!t.effects)t.effects=[];const ex=t.effects.find(e=>e.type===type);if(ex)ex.turns=ef.turns;else t.effects.push({type,dmg:ef.dmg,turns:ef.turns});this.log(`<span style="color:var(--orange)">⚡ ${type.toUpperCase()} → ${t.name}</span>`)},
     processAllEffects(){this.processEff(G.p);if(G.p.pet)this.processEff(G.p.pet);G.enemies.forEach(e=>this.processEff(e));this.updateUI();Game.updateUI()},
     processEff(t){if(!t.effects?.length||t.hp<=0)return;let total=0;t.effects.forEach(ef=>{const d=typeof ef.dmg==='string'?roll(ef.dmg):ef.dmg;total+=d;ef.turns--});t.effects=t.effects.filter(e=>e.turns>0);if(total>0){t.hp=Math.max(0,t.hp-total);this.log(`<span style="color:var(--orange)">🔥 ${t.name} -${total} efectos (HP:${t.hp})</span>`)}},
     victory(){
         $('#combatArena').classList.add('hidden');
         G.combat=false;
+        // Plugin hook: fin de combate
+        if(typeof Plugins!=='undefined')Plugins.trigger('onCombatEnd',true);
         // Increment encounter count for current region
         if(!G.regionProgress[G.region.id])G.regionProgress[G.region.id]={encounters:0};
         G.regionProgress[G.region.id].encounters++;
@@ -1191,7 +1223,7 @@ const Combat={
             Game.exploreActions();
         }
     },
-    defeat(){$('#combatArena').classList.add('hidden');G.combat=false;this.duringTravel=false;G.traveling=null;Story.add('<strong style="color:var(--red-bright)">💀 Has muerto...</strong>','combat');Story.add('Tu aventura termina aquí.','system');Game.deleteSave();Game.setActions([{text:'🔄 Nueva Partida',fn:()=>{G.p=null;Story.clear();Game.showCreate()},cls:'btn-primary'}])},
+    defeat(){$('#combatArena').classList.add('hidden');G.combat=false;if(typeof Plugins!=='undefined')Plugins.trigger('onCombatEnd',false);this.duringTravel=false;G.traveling=null;Story.add('<strong style="color:var(--red-bright)">💀 Has muerto...</strong>','combat');Story.add('Tu aventura termina aquí.','system');Game.deleteSave();Game.setActions([{text:'🔄 Nueva Partida',fn:()=>{G.p=null;Story.clear();Game.showCreate()},cls:'btn-primary'}])},
     escape(){$('#combatArena').classList.add('hidden');G.combat=false;G.enemies=[];Story.add('Escapas.','system');Game.updateUI();if(this.duringTravel){this.duringTravel=false;G.traveling=null;Story.add('Vuelves al punto de partida.','travel')}Game.exploreActions()},
     log(t){$('#combatLog').innerHTML+=`<div class="log-entry">${t}</div>`;$('#combatLog').scrollTop=999999},
     updateUI(){if(!G.p)return;const grid=$('#combatGrid');grid.innerHTML='';const pDiv=document.createElement('div');pDiv.className=`combatant player ${G.p.hp<=0?'dead':''}`;const pHpPct=(G.p.hp/G.p.maxHp)*100;pDiv.innerHTML=`<div class="combatant-order">⚡${Game.speed()}</div><div class="combatant-sprite">${sprite({icon:G.p.race.icon,sprite:G.p.race.sprite})}</div><div class="combatant-name">${G.p.name}</div><div class="combatant-stats">⚔️${G.p.weapon?.damage||'1d2'} 🛡️${Game.armor()}</div><div class="hp-container"><div class="hp-fill ${hpClass(pHpPct)}" style="width:${pHpPct}%"></div><div class="hp-text">${G.p.hp}/${G.p.maxHp}</div></div><div class="effects-row">${(G.p.effects||[]).map(e=>`<span class="effect-tag eff-${e.type}">${e.type}${e.turns}</span>`).join('')}</div>`;grid.appendChild(pDiv);if(G.p.pet&&G.p.pet.hp>0){const petDiv=document.createElement('div');petDiv.className='combatant pet';const petHpPct=(G.p.pet.hp/G.p.pet.maxHp)*100;petDiv.innerHTML=`<div class="combatant-order">⚡${G.p.pet.speed||12}</div><div class="combatant-sprite">${G.p.pet.icon}</div><div class="combatant-name">${G.p.pet.name}</div><div class="combatant-stats">⚔️${G.p.pet.damage}</div><div class="hp-container"><div class="hp-fill" style="width:${petHpPct}%"></div><div class="hp-text">${G.p.pet.hp}/${G.p.pet.maxHp}</div></div>`;grid.appendChild(petDiv)}const vs=document.createElement('div');vs.className='combat-vs';vs.textContent='⚔';grid.appendChild(vs);G.enemies.forEach(e=>{const eDiv=document.createElement('div');eDiv.className=`combatant enemy ${e.hp<=0?'dead':''}`;eDiv.dataset.uid=e.uid;const eHpPct=(e.hp/e.maxHp)*100;const weaponInfo=e.weapon?`${e.weapon.icon}${e.damage}`:e.damage;eDiv.innerHTML=`<div class="combatant-order">⚡${e.speed||10}</div><div class="combatant-sprite">${sprite(e)}</div><div class="combatant-name">${e.name}</div><div class="combatant-stats">⚔️${weaponInfo} 🛡️${e.armor||0}</div><div class="hp-container"><div class="hp-fill ${hpClass(eHpPct)}" style="width:${eHpPct}%"></div><div class="hp-text">${Math.max(0,e.hp)}/${e.maxHp}</div></div><div class="effects-row">${(e.effects||[]).map(ef=>`<span class="effect-tag eff-${ef.type}">${ef.type}${ef.turns}</span>`).join('')}</div>`;grid.appendChild(eDiv)});$('#turnCounter').textContent=G.turn}
@@ -1433,6 +1465,39 @@ document.addEventListener('DOMContentLoaded',()=>{
     $('#weaponSlot').addEventListener('click',()=>{if(!G.p||!G.region)return;if(G.combat||G.region.type!=='safe'){toast('Solo zona segura','error');return}if(G.p.weapon?.uid)Inv.detail(G.p.weapon,'eq-weapon')});
     $('#armorSlot').addEventListener('click',()=>{if(!G.p||!G.region)return;if(G.combat||G.region.type!=='safe'){toast('Solo zona segura','error');return}if(G.p.armor?.uid)Inv.detail(G.p.armor,'eq-armor')});
 });
+</script>
+<!-- Sistema de Plugins - Extensiones sin modificar código principal -->
+<script src="rpg-plugins.js"></script>
+<script>
+// Integración de plugins con el juego
+if(typeof Plugins!=='undefined'){
+    // Registrar items especiales en Data
+    Data.loadPluginItems=function(){
+        Object.values(Plugins.specialItems).forEach(item=>{
+            if(item.damage&&!Data.weapons.find(w=>w.id===item.id)){
+                Data.weapons.push(item);
+            }else if(item.defense!==undefined&&!Data.armors.find(a=>a.id===item.id)){
+                Data.armors.push(item);
+            }else if(!Data.items.find(i=>i.id===item.id)){
+                Data.items.push(item);
+            }
+        });
+    };
+    setTimeout(()=>Data.loadPluginItems(),100);
+    
+    // Hook: Modificar Game.speed para incluir bonus de accesorios
+    const origSpeed=Game.speed;
+    Game.speed=function(){
+        let spd=origSpeed.call(this);
+        if(G.p){
+            (G.p.inv||[]).forEach(item=>{
+                const special=Plugins.getSpecialItem(item.id);
+                if(special&&special.speedBonus)spd+=special.speedBonus;
+            });
+        }
+        return spd;
+    };
+}
 </script>
 </body>
 </html>
