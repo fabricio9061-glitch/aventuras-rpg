@@ -2,7 +2,7 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width,initial-scale=1.0,maximum-scale=1.0,user-scalable=no">
     <title>Aventuras de Acero y Runas</title>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
@@ -10,168 +10,193 @@
     <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
     <style>
 :root{--bg:#0a0908;--panel:#1a1614;--light:#2a2320;--input:#151210;--gold:#d4a437;--gold-dim:#a67c00;--gold-b:#ffd700;--red:#8b0000;--red-b:#dc143c;--green:#2d5a27;--green-b:#4caf50;--blue:#1e3a5f;--blue-b:#4a9eff;--purple:#9c27b0;--orange:#ff6b35;--cyan:#00bcd4;--text:#e8dcc4;--dim:#8a8078;--border:#3d3530}
-*{margin:0;padding:0;box-sizing:border-box}body{font-family:'Crimson Text',serif;background:var(--bg);color:var(--text);min-height:100vh}
-::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:3px}.hidden{display:none!important}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{overscroll-behavior:none}
+body{font-family:'Crimson Text',serif;background:var(--bg);color:var(--text);min-height:100vh;min-height:-webkit-fill-available}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:2px}.hidden{display:none!important}
 
-.auth-screen{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem}
-.auth-box{background:var(--panel);border:2px solid var(--gold-dim);border-radius:12px;padding:1.5rem;width:100%;max-width:340px}
-.auth-logo{text-align:center;margin-bottom:1rem}.auth-logo h1{font-family:'Cinzel',serif;color:var(--gold-b);font-size:1.3rem}.auth-logo p{color:var(--dim);font-size:.75rem}
-.auth-tabs{display:flex;margin-bottom:1rem}.auth-tab{flex:1;padding:.5rem;background:var(--bg);border:1px solid var(--border);color:var(--dim);cursor:pointer;font-family:'Cinzel',serif;font-size:.7rem}
+.auth-screen,.char-create{position:fixed;inset:0;background:var(--bg);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem}
+.auth-box,.create-box{background:var(--panel);border:2px solid var(--gold-dim);border-radius:12px;padding:1.5rem;width:100%;max-width:340px}
+.auth-logo,.create-logo{text-align:center;margin-bottom:1rem}.auth-logo h1,.create-logo h1{font-family:'Cinzel',serif;color:var(--gold-b);font-size:1.2rem}.auth-logo p,.create-logo p{color:var(--dim);font-size:.7rem}
+.auth-tabs{display:flex;margin-bottom:1rem}.auth-tab{flex:1;padding:.4rem;background:var(--bg);border:1px solid var(--border);color:var(--dim);cursor:pointer;font-family:'Cinzel',serif;font-size:.65rem}
 .auth-tab:first-child{border-radius:4px 0 0 4px}.auth-tab:last-child{border-radius:0 4px 4px 0}.auth-tab.active{background:var(--gold-dim);color:var(--bg);border-color:var(--gold)}
-.auth-form{display:flex;flex-direction:column;gap:.5rem}.auth-form.hidden{display:none}
-.auth-input{background:var(--input);border:1px solid var(--border);padding:.5rem;color:var(--text);font-size:.8rem;border-radius:4px}.auth-input:focus{outline:none;border-color:var(--gold-dim)}
-.auth-btn{font-family:'Cinzel',serif;padding:.5rem;background:var(--gold-dim);border:none;color:var(--bg);cursor:pointer;border-radius:4px;margin-top:.3rem}.auth-btn:hover{background:var(--gold-b)}.auth-btn:disabled{opacity:.5}
-.auth-error{color:var(--red-b);font-size:.7rem;text-align:center;padding:.3rem;background:rgba(139,0,0,.2);border-radius:4px;margin-bottom:.5rem}
-.auth-divider{text-align:center;color:var(--dim);font-size:.65rem;margin:.5rem 0}
+.auth-form{display:flex;flex-direction:column;gap:.4rem}.auth-form.hidden{display:none}
+.auth-input,.create-input{background:var(--input);border:1px solid var(--border);padding:.5rem;color:var(--text);font-size:.8rem;border-radius:4px;width:100%}.auth-input:focus,.create-input:focus{outline:none;border-color:var(--gold-dim)}
+.auth-btn,.create-btn{font-family:'Cinzel',serif;padding:.5rem;background:var(--gold-dim);border:none;color:var(--bg);cursor:pointer;border-radius:4px;margin-top:.3rem;width:100%}.auth-btn:hover,.create-btn:hover{background:var(--gold-b)}.auth-btn:disabled,.create-btn:disabled{opacity:.5}
+.auth-error{color:var(--red-b);font-size:.65rem;text-align:center;padding:.3rem;background:rgba(139,0,0,.2);border-radius:4px;margin-bottom:.4rem}
+.auth-divider{text-align:center;color:var(--dim);font-size:.6rem;margin:.4rem 0}
 .auth-guest{background:transparent;border:1px solid var(--border);color:var(--dim)}.auth-guest:hover{border-color:var(--gold-dim);color:var(--gold)}
 
-.status-bar{position:fixed;top:0;right:0;display:flex;align-items:center;gap:.4rem;padding:.2rem .5rem;background:var(--panel);border-bottom-left-radius:6px;font-size:.6rem;z-index:200}
-.status-dot{width:8px;height:8px;border-radius:50%;background:var(--red)}.status-dot.on{background:var(--green-b)}
-.user-info{display:flex;align-items:center;gap:.3rem;color:var(--dim)}.user-info span{max-width:80px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.logout-btn{background:none;border:none;color:var(--red-b);cursor:pointer;font-size:.55rem;padding:0 .2rem}.logout-btn:hover{text-decoration:underline}
+.create-section{margin-bottom:.8rem}.create-section label{display:block;font-size:.6rem;color:var(--dim);text-transform:uppercase;margin-bottom:.3rem}
+.race-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:.4rem}
+.race-option{background:var(--bg);border:2px solid var(--border);border-radius:6px;padding:.5rem;cursor:pointer;text-align:center;transition:all .2s}
+.race-option:hover{border-color:var(--gold-dim)}.race-option.selected{border-color:var(--gold-b);background:rgba(212,164,55,.1)}
+.race-option-icon{font-size:1.5rem}.race-option-name{font-family:'Cinzel',serif;font-size:.7rem;color:var(--gold)}.race-option-stats{font-size:.5rem;color:var(--dim)}
 
-.main-nav{display:flex;justify-content:center;background:var(--panel);border-bottom:2px solid var(--gold-dim);position:sticky;top:0;z-index:100;padding:.25rem;gap:.25rem}
-.nav-btn{font-family:'Cinzel',serif;font-size:.7rem;padding:.35rem .8rem;background:transparent;border:1px solid transparent;color:var(--dim);cursor:pointer;border-radius:3px}
+.status-bar{position:fixed;top:0;right:0;display:flex;align-items:center;gap:.3rem;padding:.15rem .4rem;background:var(--panel);border-bottom-left-radius:6px;font-size:.55rem;z-index:200}
+.status-dot{width:6px;height:6px;border-radius:50%;background:var(--red)}.status-dot.on{background:var(--green-b)}
+.user-info{display:flex;align-items:center;gap:.2rem;color:var(--dim)}.user-info span{max-width:60px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.logout-btn{background:none;border:none;color:var(--red-b);cursor:pointer;font-size:.5rem;padding:0 .15rem}.logout-btn:hover{text-decoration:underline}
+
+.main-nav{display:flex;justify-content:center;background:var(--panel);border-bottom:2px solid var(--gold-dim);position:sticky;top:0;z-index:100;padding:.2rem;gap:.2rem}
+.nav-btn{font-family:'Cinzel',serif;font-size:.6rem;padding:.3rem .6rem;background:transparent;border:1px solid transparent;color:var(--dim);cursor:pointer;border-radius:3px}
 .nav-btn:hover{color:var(--gold);border-color:var(--gold-dim)}.nav-btn.active{color:var(--gold-b);background:rgba(212,164,55,.15);border-color:var(--gold-dim)}
 
-.tab-content{display:none;min-height:calc(100vh - 44px)}.tab-content.active{display:flex;flex-direction:column}
-.game-wrap{display:flex;flex-direction:column;height:calc(100vh - 44px);max-width:1400px;margin:0 auto;padding:.5rem;gap:.5rem}
-.game-top{display:grid;grid-template-columns:250px 1fr;gap:.5rem}.game-bottom{flex:1;min-height:180px;overflow:hidden}
+.tab-content{display:none;min-height:calc(100vh - 40px)}.tab-content.active{display:flex;flex-direction:column}
+.game-wrap{display:flex;flex-direction:column;height:calc(100vh - 40px);max-width:1200px;margin:0 auto;padding:.4rem;gap:.4rem}
+.game-top{display:grid;grid-template-columns:220px 1fr;gap:.4rem}.game-bottom{flex:1;min-height:150px;overflow:hidden}
 
 .panel{background:var(--panel);border:1px solid var(--border);border-radius:6px;overflow:hidden}
-.panel-head{background:var(--light);padding:.35rem .5rem;border-bottom:1px solid var(--border);font-family:'Cinzel',serif;font-size:.65rem;color:var(--gold);text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
-.panel-body{padding:.4rem}
+.panel-head{background:var(--light);padding:.3rem .4rem;border-bottom:1px solid var(--border);font-family:'Cinzel',serif;font-size:.6rem;color:var(--gold);text-transform:uppercase;display:flex;justify-content:space-between;align-items:center}
+.panel-body{padding:.35rem}
 
-.char-panel.combat .char-hp{display:none}.char-head{display:flex;align-items:center;gap:.4rem;padding:.4rem;background:var(--bg);border-bottom:1px solid var(--border)}
-.char-avatar{width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:var(--light);border:2px solid var(--gold-dim);border-radius:6px;font-size:1.6rem;overflow:hidden}
+.char-panel.combat .char-hp{display:none}.char-head{display:flex;align-items:center;gap:.35rem;padding:.35rem;background:var(--bg);border-bottom:1px solid var(--border)}
+.char-avatar{width:40px;height:40px;display:flex;align-items:center;justify-content:center;background:var(--light);border:2px solid var(--gold-dim);border-radius:6px;font-size:1.4rem;overflow:hidden}
 .char-avatar img{width:100%;height:100%;object-fit:contain}
-.char-name{font-family:'Cinzel',serif;font-size:.9rem;color:var(--gold-b)}.char-race{font-size:.6rem;color:var(--dim)}.char-body{padding:.4rem;display:flex;flex-direction:column;gap:.35rem}
+.char-name{font-family:'Cinzel',serif;font-size:.8rem;color:var(--gold-b)}.char-race{font-size:.55rem;color:var(--dim)}.char-body{padding:.35rem;display:flex;flex-direction:column;gap:.3rem}
 
-.hp-bar{background:var(--bg);border:1px solid var(--border);border-radius:4px;height:18px;position:relative;overflow:hidden}
+.hp-bar{background:var(--bg);border:1px solid var(--border);border-radius:4px;height:16px;position:relative;overflow:hidden}
 .hp-fill{height:100%;transition:width .3s;background:linear-gradient(180deg,var(--green-b),var(--green))}.hp-fill.med{background:linear-gradient(180deg,var(--gold-b),var(--gold-dim))}.hp-fill.low{background:linear-gradient(180deg,var(--orange),#c40)}.hp-fill.crit{background:linear-gradient(180deg,var(--red-b),var(--red));animation:pulse 1s infinite}
-@keyframes pulse{50%{opacity:.7}}.hp-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.65rem;font-weight:bold;color:#fff;text-shadow:1px 1px 2px #000}
+@keyframes pulse{50%{opacity:.7}}.hp-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.6rem;font-weight:bold;color:#fff;text-shadow:1px 1px 2px #000}
 
-.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:.2rem}.stat-item{display:flex;justify-content:space-between;padding:.15rem .3rem;background:var(--light);border-radius:3px;font-size:.6rem}
-.stat-label{color:var(--dim)}.stat-val{color:var(--gold);font-weight:bold}.stat-val.debuff{color:var(--red-b)}
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:.15rem}.stat-item{display:flex;justify-content:space-between;padding:.12rem .25rem;background:var(--light);border-radius:3px;font-size:.55rem}
+.stat-label{color:var(--dim)}.stat-val{color:var(--gold);font-weight:bold}
 
-.equip-slot{display:flex;align-items:center;gap:.35rem;padding:.25rem;background:var(--light);border:1px solid transparent;border-radius:4px;cursor:pointer}
+.equip-slot{display:flex;align-items:center;gap:.3rem;padding:.2rem;background:var(--light);border:1px solid transparent;border-radius:4px;cursor:pointer}
 .equip-slot:hover:not(.off){border-color:var(--gold-dim)}.equip-slot.off{opacity:.5;cursor:not-allowed}
-.equip-icon{width:26px;height:26px;display:flex;align-items:center;justify-content:center;font-size:1.1rem;overflow:hidden}
+.equip-icon{width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:1rem;overflow:hidden}
 .equip-icon img{width:100%;height:100%;object-fit:contain}
-.equip-name{font-size:.7rem}.equip-stats{font-size:.55rem;color:var(--dim)}
+.equip-name{font-size:.65rem}.equip-stats{font-size:.5rem;color:var(--dim)}
 
-.coins{display:flex;justify-content:center;gap:.8rem;padding:.25rem;background:var(--bg);border-radius:4px;font-size:.75rem}.coin-g{color:var(--gold-b)}.coin-s{color:#c0c0c0}
+.coins{display:flex;justify-content:center;gap:.6rem;padding:.2rem;background:var(--bg);border-radius:4px;font-size:.7rem}.coin-g{color:var(--gold-b)}.coin-s{color:#c0c0c0}
 
-.region-badge{text-align:center;padding:.3rem;border-radius:4px;font-size:.65rem;border:1px solid var(--border);cursor:pointer}
+.region-badge{text-align:center;padding:.25rem;border-radius:4px;font-size:.6rem;border:1px solid var(--border);cursor:pointer}
 .region-badge:hover{border-color:var(--gold-dim)}.region-badge.safe{background:rgba(45,90,39,.3);border-color:var(--green);color:var(--green-b)}.region-badge.danger{background:rgba(139,0,0,.3);border-color:var(--red);color:var(--red-b)}
 
-.main-area{display:flex;flex-direction:column;gap:.4rem}.actions-panel.combat{display:none}.actions-panel .panel-body{display:flex;flex-wrap:wrap;gap:.35rem;justify-content:center}
+.main-area{display:flex;flex-direction:column;gap:.35rem}.actions-panel.combat{display:none}.actions-panel .panel-body{display:flex;flex-wrap:wrap;gap:.3rem;justify-content:center}
 
 .combat-arena{background:linear-gradient(180deg,rgba(139,0,0,.2),transparent);border:2px solid var(--red)}.combat-arena .panel-head{background:linear-gradient(180deg,rgba(139,0,0,.4),var(--panel));color:var(--red-b)}
-.combat-grid{display:flex;gap:.4rem;align-items:start;padding:.4rem;flex-wrap:wrap;justify-content:center}
-.combatant{background:var(--bg);border:2px solid var(--border);border-radius:6px;padding:.35rem;text-align:center;min-width:100px;max-width:130px;position:relative}
-.combatant.player{border-color:var(--gold-dim);order:-1}.combatant.enemy{border-color:var(--red)}.combatant.pet{border-color:var(--cyan);order:-1}.combatant.dead{opacity:.4;filter:grayscale(1)}.combatant.active{box-shadow:0 0 10px var(--gold-b);border-color:var(--gold-b)}
-.combatant-order{position:absolute;top:-6px;right:-6px;background:var(--gold);color:var(--bg);width:18px;height:18px;border-radius:50%;font-size:.55rem;font-weight:bold;display:flex;align-items:center;justify-content:center}
-.combatant-sprite{font-size:1.8rem;margin-bottom:.15rem;height:40px;display:flex;align-items:center;justify-content:center}
-.combatant-sprite img{max-width:40px;max-height:40px;object-fit:contain}
-.combatant-name{font-family:'Cinzel',serif;font-size:.65rem;margin-bottom:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.combatant-stats{font-size:.45rem;color:var(--dim);margin-bottom:.15rem}.combatant .hp-bar{height:12px}.combatant .hp-text{font-size:.5rem}
-.combat-vs{font-size:1rem;color:var(--gold);align-self:center;padding:0 .2rem}
-.combat-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:.3rem;padding:.4rem;border-top:1px solid var(--border)}
+.combat-grid{display:flex;gap:.3rem;align-items:start;padding:.35rem;flex-wrap:wrap;justify-content:center}
+.combatant{background:var(--bg);border:2px solid var(--border);border-radius:6px;padding:.3rem;text-align:center;width:90px;position:relative;flex-shrink:0}
+.combatant.player{border-color:var(--gold-dim);order:-1}.combatant.enemy{border-color:var(--red)}.combatant.dead{opacity:.4;filter:grayscale(1)}.combatant.active{box-shadow:0 0 8px var(--gold-b);border-color:var(--gold-b)}
+.combatant-order{position:absolute;top:-5px;right:-5px;background:var(--gold);color:var(--bg);width:16px;height:16px;border-radius:50%;font-size:.5rem;font-weight:bold;display:flex;align-items:center;justify-content:center}
+.combatant-sprite{font-size:1.5rem;height:32px;display:flex;align-items:center;justify-content:center}
+.combatant-sprite img{max-width:32px;max-height:32px;object-fit:contain}
+.combatant-name{font-family:'Cinzel',serif;font-size:.55rem;margin-bottom:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.combatant-stats{font-size:.4rem;color:var(--dim);margin-bottom:.1rem}.combatant .hp-bar{height:10px}.combatant .hp-text{font-size:.45rem}
+.combat-vs{font-size:.9rem;color:var(--gold);align-self:center;padding:0 .15rem}
 
-.combat-log{max-height:160px;overflow-y:auto;padding:.4rem;background:var(--bg);border-top:1px solid var(--border);font-size:.65rem}
-.log-entry{padding:.1rem 0;border-bottom:1px dashed rgba(255,255,255,.05)}.log-player{color:var(--gold)}.log-enemy{color:var(--red-b)}.log-pet{color:var(--cyan)}.log-dmg{color:var(--orange)}.log-heal{color:var(--green-b)}.log-miss{color:var(--dim);font-style:italic}.log-crit{color:var(--gold-b);font-weight:bold}
-.log-calc{background:var(--panel);padding:.15rem .3rem;border-radius:3px;margin:.1rem 0;font-family:monospace;font-size:.6rem;border-left:3px solid var(--orange)}.log-calc.block{border-left-color:var(--blue-b)}
-.log-turn{background:linear-gradient(90deg,transparent,var(--light),transparent);color:var(--gold);padding:.2rem;margin:.2rem -.4rem;text-align:center;font-family:'Cinzel',serif;font-size:.6rem}
-.log-order{display:flex;flex-wrap:wrap;gap:.15rem;justify-content:center;margin:.15rem 0}.log-order-tag{background:var(--light);padding:.08rem .2rem;border-radius:3px;font-size:.5rem}
-.log-order-tag.player{border:1px solid var(--gold-dim);color:var(--gold)}.log-order-tag.enemy{border:1px solid var(--red);color:var(--red-b)}.log-order-tag.pet{border:1px solid var(--cyan);color:var(--cyan)}
-.effects-row{display:flex;flex-wrap:wrap;justify-content:center;gap:.1rem;margin-top:.1rem;min-height:10px}.effect-tag{font-size:.4rem;padding:.03rem .1rem;border-radius:2px}
-.eff-bleed{background:rgba(139,0,0,.6);border:1px solid var(--red)}.eff-poison{background:rgba(0,100,0,.6);border:1px solid var(--green-b)}.eff-fire{background:rgba(255,100,0,.5);border:1px solid orange}
+.combat-actions{display:flex;flex-direction:column;gap:.3rem;padding:.35rem;border-top:1px solid var(--border)}
+.combat-targets{display:flex;flex-wrap:wrap;gap:.2rem;justify-content:center;padding-bottom:.3rem;border-bottom:1px solid var(--border);margin-bottom:.3rem}
+.combat-target-btn{font-size:.55rem;padding:.25rem .4rem;background:var(--bg);border:1px solid var(--red);color:var(--red-b);border-radius:3px;cursor:pointer;display:flex;align-items:center;gap:.2rem}
+.combat-target-btn:hover{background:var(--red);color:#fff}
+.combat-target-btn img{width:16px;height:16px}
+.combat-btns{display:flex;flex-wrap:wrap;gap:.25rem;justify-content:center}
 
-.chronicles{display:flex;flex-direction:column;height:100%}.chronicles-content{flex:1;overflow-y:auto;padding:.4rem;display:flex;flex-direction:column;gap:.3rem}
-.story-entry{padding:.4rem;border-radius:4px;animation:fadeIn .3s;font-size:.8rem;line-height:1.5}@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+.combat-log{max-height:120px;overflow-y:auto;padding:.3rem;background:var(--bg);border-top:1px solid var(--border);font-size:.6rem}
+.log-entry{padding:.08rem 0;border-bottom:1px dashed rgba(255,255,255,.05)}.log-player{color:var(--gold)}.log-enemy{color:var(--red-b)}.log-dmg{color:var(--orange)}.log-heal{color:var(--green-b)}.log-miss{color:var(--dim);font-style:italic}.log-crit{color:var(--gold-b);font-weight:bold}
+.log-calc{background:var(--panel);padding:.1rem .25rem;border-radius:3px;margin:.08rem 0;font-family:monospace;font-size:.55rem;border-left:3px solid var(--orange)}.log-calc.block{border-left-color:var(--blue-b)}
+.log-turn{background:linear-gradient(90deg,transparent,var(--light),transparent);color:var(--gold);padding:.15rem;margin:.15rem -.3rem;text-align:center;font-family:'Cinzel',serif;font-size:.55rem}
+.log-order{display:flex;flex-wrap:wrap;gap:.1rem;justify-content:center;margin:.1rem 0}.log-order-tag{background:var(--light);padding:.05rem .15rem;border-radius:3px;font-size:.45rem}
+.log-order-tag.player{border:1px solid var(--gold-dim);color:var(--gold)}.log-order-tag.enemy{border:1px solid var(--red);color:var(--red-b)}
+
+.chronicles{display:flex;flex-direction:column;height:100%}.chronicles-content{flex:1;overflow-y:auto;padding:.3rem;display:flex;flex-direction:column;gap:.25rem}
+.story-entry{padding:.3rem;border-radius:4px;animation:fadeIn .3s;font-size:.75rem;line-height:1.4}@keyframes fadeIn{from{opacity:0;transform:translateY(5px)}to{opacity:1}}
 .story-narrative{background:linear-gradient(135deg,rgba(30,25,22,.95),rgba(45,38,33,.8));border-left:3px solid var(--gold-dim);font-style:italic}
 .story-combat{background:rgba(139,0,0,.15);border-left:3px solid var(--red)}.story-loot{background:rgba(212,164,55,.15);border-left:3px solid var(--gold)}
-.story-system{background:rgba(74,158,255,.1);border-left:3px solid var(--blue-b);font-size:.75rem}.story-trap{background:rgba(255,107,53,.15);border-left:3px solid var(--orange)}
-.story-dialogue{background:rgba(156,39,176,.1);border-left:3px solid var(--purple)}.story-region{background:rgba(0,188,212,.1);border-left:3px solid var(--cyan)}.story-travel{background:rgba(100,100,100,.2);border-left:3px solid var(--dim);font-style:italic}
+.story-system{background:rgba(74,158,255,.1);border-left:3px solid var(--blue-b);font-size:.7rem}.story-dialogue{background:rgba(156,39,176,.1);border-left:3px solid var(--purple)}
+.story-region{background:rgba(0,188,212,.1);border-left:3px solid var(--cyan)}.story-travel{background:rgba(100,100,100,.2);border-left:3px solid var(--dim);font-style:italic}
 
-.btn{font-family:'Cinzel',serif;font-size:.65rem;padding:.35rem .7rem;background:var(--light);border:1px solid var(--gold-dim);color:var(--gold);cursor:pointer;border-radius:4px;white-space:nowrap}
-.btn:hover:not(:disabled){background:var(--gold-dim);color:var(--bg);transform:translateY(-1px)}.btn:disabled{opacity:.5;cursor:not-allowed}
-.btn-primary{background:var(--gold-dim);color:var(--bg)}.btn-danger{border-color:var(--red);color:var(--red-b)}.btn-danger:hover:not(:disabled){background:var(--red);color:#fff}.btn-sm{font-size:.55rem;padding:.2rem .4rem}
+.btn{font-family:'Cinzel',serif;font-size:.6rem;padding:.3rem .6rem;background:var(--light);border:1px solid var(--gold-dim);color:var(--gold);cursor:pointer;border-radius:4px;white-space:nowrap}
+.btn:hover:not(:disabled){background:var(--gold-dim);color:var(--bg)}.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn:active:not(:disabled){transform:scale(.97)}
+.btn-primary{background:var(--gold-dim);color:var(--bg)}.btn-danger{border-color:var(--red);color:var(--red-b)}.btn-danger:hover:not(:disabled){background:var(--red);color:#fff}.btn-sm{font-size:.5rem;padding:.2rem .35rem}
 
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:500;justify-content:center;align-items:center;padding:1rem;overflow-y:auto}.modal-overlay.active{display:flex}
-.modal{background:var(--panel);border:2px solid var(--gold-dim);border-radius:8px;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;animation:modalIn .2s}
-@keyframes modalIn{from{opacity:0;transform:scale(.95)}}.modal-lg{max-width:750px}
-.modal-head{display:flex;justify-content:space-between;align-items:center;padding:.5rem .7rem;background:var(--light);border-bottom:1px solid var(--border)}
-.modal-title{font-family:'Cinzel',serif;font-size:.85rem;color:var(--gold)}.modal-close{background:none;border:none;color:var(--dim);font-size:1.2rem;cursor:pointer}.modal-close:hover{color:var(--gold)}
-.modal-body{padding:.7rem}
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:500;justify-content:center;align-items:center;padding:.5rem;overflow-y:auto}.modal-overlay.active{display:flex}
+.modal{background:var(--panel);border:2px solid var(--gold-dim);border-radius:8px;width:100%;max-width:420px;max-height:90vh;overflow-y:auto;animation:modalIn .2s}
+@keyframes modalIn{from{opacity:0;transform:scale(.95)}}.modal-lg{max-width:650px}
+.modal-head{display:flex;justify-content:space-between;align-items:center;padding:.4rem .6rem;background:var(--light);border-bottom:1px solid var(--border)}
+.modal-title{font-family:'Cinzel',serif;font-size:.75rem;color:var(--gold)}.modal-close{background:none;border:none;color:var(--dim);font-size:1.1rem;cursor:pointer;padding:0 .2rem}.modal-close:hover{color:var(--gold)}
+.modal-body{padding:.5rem}
 
-.inv-info{text-align:center;padding:.3rem;color:var(--dim);font-size:.7rem;border-bottom:1px solid var(--border)}
-.inv-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.3rem;padding:.5rem}
+.inv-info{text-align:center;padding:.25rem;color:var(--dim);font-size:.65rem;border-bottom:1px solid var(--border)}
+.inv-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.25rem;padding:.4rem}
 .inv-slot{aspect-ratio:1;background:var(--bg);border:1px solid var(--border);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;padding:.1rem;overflow:hidden}
-.inv-slot:hover{border-color:var(--gold-dim);transform:scale(1.05)}.inv-slot.empty{cursor:default}.inv-slot.empty:hover{transform:none;border-color:var(--border)}
-.inv-slot-icon{font-size:1.3rem;height:28px;display:flex;align-items:center;justify-content:center}
-.inv-slot-icon img{max-width:28px;max-height:28px;object-fit:contain}
-.inv-slot-name{font-size:.45rem;text-align:center;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
-.rarity-common{border-color:#555}.rarity-rare{border-color:var(--blue-b)}.rarity-epic{border-color:var(--purple)}.rarity-legendary{border-color:var(--gold-b);box-shadow:0 0 6px rgba(255,215,0,.4)}
+.inv-slot:hover{border-color:var(--gold-dim)}.inv-slot.empty{cursor:default}.inv-slot.empty:hover{border-color:var(--border)}
+.inv-slot-icon{font-size:1.2rem;height:24px;display:flex;align-items:center;justify-content:center}
+.inv-slot-icon img{max-width:24px;max-height:24px;object-fit:contain}
+.inv-slot-name{font-size:.4rem;text-align:center;color:var(--dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+.rarity-common{border-color:#555}.rarity-rare{border-color:var(--blue-b)}.rarity-epic{border-color:var(--purple)}.rarity-legendary{border-color:var(--gold-b);box-shadow:0 0 5px rgba(255,215,0,.4)}
 
-.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:.8rem}.shop-section h4{color:var(--gold);margin-bottom:.4rem;font-size:.75rem;font-family:'Cinzel',serif}
-.shop-items{display:flex;flex-direction:column;gap:.3rem;max-height:250px;overflow-y:auto}
-.shop-item{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:.4rem;cursor:pointer}.shop-item:hover{border-color:var(--gold-dim)}.shop-item.selected{border-color:var(--gold);background:rgba(212,164,55,.1)}
-.shop-item-head{display:flex;align-items:center;gap:.3rem;margin-bottom:.2rem}.shop-item-icon{font-size:1.2rem;width:24px;height:24px;display:flex;align-items:center;justify-content:center}
-.shop-item-icon img{max-width:24px;max-height:24px;object-fit:contain}
-.shop-item-name{font-family:'Cinzel',serif;font-size:.7rem;color:var(--gold)}.shop-item-price{margin-left:auto;font-size:.65rem;color:var(--dim)}
-.shop-item-stats{display:flex;flex-wrap:wrap;gap:.2rem;font-size:.55rem}.shop-item-stat{background:var(--panel);padding:.1rem .2rem;border-radius:2px}
+.shop-grid{display:grid;grid-template-columns:1fr 1fr;gap:.6rem}.shop-section h4{color:var(--gold);margin-bottom:.3rem;font-size:.7rem;font-family:'Cinzel',serif}
+.shop-items{display:flex;flex-direction:column;gap:.25rem;max-height:200px;overflow-y:auto}
+.shop-item{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:.35rem;cursor:pointer}.shop-item:hover{border-color:var(--gold-dim)}.shop-item.selected{border-color:var(--gold);background:rgba(212,164,55,.1)}
+.shop-item-head{display:flex;align-items:center;gap:.25rem;margin-bottom:.15rem}.shop-item-icon{font-size:1rem;width:20px;height:20px;display:flex;align-items:center;justify-content:center}
+.shop-item-icon img{max-width:20px;max-height:20px;object-fit:contain}
+.shop-item-name{font-family:'Cinzel',serif;font-size:.65rem;color:var(--gold)}.shop-item-price{margin-left:auto;font-size:.6rem;color:var(--dim)}
+.shop-item-stats{display:flex;flex-wrap:wrap;gap:.15rem;font-size:.5rem}.shop-item-stat{background:var(--panel);padding:.08rem .15rem;border-radius:2px}
 .shop-item-stat.dmg{color:var(--orange)}.shop-item-stat.def{color:var(--blue-b)}.shop-item-stat.heal{color:var(--green-b)}.shop-item-stat.weight{color:var(--red-b)}
-.shop-item-stat.rarity{text-transform:capitalize}.shop-item-stat.common{color:#888}.shop-item-stat.rare{color:var(--blue-b)}.shop-item-stat.epic{color:var(--purple)}.shop-item-stat.legendary{color:var(--gold-b)}
-.shop-item-desc{font-size:.55rem;color:var(--dim);margin-top:.15rem;font-style:italic}.shop-item-tag{font-size:.45rem;color:var(--orange);margin-top:.1rem}
-.shop-footer{text-align:center;margin-top:.6rem;padding-top:.5rem;border-top:1px solid var(--border)}.shop-balance{font-size:.8rem;margin-bottom:.4rem}.shop-actions{display:flex;justify-content:center;gap:.4rem}
+.shop-item-stat.common{color:#888}.shop-item-stat.rare{color:var(--blue-b)}.shop-item-stat.epic{color:var(--purple)}.shop-item-stat.legendary{color:var(--gold-b)}
+.shop-item-desc{font-size:.5rem;color:var(--dim);margin-top:.1rem;font-style:italic}.shop-item-tag{font-size:.4rem;color:var(--orange);margin-top:.08rem}
+.shop-footer{text-align:center;margin-top:.5rem;padding-top:.4rem;border-top:1px solid var(--border)}.shop-balance{font-size:.75rem;margin-bottom:.3rem}.shop-actions{display:flex;justify-content:center;gap:.3rem}
 
-.travel-map{display:flex;flex-direction:column;gap:.4rem}.travel-current{text-align:center;padding:.4rem;background:var(--bg);border-radius:6px;margin-bottom:.4rem}
-.travel-current-icon{font-size:1.8rem}.travel-current-name{font-family:'Cinzel',serif;color:var(--gold-b);font-size:.9rem}.travel-current-prog{font-size:.6rem;color:var(--dim);margin-top:.15rem}
-.travel-routes{display:flex;flex-direction:column;gap:.3rem}
-.travel-route{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:.4rem;display:flex;align-items:center;gap:.4rem;cursor:pointer}
-.travel-route:hover:not(.locked){border-color:var(--gold-dim);transform:translateX(3px)}.travel-route.locked{opacity:.5;cursor:not-allowed}.travel-route.locked:hover{transform:none}
-.travel-route-icon{font-size:1.3rem;width:36px;text-align:center}.travel-route-info{flex:1}.travel-route-name{font-family:'Cinzel',serif;color:var(--gold);font-size:.75rem}
-.travel-route-desc{font-size:.55rem;color:var(--dim)}.travel-route-req{font-size:.5rem;color:var(--red-b);margin-top:.1rem}.travel-route-steps{font-size:.55rem;color:var(--cyan);margin-top:.05rem}.travel-route-arrow{color:var(--gold-dim);font-size:1rem}
+.travel-map{display:flex;flex-direction:column;gap:.3rem}.travel-current{text-align:center;padding:.3rem;background:var(--bg);border-radius:6px;margin-bottom:.3rem}
+.travel-current-icon{font-size:1.5rem}.travel-current-name{font-family:'Cinzel',serif;color:var(--gold-b);font-size:.8rem}.travel-current-prog{font-size:.55rem;color:var(--dim);margin-top:.1rem}
+.travel-routes{display:flex;flex-direction:column;gap:.25rem}
+.travel-route{background:var(--bg);border:1px solid var(--border);border-radius:5px;padding:.35rem;display:flex;align-items:center;gap:.3rem;cursor:pointer}
+.travel-route:hover:not(.locked){border-color:var(--gold-dim)}.travel-route.locked{opacity:.5;cursor:not-allowed}
+.travel-route-icon{font-size:1.2rem;width:30px;text-align:center}.travel-route-info{flex:1}.travel-route-name{font-family:'Cinzel',serif;color:var(--gold);font-size:.7rem}
+.travel-route-desc{font-size:.5rem;color:var(--dim)}.travel-route-req{font-size:.45rem;color:var(--red-b);margin-top:.08rem}.travel-route-steps{font-size:.5rem;color:var(--cyan);margin-top:.04rem}.travel-route-arrow{color:var(--gold-dim);font-size:.9rem}
 
-.editor-wrap{max-width:1000px;margin:0 auto;padding:.7rem}
-.editor-tabs{display:flex;flex-wrap:wrap;gap:.2rem;background:var(--panel);padding:.3rem;border-radius:5px;margin-bottom:.5rem}
-.editor-tab{padding:.3rem .6rem;background:transparent;border:1px solid var(--border);color:var(--dim);cursor:pointer;font-family:'Cinzel',serif;font-size:.6rem;border-radius:3px}
+.editor-wrap{max-width:900px;margin:0 auto;padding:.5rem}
+.editor-tabs{display:flex;flex-wrap:wrap;gap:.15rem;background:var(--panel);padding:.25rem;border-radius:5px;margin-bottom:.4rem}
+.editor-tab{padding:.25rem .5rem;background:transparent;border:1px solid var(--border);color:var(--dim);cursor:pointer;font-family:'Cinzel',serif;font-size:.55rem;border-radius:3px}
 .editor-tab:hover{border-color:var(--gold-dim);color:var(--gold)}.editor-tab.active{background:var(--gold-dim);color:var(--bg);border-color:var(--gold)}
-.editor-section{display:none;background:var(--panel);border:1px solid var(--border);border-radius:5px;padding:.6rem}.editor-section.active{display:block}
-.editor-section h3{font-family:'Cinzel',serif;color:var(--gold);font-size:.85rem;margin-bottom:.5rem;padding-bottom:.3rem;border-bottom:1px solid var(--border)}
-.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:.4rem;margin-bottom:.4rem}
-.form-group{display:flex;flex-direction:column;gap:.1rem}.form-group label{font-size:.5rem;color:var(--dim);text-transform:uppercase}
-.form-group input,.form-group select,.form-group textarea{background:var(--input);border:1px solid var(--border);padding:.3rem;color:var(--text);font-size:.65rem;border-radius:3px;font-family:inherit}
-.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--gold-dim)}.form-group textarea{resize:vertical;min-height:40px}
-.form-actions{display:flex;gap:.3rem;justify-content:flex-end;padding-top:.4rem;border-top:1px solid var(--border);margin-top:.4rem}
-.multi-select{background:var(--input);border:1px solid var(--border);border-radius:3px;padding:.2rem;max-height:70px;overflow-y:auto;font-size:.6rem}
-.multi-select label{display:flex;align-items:center;gap:.2rem;padding:.08rem;cursor:pointer}.multi-select label:hover{background:var(--light)}
-.items-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:.3rem;margin-top:.5rem;max-height:220px;overflow-y:auto;padding:.1rem}
-.item-card{background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:.3rem;display:flex;align-items:center;gap:.3rem;cursor:pointer}.item-card:hover{border-color:var(--gold-dim)}
-.item-card-icon{font-size:1rem;width:24px;height:24px;display:flex;align-items:center;justify-content:center;overflow:hidden}
-.item-card-icon img{max-width:24px;max-height:24px;object-fit:contain}
-.item-card-info{flex:1;min-width:0}.item-card-name{font-size:.65rem;color:var(--gold);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.item-card-stats{font-size:.5rem;color:var(--dim)}
-.item-card-actions{display:flex;gap:.15rem}.icon-btn{background:none;border:1px solid var(--border);color:var(--dim);padding:.12rem .18rem;cursor:pointer;font-size:.5rem;border-radius:2px}.icon-btn:hover{border-color:var(--gold-dim);color:var(--gold)}.icon-btn.delete:hover{border-color:var(--red);color:var(--red-b)}
+.editor-section{display:none;background:var(--panel);border:1px solid var(--border);border-radius:5px;padding:.5rem}.editor-section.active{display:block}
+.editor-section h3{font-family:'Cinzel',serif;color:var(--gold);font-size:.75rem;margin-bottom:.4rem;padding-bottom:.25rem;border-bottom:1px solid var(--border)}
+.form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:.3rem;margin-bottom:.3rem}
+.form-group{display:flex;flex-direction:column;gap:.08rem}.form-group label{font-size:.45rem;color:var(--dim);text-transform:uppercase}
+.form-group input,.form-group select,.form-group textarea{background:var(--input);border:1px solid var(--border);padding:.25rem;color:var(--text);font-size:.6rem;border-radius:3px;font-family:inherit}
+.form-group input:focus,.form-group select:focus{outline:none;border-color:var(--gold-dim)}.form-group textarea{resize:vertical;min-height:35px}
+.form-actions{display:flex;gap:.25rem;justify-content:flex-end;padding-top:.3rem;border-top:1px solid var(--border);margin-top:.3rem}
+.multi-select{background:var(--input);border:1px solid var(--border);border-radius:3px;padding:.15rem;max-height:60px;overflow-y:auto;font-size:.55rem}
+.multi-select label{display:flex;align-items:center;gap:.15rem;padding:.06rem;cursor:pointer}.multi-select label:hover{background:var(--light)}
+.items-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:.25rem;margin-top:.4rem;max-height:180px;overflow-y:auto;padding:.08rem}
+.item-card{background:var(--bg);border:1px solid var(--border);border-radius:3px;padding:.25rem;display:flex;align-items:center;gap:.25rem;cursor:pointer}.item-card:hover{border-color:var(--gold-dim)}
+.item-card-icon{font-size:.9rem;width:20px;height:20px;display:flex;align-items:center;justify-content:center;overflow:hidden}
+.item-card-icon img{max-width:20px;max-height:20px;object-fit:contain}
+.item-card-info{flex:1;min-width:0}.item-card-name{font-size:.6rem;color:var(--gold);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.item-card-stats{font-size:.45rem;color:var(--dim)}
+.item-card-actions{display:flex;gap:.12rem}.icon-btn{background:none;border:1px solid var(--border);color:var(--dim);padding:.1rem .15rem;cursor:pointer;font-size:.45rem;border-radius:2px}.icon-btn:hover{border-color:var(--gold-dim);color:var(--gold)}.icon-btn.delete:hover{border-color:var(--red);color:var(--red-b)}
 
-.rules-wrap{max-width:900px;margin:0 auto;padding:.7rem}.rules-header{text-align:center;margin-bottom:.6rem}.rules-header h2{font-family:'Cinzel',serif;color:var(--gold);font-size:1.2rem}
-.rules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:.4rem}
-.rules-card{background:var(--panel);border:1px solid var(--border);border-radius:5px;padding:.5rem}
-.rules-card h4{font-family:'Cinzel',serif;color:var(--gold);font-size:.75rem;margin-bottom:.3rem;padding-bottom:.2rem;border-bottom:1px solid var(--border)}
-.rules-card p,.rules-card li{font-size:.65rem;margin-bottom:.1rem}.rules-card ul{padding-left:.8rem}
-.rules-hl{background:var(--bg);border-left:3px solid var(--gold);padding:.3rem;margin:.2rem 0;font-size:.65rem}
+.rules-wrap{max-width:800px;margin:0 auto;padding:.5rem}.rules-header{text-align:center;margin-bottom:.5rem}.rules-header h2{font-family:'Cinzel',serif;color:var(--gold);font-size:1rem}
+.rules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:.3rem}
+.rules-card{background:var(--panel);border:1px solid var(--border);border-radius:5px;padding:.4rem}
+.rules-card h4{font-family:'Cinzel',serif;color:var(--gold);font-size:.7rem;margin-bottom:.25rem;padding-bottom:.15rem;border-bottom:1px solid var(--border)}
+.rules-card p{font-size:.6rem;margin-bottom:.08rem}.rules-hl{background:var(--bg);border-left:3px solid var(--gold);padding:.25rem;margin:.15rem 0;font-size:.6rem}
 
-.toast-box{position:fixed;top:2.2rem;right:.6rem;z-index:1000;display:flex;flex-direction:column;gap:.3rem}
-.toast{padding:.3rem .6rem;border-radius:3px;font-size:.7rem;animation:toastIn .3s,toastOut .3s 2.5s forwards;color:#fff}
+.toast-box{position:fixed;top:2rem;right:.5rem;z-index:1000;display:flex;flex-direction:column;gap:.25rem}
+.toast{padding:.25rem .5rem;border-radius:3px;font-size:.65rem;animation:toastIn .3s,toastOut .3s 2.5s forwards;color:#fff}
 @keyframes toastIn{from{transform:translateX(100%);opacity:0}}@keyframes toastOut{to{transform:translateX(100%);opacity:0}}
 .toast.success{background:var(--green)}.toast.error{background:var(--red)}.toast.info{background:var(--blue)}
 .dice-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:600;justify-content:center;align-items:center}.dice-overlay.active{display:flex}
-.dice-box{background:var(--panel);border:2px solid var(--gold-dim);border-radius:10px;padding:1.2rem 1.5rem;text-align:center}
-.dice-icon{font-size:2.5rem;animation:diceRoll .4s}@keyframes diceRoll{0%{transform:rotate(0) scale(.5)}50%{transform:rotate(180deg) scale(1.2)}100%{transform:rotate(360deg) scale(1)}}
-.dice-label{font-size:.7rem;color:var(--dim)}.dice-result{font-family:'Cinzel',serif;font-size:1.8rem;color:var(--gold-b)}.dice-result.crit{color:var(--red-b);text-shadow:0 0 8px var(--red)}
+.dice-box{background:var(--panel);border:2px solid var(--gold-dim);border-radius:10px;padding:1rem 1.2rem;text-align:center}
+.dice-icon{font-size:2rem;animation:diceRoll .4s}@keyframes diceRoll{0%{transform:rotate(0) scale(.5)}50%{transform:rotate(180deg) scale(1.2)}100%{transform:rotate(360deg) scale(1)}}
+.dice-label{font-size:.65rem;color:var(--dim)}.dice-result{font-family:'Cinzel',serif;font-size:1.5rem;color:var(--gold-b)}.dice-result.crit{color:var(--red-b);text-shadow:0 0 6px var(--red)}
 
-@media(max-width:800px){.game-top{grid-template-columns:1fr}.char-panel{order:2}.main-area{order:1}.inv-grid{grid-template-columns:repeat(4,1fr)}.combatant{min-width:85px;max-width:100px}.rules-grid{grid-template-columns:1fr}.shop-grid{grid-template-columns:1fr}}
+@media(max-width:700px){
+    .game-top{grid-template-columns:1fr}.char-panel{order:2}.main-area{order:1}
+    .inv-grid{grid-template-columns:repeat(4,1fr)}.shop-grid{grid-template-columns:1fr}
+    .combatant{width:75px;padding:.2rem}.combatant-sprite{font-size:1.3rem;height:28px}.combatant-name{font-size:.5rem}.combatant-stats{font-size:.35rem}.combatant .hp-bar{height:8px}.combatant .hp-text{font-size:.4rem}.combatant-order{width:14px;height:14px;font-size:.45rem}
+    .combat-log{max-height:100px;font-size:.55rem}.log-calc{font-size:.5rem}
+    .rules-grid{grid-template-columns:1fr}.race-grid{grid-template-columns:repeat(2,1fr)}
+    .editor-tabs{justify-content:center}.items-list{grid-template-columns:repeat(auto-fill,minmax(140px,1fr))}
+    .btn{font-size:.55rem;padding:.25rem .5rem}
+}
+@media(max-width:400px){
+    .combatant{width:65px}.combatant-sprite{font-size:1.1rem;height:24px}
+    .inv-grid{grid-template-columns:repeat(3,1fr)}
+    .nav-btn{font-size:.5rem;padding:.25rem .4rem}
+}
     </style>
 </head>
 <body>
@@ -196,6 +221,21 @@
     </div>
 </div>
 
+<div class="char-create hidden" id="charCreate">
+    <div class="create-box">
+        <div class="create-logo"><h1>⚔️ Crear Personaje</h1><p>Elige tu nombre y raza</p></div>
+        <div class="create-section">
+            <label>Nombre del Héroe</label>
+            <input type="text" class="create-input" id="heroName" placeholder="Escribe tu nombre..." maxlength="20">
+        </div>
+        <div class="create-section">
+            <label>Elige tu Raza</label>
+            <div class="race-grid" id="raceGrid"></div>
+        </div>
+        <button class="create-btn" onclick="Game.createChar()">⚔️ Comenzar Aventura</button>
+    </div>
+</div>
+
 <div class="status-bar"><div class="user-info" id="userInfo"></div><div class="status-dot" id="fbStatus"></div><span id="fbStatusText">...</span></div>
 <nav class="main-nav"><button class="nav-btn active" data-tab="game">⚔️ Juego</button><button class="nav-btn" data-tab="rules">📜 Reglas</button><button class="nav-btn" data-tab="editor">🛠️ Editor</button></nav>
 
@@ -206,7 +246,7 @@
                 <div class="char-head"><div class="char-avatar" id="charAvatar">🧙</div><div><div class="char-name" id="charName">---</div><div class="char-race" id="charRace">---</div></div></div>
                 <div class="char-body">
                     <div class="char-hp"><div class="hp-bar"><div class="hp-fill" id="hpFill"></div><div class="hp-text" id="hpText">0/0</div></div></div>
-                    <div class="region-badge safe" id="regionBadge" onclick="Regions.open()"><span id="regionIcon">🏘️</span> <span id="regionName">Pueblo</span><div style="font-size:.45rem;color:var(--dim)">Click para viajar</div></div>
+                    <div class="region-badge safe" id="regionBadge" onclick="Regions.open()"><span id="regionIcon">🏘️</span> <span id="regionName">Pueblo</span><div style="font-size:.4rem;color:var(--dim)">Click para viajar</div></div>
                     <div class="stats-grid">
                         <div class="stat-item"><span class="stat-label">Armadura</span><span class="stat-val" id="statArmor">0</span></div>
                         <div class="stat-item"><span class="stat-label">Evasión</span><span class="stat-val" id="statEvasion">0</span></div>
@@ -236,11 +276,11 @@
     <div class="rules-wrap">
         <div class="rules-header"><h2>📜 Reglas del Juego</h2></div>
         <div class="rules-grid">
-            <div class="rules-card"><h4>⚔️ Cálculo de Daño</h4><div class="rules-hl">Daño Final = Base − Armadura (mín 0)</div></div>
-            <div class="rules-card"><h4>⚡ Velocidad y Peso</h4><div class="rules-hl">Velocidad Final = Base − Peso Equipo</div><p>Armas y armaduras pesadas te hacen más lento</p></div>
-            <div class="rules-card"><h4>🎲 Ataque</h4><div class="rules-hl">D20 + Precisión ≥ Dificultad<br>Crítico (20): ×2 | Pifia (1): Fallo</div></div>
-            <div class="rules-card"><h4>💀 Modo Hardcore</h4><div class="rules-hl">Si mueres, pierdes TODO el progreso</div><p>¡Guarda a menudo pero con cuidado!</p></div>
-            <div class="rules-card"><h4>💰 Economía</h4><div class="rules-hl">99 MP = 1 MO</div><p>Vender encontrados: 50%</p><p>Vender comprados: 60%</p></div>
+            <div class="rules-card"><h4>⚔️ Cálculo de Daño</h4><div class="rules-hl">Daño = Base − Armadura (mín 0)</div></div>
+            <div class="rules-card"><h4>⚡ Velocidad y Peso</h4><div class="rules-hl">Velocidad = Base − Peso</div><p>Equipo pesado te hace lento</p></div>
+            <div class="rules-card"><h4>🎲 Ataque</h4><div class="rules-hl">D20 + Precisión ≥ Dificultad<br>20=Crítico ×2 | 1=Pifia</div></div>
+            <div class="rules-card"><h4>💀 Modo Hardcore</h4><div class="rules-hl">Si mueres, pierdes TODO</div></div>
+            <div class="rules-card"><h4>💰 Economía</h4><div class="rules-hl">99 MP = 1 MO</div><p>Vender: 50% encontrado, 60% comprado</p></div>
             <div class="rules-card"><h4>🗺️ Viaje</h4><p>Completa encuentros para desbloquear rutas</p></div>
         </div>
     </div>
@@ -249,13 +289,13 @@
 <div class="tab-content" id="tab-editor">
     <div class="editor-wrap">
         <div class="editor-tabs">
-            <button class="editor-tab active" data-editor="regions">🗺️ Regiones</button>
-            <button class="editor-tab" data-editor="races">👤 Razas</button>
-            <button class="editor-tab" data-editor="weapons">⚔️ Armas</button>
-            <button class="editor-tab" data-editor="armors">🛡️ Armaduras</button>
-            <button class="editor-tab" data-editor="items">🎒 Items</button>
-            <button class="editor-tab" data-editor="enemies">👹 Enemigos</button>
-            <button class="editor-tab" data-editor="npcs">🧔 NPCs</button>
+            <button class="editor-tab active" data-editor="regions">🗺️</button>
+            <button class="editor-tab" data-editor="races">👤</button>
+            <button class="editor-tab" data-editor="weapons">⚔️</button>
+            <button class="editor-tab" data-editor="armors">🛡️</button>
+            <button class="editor-tab" data-editor="items">🎒</button>
+            <button class="editor-tab" data-editor="enemies">👹</button>
+            <button class="editor-tab" data-editor="npcs">🧔</button>
         </div>
         
         <div class="editor-section active" id="editor-regions"><h3>🗺️ Regiones</h3>
@@ -267,8 +307,8 @@
                 <div class="form-group"><label>Distancia</label><input type="number" id="region-distance" min="0"></div>
                 <div class="form-group"><label>Enc. req.</label><input type="number" id="region-reqEncounters" min="0"></div>
             </div>
-            <div class="form-group"><label>Conexiones (IDs separados por coma)</label><input id="region-connections"></div>
-            <div class="form-actions"><button class="btn" onclick="Ed.clear('region')">🆕 Nuevo</button><button class="btn btn-primary" onclick="Ed.saveRegion()">💾 Guardar</button></div>
+            <div class="form-group"><label>Conexiones (IDs,coma)</label><input id="region-connections"></div>
+            <div class="form-actions"><button class="btn" onclick="Ed.clear('region')">🆕</button><button class="btn btn-primary" onclick="Ed.saveRegion()">💾</button></div>
             <div class="items-list" id="regions-list"></div>
         </div>
         
@@ -277,13 +317,13 @@
                 <div class="form-group"><label>ID</label><input id="race-id"></div>
                 <div class="form-group"><label>Nombre</label><input id="race-name"></div>
                 <div class="form-group"><label>Icono</label><input id="race-icon" maxlength="2"></div>
-                <div class="form-group"><label>Sprite URL</label><input id="race-sprite" placeholder="https://..."></div>
+                <div class="form-group"><label>Sprite</label><input id="race-sprite" placeholder="URL"></div>
                 <div class="form-group"><label>+HP</label><input type="number" id="race-hp"></div>
-                <div class="form-group"><label>+Armadura</label><input type="number" id="race-armor"></div>
-                <div class="form-group"><label>Velocidad Base</label><input type="number" id="race-speed" value="10"></div>
+                <div class="form-group"><label>+Armor</label><input type="number" id="race-armor"></div>
+                <div class="form-group"><label>Velocidad</label><input type="number" id="race-speed" value="10"></div>
                 <div class="form-group"><label>+Precisión</label><input type="number" id="race-precision"></div>
             </div>
-            <div class="form-actions"><button class="btn" onclick="Ed.clear('race')">🆕 Nuevo</button><button class="btn btn-primary" onclick="Ed.saveRace()">💾 Guardar</button></div>
+            <div class="form-actions"><button class="btn" onclick="Ed.clear('race')">🆕</button><button class="btn btn-primary" onclick="Ed.saveRace()">💾</button></div>
             <div class="items-list" id="races-list"></div>
         </div>
         
@@ -293,13 +333,13 @@
                 <div class="form-group"><label>Nombre</label><input id="weapon-name"></div>
                 <div class="form-group"><label>Daño</label><input id="weapon-damage" placeholder="1d6"></div>
                 <div class="form-group"><label>Icono</label><input id="weapon-icon" maxlength="2"></div>
-                <div class="form-group"><label>Sprite URL</label><input id="weapon-sprite" placeholder="https://..."></div>
+                <div class="form-group"><label>Sprite</label><input id="weapon-sprite" placeholder="URL"></div>
                 <div class="form-group"><label>Peso</label><input type="number" id="weapon-weight" min="0" value="0"></div>
-                <div class="form-group"><label>Valor MP</label><input type="number" id="weapon-value"></div>
+                <div class="form-group"><label>Valor</label><input type="number" id="weapon-value"></div>
                 <div class="form-group"><label>Rareza</label><select id="weapon-rarity"><option value="common">Común</option><option value="rare">Raro</option><option value="epic">Épico</option><option value="legendary">Legendario</option></select></div>
             </div>
             <div class="form-group"><label>Descripción</label><textarea id="weapon-desc"></textarea></div>
-            <div class="form-actions"><button class="btn" onclick="Ed.clear('weapon')">🆕 Nuevo</button><button class="btn btn-primary" onclick="Ed.saveWeapon()">💾 Guardar</button></div>
+            <div class="form-actions"><button class="btn" onclick="Ed.clear('weapon')">🆕</button><button class="btn btn-primary" onclick="Ed.saveWeapon()">💾</button></div>
             <div class="items-list" id="weapons-list"></div>
         </div>
         
@@ -309,13 +349,13 @@
                 <div class="form-group"><label>Nombre</label><input id="armor-name"></div>
                 <div class="form-group"><label>Defensa</label><input type="number" id="armor-defense"></div>
                 <div class="form-group"><label>Icono</label><input id="armor-icon" maxlength="2"></div>
-                <div class="form-group"><label>Sprite URL</label><input id="armor-sprite" placeholder="https://..."></div>
+                <div class="form-group"><label>Sprite</label><input id="armor-sprite" placeholder="URL"></div>
                 <div class="form-group"><label>Peso</label><input type="number" id="armor-weight" min="0" value="0"></div>
-                <div class="form-group"><label>Valor MP</label><input type="number" id="armor-value"></div>
+                <div class="form-group"><label>Valor</label><input type="number" id="armor-value"></div>
                 <div class="form-group"><label>Rareza</label><select id="armor-rarity"><option value="common">Común</option><option value="rare">Raro</option><option value="epic">Épico</option><option value="legendary">Legendario</option></select></div>
             </div>
             <div class="form-group"><label>Descripción</label><textarea id="armor-desc"></textarea></div>
-            <div class="form-actions"><button class="btn" onclick="Ed.clear('armor')">🆕 Nuevo</button><button class="btn btn-primary" onclick="Ed.saveArmor()">💾 Guardar</button></div>
+            <div class="form-actions"><button class="btn" onclick="Ed.clear('armor')">🆕</button><button class="btn btn-primary" onclick="Ed.saveArmor()">💾</button></div>
             <div class="items-list" id="armors-list"></div>
         </div>
         
@@ -325,13 +365,13 @@
                 <div class="form-group"><label>Nombre</label><input id="item-name"></div>
                 <div class="form-group"><label>Tipo</label><select id="item-type"><option value="potion">Poción</option><option value="food">Comida</option><option value="antidote">Antídoto</option><option value="escape">Escape</option></select></div>
                 <div class="form-group"><label>Icono</label><input id="item-icon" maxlength="2"></div>
-                <div class="form-group"><label>Sprite URL</label><input id="item-sprite" placeholder="https://..."></div>
+                <div class="form-group"><label>Sprite</label><input id="item-sprite" placeholder="URL"></div>
                 <div class="form-group"><label>Efecto</label><input id="item-effect" placeholder="1d8"></div>
-                <div class="form-group"><label>Valor MP</label><input type="number" id="item-value"></div>
+                <div class="form-group"><label>Valor</label><input type="number" id="item-value"></div>
                 <div class="form-group"><label>Rareza</label><select id="item-rarity"><option value="common">Común</option><option value="rare">Raro</option><option value="epic">Épico</option><option value="legendary">Legendario</option></select></div>
             </div>
             <div class="form-group"><label>Descripción</label><textarea id="item-desc"></textarea></div>
-            <div class="form-actions"><button class="btn" onclick="Ed.clear('item')">🆕 Nuevo</button><button class="btn btn-primary" onclick="Ed.saveItem()">💾 Guardar</button></div>
+            <div class="form-actions"><button class="btn" onclick="Ed.clear('item')">🆕</button><button class="btn btn-primary" onclick="Ed.saveItem()">💾</button></div>
             <div class="items-list" id="items-list"></div>
         </div>
         
@@ -345,12 +385,12 @@
                 <div class="form-group"><label>Armadura</label><input type="number" id="enemy-armor"></div>
                 <div class="form-group"><label>Velocidad</label><input type="number" id="enemy-speed"></div>
                 <div class="form-group"><label>Icono</label><input id="enemy-icon" maxlength="2"></div>
-                <div class="form-group"><label>Sprite URL</label><input id="enemy-sprite" placeholder="https://..."></div>
+                <div class="form-group"><label>Sprite</label><input id="enemy-sprite" placeholder="URL"></div>
                 <div class="form-group"><label>Loot Min</label><input type="number" id="enemy-loot-min"></div>
                 <div class="form-group"><label>Loot Max</label><input type="number" id="enemy-loot-max"></div>
             </div>
             <div class="form-group"><label>Regiones</label><div class="multi-select" id="enemy-regions"></div></div>
-            <div class="form-actions"><button class="btn" onclick="Ed.clear('enemy')">🆕 Nuevo</button><button class="btn btn-primary" onclick="Ed.saveEnemy()">💾 Guardar</button></div>
+            <div class="form-actions"><button class="btn" onclick="Ed.clear('enemy')">🆕</button><button class="btn btn-primary" onclick="Ed.saveEnemy()">💾</button></div>
             <div class="items-list" id="enemies-list"></div>
         </div>
         
@@ -360,12 +400,12 @@
                 <div class="form-group"><label>Nombre</label><input id="npc-name"></div>
                 <div class="form-group"><label>Rol</label><select id="npc-role"><option value="blacksmith">Herrero</option><option value="alchemist">Alquimista</option><option value="innkeeper">Tabernero</option><option value="healer">Curandero</option></select></div>
                 <div class="form-group"><label>Icono</label><input id="npc-icon" maxlength="2"></div>
-                <div class="form-group"><label>Sprite URL</label><input id="npc-sprite" placeholder="https://..."></div>
+                <div class="form-group"><label>Sprite</label><input id="npc-sprite" placeholder="URL"></div>
                 <div class="form-group"><label>Región</label><select id="npc-region"></select></div>
             </div>
             <div class="form-group"><label>Diálogo</label><textarea id="npc-dialogue"></textarea></div>
-            <div class="form-group"><label>Vende (items)</label><div class="multi-select" id="npc-sells"></div></div>
-            <div class="form-actions"><button class="btn" onclick="Ed.clear('npc')">🆕 Nuevo</button><button class="btn btn-primary" onclick="Ed.saveNpc()">💾 Guardar</button></div>
+            <div class="form-group"><label>Vende</label><div class="multi-select" id="npc-sells"></div></div>
+            <div class="form-actions"><button class="btn" onclick="Ed.clear('npc')">🆕</button><button class="btn btn-primary" onclick="Ed.saveNpc()">💾</button></div>
             <div class="items-list" id="npcs-list"></div>
         </div>
     </div>
@@ -387,7 +427,7 @@ const hpClass=p=>p>60?'':p>30?'med':p>15?'low':'crit';
 const genId=p=>`${p}_${Date.now()}_${Math.random().toString(36).substr(2,4)}`;
 const toast=(m,t='info')=>{const e=document.createElement('div');e.className=`toast ${t}`;e.textContent=m;$('#toastBox').appendChild(e);setTimeout(()=>e.remove(),3000)};
 const openModal=id=>$(`#${id}`).classList.add('active'),closeModal=id=>$(`#${id}`).classList.remove('active');
-const showDice=async(r,s=20,c=false)=>{$('#diceLabel').textContent=`D${s}`;$('#diceResult').textContent=r;$('#diceResult').classList.toggle('crit',c);$('#diceOverlay').classList.add('active');await new Promise(r=>setTimeout(r,400));$('#diceOverlay').classList.remove('active')};
+const showDice=async(r,s=20,c=false)=>{$('#diceLabel').textContent=`D${s}`;$('#diceResult').textContent=r;$('#diceResult').classList.toggle('crit',c);$('#diceOverlay').classList.add('active');await new Promise(r=>setTimeout(r,350));$('#diceOverlay').classList.remove('active')};
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 const sprite=(it)=>it?.sprite?`<img src="${it.sprite}" onerror="this.outerHTML='${it.icon||'📦'}'">`:(it?.icon||'📦');
 
@@ -406,20 +446,8 @@ const Auth={
 const D={
     regions:[{id:'pueblo',name:'Pueblo',icon:'🏘️',type:'safe',distance:0,reqEncounters:0,connections:['bosque','camino']},{id:'camino',name:'Camino Real',icon:'🛤️',type:'danger',distance:1,reqEncounters:0,connections:['pueblo','bosque','mazmorra']},{id:'bosque',name:'Bosque Sombrío',icon:'🌲',type:'danger',distance:1,reqEncounters:0,connections:['pueblo','camino','pantano']},{id:'mazmorra',name:'Mazmorras',icon:'🏚️',type:'danger',distance:2,reqEncounters:3,connections:['camino']},{id:'pantano',name:'Pantano',icon:'🌿',type:'danger',distance:2,reqEncounters:4,connections:['bosque']}],
     races:[{id:'human',name:'Humano',icon:'🧑',bonus:{health:2,speed:10}},{id:'elf',name:'Elfo',icon:'🧝',bonus:{precision:2,speed:14}},{id:'dwarf',name:'Enano',icon:'🧔',bonus:{armor:2,speed:8}},{id:'orc',name:'Orco',icon:'👹',bonus:{damage:2,speed:10}}],
-    weapons:[
-        {id:'w1',name:'Daga',damage:'1d4',icon:'🗡️',value:10,weight:0,rarity:'common',desc:'Arma ligera y rápida.'},
-        {id:'w2',name:'Espada',damage:'1d6',icon:'⚔️',value:25,weight:1,rarity:'common',desc:'Espada estándar de combate.'},
-        {id:'w3',name:'Hacha',damage:'1d8',icon:'🪓',value:40,weight:2,rarity:'rare',desc:'Hacha pesada de guerra.'},
-        {id:'w4',name:'Martillo',damage:'2d4',icon:'🔨',value:60,weight:3,rarity:'rare',desc:'Martillo devastador pero lento.'},
-        {id:'w5',name:'Espadón',damage:'1d10',icon:'⚔️',value:80,weight:4,rarity:'epic',desc:'Espada a dos manos, muy pesada.'}
-    ],
-    armors:[
-        {id:'a1',name:'Cuero',defense:1,icon:'🦺',value:15,weight:0,rarity:'common',desc:'Armadura ligera de cuero.'},
-        {id:'a2',name:'Cota',defense:2,icon:'⛓️',value:40,weight:1,rarity:'rare',desc:'Malla de anillos metálicos.'},
-        {id:'a3',name:'Brigantina',defense:3,icon:'🎽',value:70,weight:2,rarity:'rare',desc:'Placas sobre cuero.'},
-        {id:'a4',name:'Placas',defense:5,icon:'🛡️',value:120,weight:4,rarity:'epic',desc:'Armadura pesada de placas.'},
-        {id:'a5',name:'Armadura Completa',defense:7,icon:'🏰',value:200,weight:6,rarity:'legendary',desc:'Protección máxima, muy pesada.'}
-    ],
+    weapons:[{id:'w1',name:'Daga',damage:'1d4',icon:'🗡️',value:10,weight:0,rarity:'common',desc:'Arma ligera.'},{id:'w2',name:'Espada',damage:'1d6',icon:'⚔️',value:25,weight:1,rarity:'common',desc:'Espada estándar.'},{id:'w3',name:'Hacha',damage:'1d8',icon:'🪓',value:40,weight:2,rarity:'rare',desc:'Hacha de guerra.'},{id:'w4',name:'Martillo',damage:'2d4',icon:'🔨',value:60,weight:3,rarity:'rare',desc:'Martillo pesado.'},{id:'w5',name:'Espadón',damage:'1d10',icon:'⚔️',value:80,weight:4,rarity:'epic',desc:'Espada a dos manos.'}],
+    armors:[{id:'a1',name:'Cuero',defense:1,icon:'🦺',value:15,weight:0,rarity:'common',desc:'Armadura ligera.'},{id:'a2',name:'Cota',defense:2,icon:'⛓️',value:40,weight:1,rarity:'rare',desc:'Malla metálica.'},{id:'a3',name:'Brigantina',defense:3,icon:'🎽',value:70,weight:2,rarity:'rare',desc:'Placas sobre cuero.'},{id:'a4',name:'Placas',defense:5,icon:'🛡️',value:120,weight:4,rarity:'epic',desc:'Armadura pesada.'},{id:'a5',name:'Completa',defense:7,icon:'🏰',value:200,weight:6,rarity:'legendary',desc:'Protección máxima.'}],
     items:[{id:'i1',name:'Poción menor',type:'potion',effect:'1d8',icon:'🧪',value:12,rarity:'common',desc:'Cura 1-8 HP.'},{id:'i2',name:'Antídoto',type:'antidote',icon:'💊',value:15,rarity:'common',desc:'Cura veneno.'},{id:'i3',name:'Carne',type:'food',effect:'1d4',icon:'🥩',value:5,rarity:'common',desc:'Cura 1-4 HP.'},{id:'i4',name:'Bomba humo',type:'escape',icon:'💨',value:30,rarity:'rare',desc:'Escape garantizado.'}],
     enemies:[{id:'e1',name:'Rata',health:8,damage:'1d4',difficulty:6,armor:0,speed:12,icon:'🐀',loot:[5,12],regions:['mazmorra','camino']},{id:'e2',name:'Goblin',health:14,damage:'1d6',difficulty:8,armor:0,speed:11,icon:'👺',loot:[10,20],regions:['bosque','camino']},{id:'e3',name:'Lobo',health:16,damage:'1d6',difficulty:9,armor:0,speed:14,icon:'🐺',loot:[8,18],regions:['bosque']},{id:'e4',name:'Esqueleto',health:18,damage:'1d6',difficulty:10,armor:1,speed:8,icon:'💀',loot:[12,25],regions:['mazmorra']},{id:'e5',name:'Troll',health:40,damage:'2d6',difficulty:13,armor:2,speed:7,icon:'🧌',loot:[30,60],regions:['pantano']}],
     npcs:[{id:'n1',name:'Grimbold',role:'blacksmith',icon:'🧔',region:'pueblo',dialogue:'¡Mis armas son las mejores!',sells:['w1','w2','w3','w4','w5','a1','a2','a3','a4','a5']},{id:'n2',name:'Elara',role:'alchemist',icon:'🧙‍♀️',region:'pueblo',dialogue:'Pociones de calidad.',sells:['i1','i2','i4']},{id:'n3',name:'Clara',role:'healer',icon:'👩‍⚕️',region:'pueblo',dialogue:'Puedo curarte por 10 MP.',sells:[]}],
@@ -429,11 +457,11 @@ const D={
     getEnemies(rid){return this.enemies.filter(e=>(e.regions||[]).includes(rid))},
     getNpcs(rid){return this.npcs.filter(n=>n.region===rid)},
     getConnected(rid){const r=this.getRegion(rid);return(r.connections||[]).map(c=>this.getRegion(c)).filter(x=>x)},
-    save(){localStorage.setItem('rpg_data',JSON.stringify({regions:this.regions,races:this.races,weapons:this.weapons,armors:this.armors,items:this.items,enemies:this.enemies,npcs:this.npcs}));if(FB.db&&FB.ok)FB.db.ref('gameData').set({regions:this.regions,races:this.races,weapons:this.weapons,armors:this.armors,items:this.items,enemies:this.enemies,npcs:this.npcs})},
+    save(){localStorage.setItem('rpg_data',JSON.stringify({regions:this.regions,races:this.races,weapons:this.weapons,armors:this.armors,items:this.items,enemies:this.enemies,npcs:this.npcs}))},
     load(){try{const d=JSON.parse(localStorage.getItem('rpg_data'));if(d)Object.keys(d).forEach(k=>{if(this[k])this[k]=d[k]})}catch(e){}}
 };
 
-const FB={db:null,ok:false,init(){try{firebase.initializeApp({apiKey:"AIzaSyAV4eSg9QjyE08zwtFsvjAomuMYVcNik9k",databaseURL:"https://rpggo-756a7-default-rtdb.firebaseio.com",projectId:"rpggo-756a7",authDomain:"rpggo-756a7.firebaseapp.com"});this.db=firebase.database();this.db.ref('.info/connected').on('value',s=>{this.ok=s.val()===true;$('#fbStatus').classList.toggle('on',this.ok);$('#fbStatusText').textContent=this.ok?'✓':'✗';if(this.ok)this.loadData()});firebase.auth().onAuthStateChanged(u=>{if(u){Auth.user=u;Auth.onAuth()}else if(!Auth.user){$('#authScreen').classList.remove('hidden')}})}catch(e){console.error(e)}},loadData(){if(!this.db)return;this.db.ref('gameData').once('value').then(s=>{const d=s.val();if(d){Object.keys(d).forEach(k=>{if(D[k])D[k]=d[k]});Ed.renderAll()}})}};
+const FB={db:null,ok:false,init(){try{firebase.initializeApp({apiKey:"AIzaSyAV4eSg9QjyE08zwtFsvjAomuMYVcNik9k",databaseURL:"https://rpggo-756a7-default-rtdb.firebaseio.com",projectId:"rpggo-756a7",authDomain:"rpggo-756a7.firebaseapp.com"});this.db=firebase.database();this.db.ref('.info/connected').on('value',s=>{this.ok=s.val()===true;$('#fbStatus').classList.toggle('on',this.ok);$('#fbStatusText').textContent=this.ok?'✓':'✗'});firebase.auth().onAuthStateChanged(u=>{if(u){Auth.user=u;Auth.onAuth()}else if(!Auth.user){$('#authScreen').classList.remove('hidden')}})}catch(e){console.error(e)}}};
 
 let G={p:null,combat:false,enemies:[],turn:0,region:null,regionProg:{},traveling:null,turnOrder:[],curActor:0};
 
@@ -441,7 +469,7 @@ const Story={add(t,c=''){const e=document.createElement('div');e.className=`stor
 
 const Regions={
     open(){if(G.combat)return;const cur=G.region,prog=G.regionProg[cur.id]||{enc:0};let h=`<div class="travel-current"><div class="travel-current-icon">${cur.icon}</div><div class="travel-current-name">${cur.name}</div><div class="travel-current-prog">📍 ${prog.enc} encuentros</div></div><div class="travel-routes">`;
-    D.getConnected(cur.id).forEach(dest=>{const unlocked=dest.reqEncounters===0||prog.enc>=dest.reqEncounters;const steps=Math.abs(dest.distance-cur.distance)+1;h+=`<div class="travel-route ${unlocked?'':'locked'}" onclick="${unlocked?`Regions.travel('${dest.id}')`:''}"><div class="travel-route-icon">${dest.icon}</div><div class="travel-route-info"><div class="travel-route-name">${dest.name}</div>${!unlocked?`<div class="travel-route-req">🔒 Necesitas ${dest.reqEncounters} encuentros</div>`:''}<div class="travel-route-steps">🚶 ${steps} paso${steps>1?'s':''}</div></div><div class="travel-route-arrow">${unlocked?'→':'🔒'}</div></div>`});
+    D.getConnected(cur.id).forEach(dest=>{const unlocked=dest.reqEncounters===0||prog.enc>=dest.reqEncounters;const steps=Math.abs(dest.distance-cur.distance)+1;h+=`<div class="travel-route ${unlocked?'':'locked'}" onclick="${unlocked?`Regions.travel('${dest.id}')`:''}"><div class="travel-route-icon">${dest.icon}</div><div class="travel-route-info"><div class="travel-route-name">${dest.name}</div>${!unlocked?`<div class="travel-route-req">🔒 Necesitas ${dest.reqEncounters} enc.</div>`:''}<div class="travel-route-steps">🚶 ${steps} paso${steps>1?'s':''}</div></div><div class="travel-route-arrow">${unlocked?'→':'🔒'}</div></div>`});
     h+='</div>';$('#travelMap').innerHTML=h;openModal('regionModal')},
     travel(id){closeModal('regionModal');const dest=D.getRegion(id);const steps=Math.abs(dest.distance-G.region.distance)+1;G.traveling={dest,steps,cur:0};Story.add(`🚶 Viajando a ${dest.name}...`,'travel');this.step()},
     step(){const t=G.traveling;if(!t)return;t.cur++;Story.add(`Paso ${t.cur}/${t.steps}...`,'travel');if(t.dest.type==='danger'&&Math.random()<0.3){const pool=D.getEnemies(t.dest.id);if(pool.length){const e=pick(pool);Story.add('¡Emboscada!','combat');Game.setActions([{text:'⚔️ Luchar',fn:()=>Combat.start([{...e,uid:genId('e'),hp:e.health,maxHp:e.health,effs:[]}],true),cls:'btn-primary'},{text:'💨 Huir',fn:()=>{G.traveling=null;Story.add('Vuelves atrás.','system');Game.explore()},cls:'btn-danger'}]);return}}if(t.cur>=t.steps)this.arrive(t.dest);else Game.setActions([{text:'🚶 Continuar',fn:()=>this.step(),cls:'btn-primary'}])},
@@ -450,11 +478,15 @@ const Regions={
 };
 
 const Game={
-    init(){this.load()||this.new()},
-    new(){const race=pick(D.races);const wpn={...D.weapons[0],uid:genId('i')};const arm={...D.armors[0],uid:genId('i')};G.p={name:pick(['Aldric','Brynn','Cedric','Dara','Freya','Kira','Theron']),race,maxHp:20+(race.bonus.health||0),hp:20+(race.bonus.health||0),baseSpeed:race.bonus.speed||10,weapon:wpn,armor:arm,inv:[{...D.items[0],uid:genId('i')}],maxSlots:10,gold:0,silver:25,effs:[]};G.combat=false;G.region=D.getRegion('pueblo');G.regionProg={pueblo:{enc:0}};G.traveling=null;Story.clear();Story.add(`<strong style="color:var(--gold-b)">⚔️ Aventuras de Acero y Runas ⚔️</strong>`);Story.add(`Eres <strong>${G.p.name}</strong>, ${race.name} ${race.icon}`,'narrative');Story.add(`💀 MODO HARDCORE: Si mueres, pierdes todo.`,'system');this.updateUI();this.explore()},
+    selectedRace:null,
+    init(){if(this.load())return;this.showCreate()},
+    showCreate(){$('#charCreate').classList.remove('hidden');$('#raceGrid').innerHTML=D.races.map(r=>`<div class="race-option" data-id="${r.id}" onclick="Game.selectRace('${r.id}')"><div class="race-option-icon">${sprite(r)}</div><div class="race-option-name">${r.name}</div><div class="race-option-stats">HP+${r.bonus.health||0} ⚡${r.bonus.speed||10}</div></div>`).join('');this.selectRace(D.races[0].id)},
+    selectRace(id){this.selectedRace=D.find('races',id);$$('.race-option').forEach(el=>el.classList.toggle('selected',el.dataset.id===id))},
+    createChar(){const name=$('#heroName').value.trim()||pick(['Aldric','Brynn','Cedric','Dara','Freya','Kira','Theron']);const race=this.selectedRace||pick(D.races);$('#charCreate').classList.add('hidden');const wpn={...D.weapons[0],uid:genId('i')};const arm={...D.armors[0],uid:genId('i')};G.p={name,race,maxHp:20+(race.bonus.health||0),hp:20+(race.bonus.health||0),baseSpeed:race.bonus.speed||10,weapon:wpn,armor:arm,inv:[{...D.items[0],uid:genId('i')}],maxSlots:10,gold:0,silver:25,effs:[]};G.combat=false;G.region=D.getRegion('pueblo');G.regionProg={pueblo:{enc:0}};G.traveling=null;Story.clear();Story.add(`<strong style="color:var(--gold-b)">⚔️ Aventuras de Acero y Runas ⚔️</strong>`);Story.add(`Eres <strong>${G.p.name}</strong>, ${race.name} ${race.icon}`,'narrative');Story.add(`💀 MODO HARDCORE: Si mueres, pierdes todo.`,'system');this.updateUI();this.explore()},
+    newGame(){if(!confirm('¿Crear nuevo personaje? Se perderá el progreso actual.'))return;this.deleteSave();G.p=null;G.combat=false;G.enemies=[];Story.clear();this.showCreate()},
     save(){localStorage.setItem('rpg_save',JSON.stringify({p:G.p,region:G.region,regionProg:G.regionProg}));toast('Guardado','success')},
     load(){const s=localStorage.getItem('rpg_save');if(!s)return false;try{const d=JSON.parse(s);G.p=d.p;G.region=D.getRegion(d.region?.id)||D.getRegion('pueblo');G.regionProg=d.regionProg||{};G.combat=false;G.traveling=null;Story.add('Partida cargada.','system');this.updateUI();this.explore();return true}catch(e){return false}},
-    deleteSave(){localStorage.removeItem('rpg_save');toast('Partida eliminada','info')},
+    deleteSave(){localStorage.removeItem('rpg_save')},
     getWeight(){return(G.p.weapon?.weight||0)+(G.p.armor?.weight||0)},
     getSpeed(){return Math.max(1,G.p.baseSpeed-this.getWeight())},
     armor(){return(G.p.armor?.defense||0)+(G.p.race.bonus.armor||0)},
@@ -465,15 +497,15 @@ const Game={
         $('#regionBadge').className=`region-badge ${G.region.type}`;$('#regionIcon').textContent=G.region.icon;$('#regionName').textContent=G.region.name;
         $('#statArmor').textContent=this.armor();$('#statEvasion').textContent=p.race.bonus.evasion||0;$('#statPrecision').textContent=p.race.bonus.precision||0;
         const weight=this.getWeight(),speed=this.getSpeed();
-        $('#statSpeed').innerHTML=weight>0?`${speed} <span style="color:var(--red-b);font-size:.5rem">(-${weight})</span>`:speed;
+        $('#statSpeed').innerHTML=weight>0?`${speed} <span style="color:var(--red-b);font-size:.45rem">(-${weight})</span>`:speed;
         $('#weaponIcon').innerHTML=sprite(p.weapon);$('#weaponName').textContent=p.weapon?.name||'Puños';
-        $('#weaponStats').innerHTML=`${p.weapon?.damage||'1d2'}${p.weapon?.weight?` ⚖️${p.weapon.weight}`:''}`;
+        $('#weaponStats').innerHTML=`${p.weapon?.damage||'1d2'}${p.weapon?.weight?` ⚖${p.weapon.weight}`:''}`;
         $('#armorIcon').innerHTML=sprite(p.armor);$('#armorName').textContent=p.armor?.name||'Nada';
-        $('#armorStats').innerHTML=`Def:${p.armor?.defense||0}${p.armor?.weight?` ⚖️${p.armor.weight}`:''}`;
+        $('#armorStats').innerHTML=`Def:${p.armor?.defense||0}${p.armor?.weight?` ⚖${p.armor.weight}`:''}`;
         $('#goldAmt').textContent=p.gold;$('#silverAmt').textContent=p.silver;
         $('#charPanel').classList.toggle('combat',G.combat);$('#actionsPanel').classList.toggle('combat',G.combat)},
     setActions(acts){const c=$('#actionsBox');c.innerHTML='';acts.forEach(a=>{const b=document.createElement('button');b.className=`btn ${a.cls||''}`;b.textContent=a.text;b.disabled=a.disabled||false;b.onclick=a.fn;c.appendChild(b)})},
-    explore(){const acts=[{text:'🗺️ Viajar',fn:()=>Regions.open()}];if(G.region.type==='danger')acts.unshift({text:'⚔️ Explorar',fn:()=>Exp.start(),cls:'btn-primary'});else{const npcs=D.getNpcs(G.region.id);if(npcs.length)acts.push({text:'🏘️ NPCs',fn:()=>Town.visit()})}acts.push({text:'🎒 Inventario',fn:()=>Inv.open()},{text:'💾 Guardar',fn:()=>this.save()});this.setActions(acts)}
+    explore(){const acts=[{text:'🗺️ Viajar',fn:()=>Regions.open()}];if(G.region.type==='danger')acts.unshift({text:'⚔️ Explorar',fn:()=>Exp.start(),cls:'btn-primary'});else{const npcs=D.getNpcs(G.region.id);if(npcs.length)acts.push({text:'🏘️ NPCs',fn:()=>Town.visit()})}acts.push({text:'🎒 Inventario',fn:()=>Inv.open()},{text:'💾 Guardar',fn:()=>this.save()},{text:'🔄 Nueva',fn:()=>this.newGame(),cls:'btn-danger'});this.setActions(acts)}
 };
 
 const Exp={
@@ -489,13 +521,20 @@ const Combat={
     start(enemies,traveling=false){this.traveling=traveling;G.combat=true;G.enemies=enemies;G.turn=0;$('#combatArena').classList.remove('hidden');$('#combatLog').innerHTML='';Game.updateUI();this.newTurn()},
     newTurn(){G.turn++;G.turnOrder=[];const playerSpeed=Game.getSpeed();G.turnOrder.push({type:'player',ent:G.p,spd:playerSpeed,init:d20()});G.enemies.filter(e=>e.hp>0).forEach(e=>G.turnOrder.push({type:'enemy',ent:e,spd:e.speed||10,init:d20()}));G.turnOrder.sort((a,b)=>b.spd!==a.spd?b.spd-a.spd:b.init-a.init);G.curActor=0;this.log(`<div class="log-turn">══ TURNO ${G.turn} ══</div>`);this.log(`<div class="log-order">${G.turnOrder.map((c,i)=>`<span class="log-order-tag ${c.type}">${i+1}.${c.type==='player'?G.p.name:c.ent.name} ⚡${c.spd}</span>`).join('')}</div>`);this.updateUI();this.next()},
     async next(){if(G.enemies.filter(e=>e.hp>0).length===0){this.victory();return}if(G.p.hp<=0){this.defeat();return}while(G.curActor<G.turnOrder.length){const a=G.turnOrder[G.curActor];if((a.type==='player'&&G.p.hp>0)||(a.type==='enemy'&&a.ent.hp>0))break;G.curActor++}if(G.curActor>=G.turnOrder.length){this.newTurn();return}const actor=G.turnOrder[G.curActor];if(actor.type==='player')this.playerActions();else await this.enemyTurn(actor.ent)},
-    playerActions(){const ca=$('#combatActions');ca.innerHTML='';const alive=G.enemies.filter(e=>e.hp>0);if(alive.length>1){alive.forEach(e=>{const b=document.createElement('button');b.className='btn btn-sm';b.innerHTML=`${sprite(e)} ${e.name}`;b.onclick=()=>this.playerAtk(e);ca.appendChild(b)})}else{const b=document.createElement('button');b.className='btn btn-primary';b.textContent='⚔️ Atacar';b.onclick=()=>this.playerAtk(alive[0]);ca.appendChild(b)}[{t:'🛡️ Defender',f:()=>this.playerDef()},{t:'🎒 Item',f:()=>Inv.open()},{t:'💨 Huir',f:()=>this.playerFlee(),c:'btn-danger'}].forEach(x=>{const b=document.createElement('button');b.className=`btn ${x.c||''}`;b.textContent=x.t;b.onclick=x.f;ca.appendChild(b)})},
-    async playerAtk(target){const atk=d20(),prec=G.p.race.bonus.precision||0,total=atk+prec,crit=atk===20,pifia=atk===1;await showDice(atk,20,crit);this.log(`<span class="log-player">${G.p.name}</span> → <span class="log-enemy">${target.name}</span>`);this.log(`┌ D20=${atk}${prec?`+${prec}`:''}=${total} vs ${target.difficulty}`);if(pifia){this.log(`└ <span class="log-miss">¡PIFIA!</span>`)}else if(total>=target.difficulty||crit){let dmg=roll(G.p.weapon?.damage||'1d2')+(G.p.race.bonus.damage||0);this.log(`├ Daño: ${dmg}`);if(crit){dmg*=2;this.log(`├ <span class="log-crit">¡CRÍTICO! x2=${dmg}</span>`)}const arm=target.armor||0,final=Math.max(0,dmg-arm);if(final>0){this.log(`<div class="log-calc">⚔️ ${dmg}-${arm}=${final}</div>`);target.hp-=final;this.log(`└ <span class="log-dmg">${target.name} -${final}</span>`);if(target.hp<=0)this.log(`💀 ${target.name} derrotado!`)}else this.log(`<div class="log-calc block">🛡️ BLOQUEADO</div>`)}else this.log(`└ <span class="log-miss">Falla</span>`);this.updateUI();G.curActor++;await delay(300);this.next()},
+    playerActions(){const ca=$('#combatActions');ca.innerHTML='';const alive=G.enemies.filter(e=>e.hp>0);
+        // Targets section
+        let h='<div class="combat-targets"><span style="font-size:.5rem;color:var(--dim);margin-right:.3rem">Objetivo:</span>';
+        alive.forEach(e=>{h+=`<button class="combat-target-btn" onclick="Combat.playerAtk('${e.uid}')">${sprite(e)} ${e.name}</button>`});
+        h+='</div>';
+        // Action buttons
+        h+='<div class="combat-btns"><button class="btn" onclick="Combat.playerDef()">🛡️ Defender</button><button class="btn" onclick="Inv.open()">🎒 Item</button><button class="btn btn-danger" onclick="Combat.playerFlee()">💨 Huir</button></div>';
+        ca.innerHTML=h},
+    async playerAtk(uid){const target=G.enemies.find(e=>e.uid===uid);if(!target||target.hp<=0)return;const atk=d20(),prec=G.p.race.bonus.precision||0,total=atk+prec,crit=atk===20,pifia=atk===1;await showDice(atk,20,crit);this.log(`<span class="log-player">${G.p.name}</span> → <span class="log-enemy">${target.name}</span>`);this.log(`┌ D20=${atk}${prec?`+${prec}`:''}=${total} vs ${target.difficulty}`);if(pifia){this.log(`└ <span class="log-miss">¡PIFIA!</span>`)}else if(total>=target.difficulty||crit){let dmg=roll(G.p.weapon?.damage||'1d2')+(G.p.race.bonus.damage||0);this.log(`├ Daño: ${dmg}`);if(crit){dmg*=2;this.log(`├ <span class="log-crit">¡CRÍTICO! x2=${dmg}</span>`)}const arm=target.armor||0,final=Math.max(0,dmg-arm);if(final>0){this.log(`<div class="log-calc">⚔️ ${dmg}-${arm}=${final}</div>`);target.hp-=final;this.log(`└ <span class="log-dmg">${target.name} -${final}</span>`);if(target.hp<=0)this.log(`💀 ${target.name} derrotado!`)}else this.log(`<div class="log-calc block">🛡️ BLOQUEADO</div>`)}else this.log(`└ <span class="log-miss">Falla</span>`);this.updateUI();G.curActor++;await delay(250);this.next()},
     playerDef(){G.p.defending=true;this.log(`<span class="log-player">${G.p.name}</span> defiende +4 Eva`);G.curActor++;this.next()},
-    async playerFlee(){const r=d20();await showDice(r,20,r>=12);if(r>=12){this.log('<span class="log-heal">¡Escape!</span>');this.escape()}else{this.log('<span class="log-miss">¡No escapas!</span>');G.curActor++;await delay(300);this.next()}},
-    async enemyTurn(e){const eva=(G.p.race.bonus.evasion||0)+(G.p.defending?4:0),dodge=d20()+eva;this.log(`<span class="log-enemy">${e.name}</span> → <span class="log-player">${G.p.name}</span>`);this.log(`┌ Esquive: ${dodge} vs 12`);if(dodge>=12){this.log(`└ <span class="log-heal">¡Esquivado!</span>`)}else{let dmg=roll(e.damage);const crit=Math.random()<0.1;if(crit){dmg=Math.ceil(dmg*1.25);this.log(`├ <span class="log-crit">¡Crítico! ${dmg}</span>`)}const arm=Game.armor(),final=Math.max(0,dmg-arm);if(final>0){this.log(`<div class="log-calc">⚔️ ${dmg}-${arm}=${final}</div>`);G.p.hp-=final;this.log(`└ <span class="log-dmg">${G.p.name} -${final}</span>`)}else this.log(`<div class="log-calc block">🛡️ BLOQUEADO</div>`)}G.p.defending=false;this.updateUI();Game.updateUI();G.curActor++;if(G.p.hp<=0){this.defeat();return}await delay(300);this.next()},
+    async playerFlee(){const r=d20();await showDice(r,20,r>=12);if(r>=12){this.log('<span class="log-heal">¡Escape!</span>');this.escape()}else{this.log('<span class="log-miss">¡No escapas!</span>');G.curActor++;await delay(250);this.next()}},
+    async enemyTurn(e){const eva=(G.p.race.bonus.evasion||0)+(G.p.defending?4:0),dodge=d20()+eva;this.log(`<span class="log-enemy">${e.name}</span> → <span class="log-player">${G.p.name}</span>`);this.log(`┌ Esquive: ${dodge} vs 12`);if(dodge>=12){this.log(`└ <span class="log-heal">¡Esquivado!</span>`)}else{let dmg=roll(e.damage);const crit=Math.random()<0.1;if(crit){dmg=Math.ceil(dmg*1.25);this.log(`├ <span class="log-crit">¡Crítico! ${dmg}</span>`)}const arm=Game.armor(),final=Math.max(0,dmg-arm);if(final>0){this.log(`<div class="log-calc">⚔️ ${dmg}-${arm}=${final}</div>`);G.p.hp-=final;this.log(`└ <span class="log-dmg">${G.p.name} -${final}</span>`)}else this.log(`<div class="log-calc block">🛡️ BLOQUEADO</div>`)}G.p.defending=false;this.updateUI();Game.updateUI();G.curActor++;if(G.p.hp<=0){this.defeat();return}await delay(250);this.next()},
     victory(){$('#combatArena').classList.add('hidden');G.combat=false;if(!G.regionProg[G.region.id])G.regionProg[G.region.id]={enc:0};G.regionProg[G.region.id].enc++;let loot=0;G.enemies.forEach(e=>{if(e.loot)loot+=dX(e.loot[1]-e.loot[0])+e.loot[0]});G.p.silver+=loot;while(G.p.silver>=99){G.p.silver-=99;G.p.gold++}Story.add(`<strong style="color:var(--green-b)">🎉 ¡Victoria!</strong> +${loot} MP`,'loot');G.enemies=[];Game.updateUI();if(this.traveling){this.traveling=false;Regions.contAfterCombat()}else Game.explore()},
-    defeat(){$('#combatArena').classList.add('hidden');G.combat=false;this.traveling=false;G.traveling=null;Story.add('<strong style="color:var(--red-b)">💀 Has muerto...</strong>','combat');Story.add('Tu aventura termina aquí. Todo el progreso se ha perdido.','system');Game.deleteSave();Game.setActions([{text:'🔄 Nueva Partida',fn:()=>Game.new(),cls:'btn-primary'}])},
+    defeat(){$('#combatArena').classList.add('hidden');G.combat=false;this.traveling=false;G.traveling=null;Story.add('<strong style="color:var(--red-b)">💀 Has muerto...</strong>','combat');Story.add('Tu aventura termina aquí.','system');Game.deleteSave();Game.setActions([{text:'🔄 Nueva Partida',fn:()=>{G.p=null;Story.clear();Game.showCreate()},cls:'btn-primary'}])},
     escape(){$('#combatArena').classList.add('hidden');G.combat=false;G.enemies=[];Story.add('Escapas.','system');Game.updateUI();if(this.traveling){this.traveling=false;G.traveling=null}Game.explore()},
     log(t){$('#combatLog').innerHTML+=`<div class="log-entry">${t}</div>`;$('#combatLog').scrollTop=999999},
     updateUI(){const g=$('#combatGrid');g.innerHTML='';const playerSpeed=Game.getSpeed();const pDiv=document.createElement('div');pDiv.className=`combatant player ${G.p.hp<=0?'dead':''}`;const pHp=(G.p.hp/G.p.maxHp)*100;pDiv.innerHTML=`<div class="combatant-order">⚡${playerSpeed}</div><div class="combatant-sprite">${sprite(G.p.race)}</div><div class="combatant-name">${G.p.name}</div><div class="combatant-stats">⚔️${G.p.weapon?.damage||'1d2'} 🛡️${Game.armor()}</div><div class="hp-bar"><div class="hp-fill ${hpClass(pHp)}" style="width:${pHp}%"></div><div class="hp-text">${G.p.hp}/${G.p.maxHp}</div></div>`;g.appendChild(pDiv);const vs=document.createElement('div');vs.className='combat-vs';vs.textContent='⚔';g.appendChild(vs);G.enemies.forEach(e=>{const d=document.createElement('div');d.className=`combatant enemy ${e.hp<=0?'dead':''}`;const eHp=(e.hp/e.maxHp)*100;d.innerHTML=`<div class="combatant-order">⚡${e.speed||10}</div><div class="combatant-sprite">${sprite(e)}</div><div class="combatant-name">${e.name}</div><div class="combatant-stats">⚔️${e.damage} 🛡️${e.armor||0}</div><div class="hp-bar"><div class="hp-fill ${hpClass(eHp)}" style="width:${eHp}%"></div><div class="hp-text">${Math.max(0,e.hp)}/${e.maxHp}</div></div>`;g.appendChild(d)});$('#turnCounter').textContent=G.turn}
@@ -504,21 +543,21 @@ const Combat={
 const Inv={
     open(){this.render();openModal('invModal')},
     render(){$('#invInfo').textContent=`${G.p.inv.length}/${G.p.maxSlots}`;const g=$('#invGrid');g.innerHTML='';G.p.inv.forEach(it=>{const s=document.createElement('div');s.className=`inv-slot rarity-${it.rarity||'common'}`;s.innerHTML=`<div class="inv-slot-icon">${sprite(it)}</div><div class="inv-slot-name">${it.name}</div>`;s.onclick=()=>this.detail(it);g.appendChild(s)});for(let i=G.p.inv.length;i<G.p.maxSlots;i++){const s=document.createElement('div');s.className='inv-slot empty';g.appendChild(s)}},
-    detail(it){let h=`<div style="text-align:center"><div style="font-size:2.5rem;height:60px;display:flex;align-items:center;justify-content:center">${sprite(it)}</div><div style="font-family:'Cinzel',serif;font-size:1rem;color:var(--gold-b)">${it.name}</div><div style="font-size:.65rem;color:var(--dim);margin-bottom:.5rem">${it.damage?'Arma':it.defense!==undefined?'Armadura':it.type||'Item'}</div>`;if(it.desc)h+=`<div style="background:var(--bg);padding:.4rem;border-radius:4px;font-size:.7rem;margin-bottom:.5rem">${it.desc}</div>`;h+=`<div style="display:flex;gap:.3rem;justify-content:center;flex-wrap:wrap;margin-bottom:.5rem">`;if(it.damage)h+=`<span style="background:var(--panel);padding:.15rem .3rem;border-radius:3px;font-size:.6rem;color:var(--orange)">⚔️${it.damage}</span>`;if(it.defense!==undefined)h+=`<span style="background:var(--panel);padding:.15rem .3rem;border-radius:3px;font-size:.6rem;color:var(--blue-b)">🛡️${it.defense}</span>`;if(it.weight)h+=`<span style="background:var(--panel);padding:.15rem .3rem;border-radius:3px;font-size:.6rem;color:var(--red-b)">⚖️${it.weight}</span>`;if(it.effect&&(it.type==='potion'||it.type==='food'))h+=`<span style="background:var(--panel);padding:.15rem .3rem;border-radius:3px;font-size:.6rem;color:var(--green-b)">💚${it.effect}</span>`;h+=`</div><div style="display:flex;gap:.3rem;justify-content:center;flex-wrap:wrap">`;const safe=!G.combat&&G.region.type==='safe';if(it.damage&&safe)h+=`<button class="btn btn-primary" onclick="Inv.equip('weapon','${it.uid}')">⚔️ Equipar</button>`;if(it.defense!==undefined&&safe)h+=`<button class="btn btn-primary" onclick="Inv.equip('armor','${it.uid}')">🛡️ Equipar</button>`;if(it.type==='potion'||it.type==='food')h+=`<button class="btn btn-primary" onclick="Inv.use('${it.uid}')">✨ Usar</button>`;if(it.type==='antidote')h+=`<button class="btn btn-primary" onclick="Inv.use('${it.uid}')">💊 Usar</button>`;if(it.type==='escape'&&G.combat)h+=`<button class="btn btn-primary" onclick="Inv.use('${it.uid}')">💨 Usar</button>`;h+=`<button class="btn" onclick="closeModal('itemModal')">Cerrar</button></div></div>`;$('#itemDetail').innerHTML=h;openModal('itemModal')},
+    detail(it){let h=`<div style="text-align:center"><div style="font-size:2rem;height:50px;display:flex;align-items:center;justify-content:center">${sprite(it)}</div><div style="font-family:'Cinzel',serif;font-size:.9rem;color:var(--gold-b)">${it.name}</div><div style="font-size:.6rem;color:var(--dim);margin-bottom:.4rem">${it.damage?'Arma':it.defense!==undefined?'Armadura':it.type||'Item'}</div>`;if(it.desc)h+=`<div style="background:var(--bg);padding:.3rem;border-radius:4px;font-size:.65rem;margin-bottom:.4rem">${it.desc}</div>`;h+=`<div style="display:flex;gap:.2rem;justify-content:center;flex-wrap:wrap;margin-bottom:.4rem">`;if(it.damage)h+=`<span style="background:var(--panel);padding:.1rem .2rem;border-radius:3px;font-size:.55rem;color:var(--orange)">⚔️${it.damage}</span>`;if(it.defense!==undefined)h+=`<span style="background:var(--panel);padding:.1rem .2rem;border-radius:3px;font-size:.55rem;color:var(--blue-b)">🛡️${it.defense}</span>`;if(it.weight)h+=`<span style="background:var(--panel);padding:.1rem .2rem;border-radius:3px;font-size:.55rem;color:var(--red-b)">⚖️${it.weight}</span>`;if(it.effect&&(it.type==='potion'||it.type==='food'))h+=`<span style="background:var(--panel);padding:.1rem .2rem;border-radius:3px;font-size:.55rem;color:var(--green-b)">💚${it.effect}</span>`;h+=`</div><div style="display:flex;gap:.2rem;justify-content:center;flex-wrap:wrap">`;const safe=!G.combat&&G.region.type==='safe';if(it.damage&&safe)h+=`<button class="btn btn-primary btn-sm" onclick="Inv.equip('weapon','${it.uid}')">⚔️ Equipar</button>`;if(it.defense!==undefined&&safe)h+=`<button class="btn btn-primary btn-sm" onclick="Inv.equip('armor','${it.uid}')">🛡️ Equipar</button>`;if(it.type==='potion'||it.type==='food')h+=`<button class="btn btn-primary btn-sm" onclick="Inv.use('${it.uid}')">✨ Usar</button>`;if(it.type==='antidote')h+=`<button class="btn btn-primary btn-sm" onclick="Inv.use('${it.uid}')">💊 Usar</button>`;if(it.type==='escape'&&G.combat)h+=`<button class="btn btn-primary btn-sm" onclick="Inv.use('${it.uid}')">💨 Usar</button>`;h+=`<button class="btn btn-sm" onclick="closeModal('itemModal')">Cerrar</button></div></div>`;$('#itemDetail').innerHTML=h;openModal('itemModal')},
     equip(slot,uid){const it=G.p.inv.find(i=>i.uid===uid);if(!it)return;closeModal('itemModal');if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon=it}else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor=it}G.p.inv=G.p.inv.filter(i=>i.uid!==uid);toast('Equipado','success');Game.updateUI();this.render()},
     use(uid){const it=G.p.inv.find(i=>i.uid===uid);if(!it)return;closeModal('itemModal');closeModal('invModal');if(it.type==='potion'||it.type==='food'){const h=roll(it.effect||'1d4');const gain=Math.min(h,G.p.maxHp-G.p.hp);G.p.hp+=gain;Story.add(`${it.icon} +${gain} HP`,'system');if(G.combat)Combat.log(`<span class="log-heal">+${gain} HP</span>`)}else if(it.type==='antidote'){G.p.effs=G.p.effs?.filter(e=>e.type!=='poison')||[];Story.add('Veneno curado.','system')}else if(it.type==='escape'&&G.combat){G.p.inv=G.p.inv.filter(i=>i.uid!==uid);Combat.escape();return}G.p.inv=G.p.inv.filter(i=>i.uid!==uid);Game.updateUI();if(G.combat){Combat.updateUI();G.curActor++;Combat.next()}}
 };
 
 const Town={
     npc:null,selBuy:null,selSell:null,
-    visit(){const npcs=D.getNpcs(G.region.id);if(!npcs.length)return;$('#townTitle').textContent=`${G.region.icon} ${G.region.name}`;let h='<div style="display:grid;gap:.3rem">';npcs.forEach(n=>{h+=`<div class="item-card" onclick="Town.talk('${n.id}')"><span class="item-card-icon">${sprite(n)}</span><div class="item-card-info"><div class="item-card-name">${n.name}</div><div class="item-card-stats">${n.role}</div></div></div>`});h+='</div>';$('#townContent').innerHTML=h;openModal('townModal')},
+    visit(){const npcs=D.getNpcs(G.region.id);if(!npcs.length)return;$('#townTitle').textContent=`${G.region.icon} ${G.region.name}`;let h='<div style="display:grid;gap:.25rem">';npcs.forEach(n=>{h+=`<div class="item-card" onclick="Town.talk('${n.id}')"><span class="item-card-icon">${sprite(n)}</span><div class="item-card-info"><div class="item-card-name">${n.name}</div><div class="item-card-stats">${n.role}</div></div></div>`});h+='</div>';$('#townContent').innerHTML=h;openModal('townModal')},
     talk(id){const n=D.find('npcs',id);if(!n)return;closeModal('townModal');this.npc=n;Story.add(`<strong>${n.name}</strong>: "${n.dialogue||'¡Saludos!'}"`,`dialogue`);if(n.sells?.length)setTimeout(()=>this.shop(n),300);else if(n.role==='healer'){if(G.p.silver>=10){G.p.silver-=10;G.p.hp=G.p.maxHp;G.p.effs=[];Story.add('Curación completa. -10 MP','system')}else Story.add('"No tienes dinero."','dialogue');Game.updateUI()}},
     shop(n){this.selBuy=null;this.selSell=null;$('#shopTitle').textContent=`🏪 ${n.name}`;let h=`<div class="shop-grid"><div class="shop-section"><h4>📦 En Venta</h4><div class="shop-items" id="shopBuy">`;
-    (n.sells||[]).forEach(iid=>{const it=D.findItem(iid);if(it){h+=`<div class="shop-item" data-id="${it.id}" onclick="Town.pickBuy('${it.id}')"><div class="shop-item-head"><span class="shop-item-icon">${sprite(it)}</span><span class="shop-item-name">${it.name}</span><span class="shop-item-price">${it.value} MP</span></div><div class="shop-item-stats">${it.damage?`<span class="shop-item-stat dmg">⚔️${it.damage}</span>`:''}${it.defense!==undefined?`<span class="shop-item-stat def">🛡️${it.defense}</span>`:''}${it.weight?`<span class="shop-item-stat weight">⚖️${it.weight}</span>`:''}${it.effect?`<span class="shop-item-stat heal">💚${it.effect}</span>`:''}<span class="shop-item-stat ${it.rarity||'common'}">${it.rarity||'común'}</span></div>${it.desc?`<div class="shop-item-desc">${it.desc}</div>`:''}</div>`}});
+    (n.sells||[]).forEach(iid=>{const it=D.findItem(iid);if(it){h+=`<div class="shop-item" data-id="${it.id}" onclick="Town.pickBuy('${it.id}')"><div class="shop-item-head"><span class="shop-item-icon">${sprite(it)}</span><span class="shop-item-name">${it.name}</span><span class="shop-item-price">${it.value}MP</span></div><div class="shop-item-stats">${it.damage?`<span class="shop-item-stat dmg">⚔️${it.damage}</span>`:''}${it.defense!==undefined?`<span class="shop-item-stat def">🛡️${it.defense}</span>`:''}${it.weight?`<span class="shop-item-stat weight">⚖${it.weight}</span>`:''}${it.effect?`<span class="shop-item-stat heal">💚${it.effect}</span>`:''}<span class="shop-item-stat ${it.rarity||'common'}">${(it.rarity||'común')[0].toUpperCase()}</span></div></div>`}});
     h+=`</div></div><div class="shop-section"><h4>💰 Tu Inventario</h4><div class="shop-items" id="shopSell">`;
-    G.p.inv.forEach(it=>{const price=it.purchased?Math.floor((it.value||10)*0.6):Math.floor((it.value||10)*0.5);h+=`<div class="shop-item" data-uid="${it.uid}" onclick="Town.pickSell('${it.uid}')"><div class="shop-item-head"><span class="shop-item-icon">${sprite(it)}</span><span class="shop-item-name">${it.name}</span><span class="shop-item-price">${price} MP</span></div><div class="shop-item-stats">${it.damage?`<span class="shop-item-stat dmg">⚔️${it.damage}</span>`:''}${it.defense!==undefined?`<span class="shop-item-stat def">🛡️${it.defense}</span>`:''}${it.weight?`<span class="shop-item-stat weight">⚖️${it.weight}</span>`:''}<span class="shop-item-stat ${it.rarity||'common'}">${it.rarity||'común'}</span></div>${it.purchased?`<div class="shop-item-tag">🏷️ Comprado</div>`:''}</div>`});
-    if(!G.p.inv.length)h+=`<div style="color:var(--dim);font-size:.7rem;text-align:center;padding:.5rem">Vacío</div>`;
-    h+=`</div></div></div><div class="shop-footer"><div class="shop-balance">💰 ${G.p.gold} MO ${G.p.silver} MP</div><div class="shop-actions"><button class="btn btn-primary" id="buyBtn" onclick="Town.buy()" disabled>Comprar</button><button class="btn" id="sellBtn" onclick="Town.sell()" disabled>Vender</button></div></div>`;
+    G.p.inv.forEach(it=>{const price=it.purchased?Math.floor((it.value||10)*0.6):Math.floor((it.value||10)*0.5);h+=`<div class="shop-item" data-uid="${it.uid}" onclick="Town.pickSell('${it.uid}')"><div class="shop-item-head"><span class="shop-item-icon">${sprite(it)}</span><span class="shop-item-name">${it.name}</span><span class="shop-item-price">${price}MP</span></div><div class="shop-item-stats">${it.damage?`<span class="shop-item-stat dmg">⚔️${it.damage}</span>`:''}${it.defense!==undefined?`<span class="shop-item-stat def">🛡️${it.defense}</span>`:''}<span class="shop-item-stat ${it.rarity||'common'}">${(it.rarity||'común')[0].toUpperCase()}</span></div>${it.purchased?`<div class="shop-item-tag">🏷️ Comprado</div>`:''}</div>`});
+    if(!G.p.inv.length)h+=`<div style="color:var(--dim);font-size:.6rem;text-align:center;padding:.4rem">Vacío</div>`;
+    h+=`</div></div></div><div class="shop-footer"><div class="shop-balance">💰 ${G.p.gold}MO ${G.p.silver}MP</div><div class="shop-actions"><button class="btn btn-primary btn-sm" id="buyBtn" onclick="Town.buy()" disabled>Comprar</button><button class="btn btn-sm" id="sellBtn" onclick="Town.sell()" disabled>Vender</button></div></div>`;
     $('#shopContent').innerHTML=h;openModal('shopModal')},
     pickBuy(id){this.selBuy=id;this.selSell=null;$$('#shopBuy .shop-item').forEach(el=>el.classList.toggle('selected',el.dataset.id===id));$$('#shopSell .shop-item').forEach(el=>el.classList.remove('selected'));const it=D.findItem(id);$('#buyBtn').disabled=!(it&&G.p.silver>=it.value&&G.p.inv.length<G.p.maxSlots);$('#sellBtn').disabled=true},
     pickSell(uid){this.selSell=uid;this.selBuy=null;$$('#shopSell .shop-item').forEach(el=>el.classList.toggle('selected',el.dataset.uid===uid));$$('#shopBuy .shop-item').forEach(el=>el.classList.remove('selected'));$('#buyBtn').disabled=true;$('#sellBtn').disabled=false},
@@ -528,35 +567,26 @@ const Town={
 
 const Ed={
     clear(t){const ids={region:['id','name','icon','distance','reqEncounters','connections'],race:['id','name','icon','sprite','hp','armor','speed','precision'],weapon:['id','name','damage','icon','sprite','weight','value','desc'],armor:['id','name','defense','icon','sprite','weight','value','desc'],item:['id','name','icon','sprite','effect','value','desc'],enemy:['id','name','health','damage','difficulty','armor','speed','icon','sprite','loot-min','loot-max'],npc:['id','name','icon','sprite','dialogue']};(ids[t]||[]).forEach(f=>{const el=$(`#${t}-${f}`);if(el)el.value=''});$$('.multi-select input').forEach(c=>c.checked=false);if(t==='region')$('#region-type').value='safe';if(t==='weapon'||t==='armor'||t==='item')$(`#${t}-rarity`).value='common'},
-    
     saveRegion(){const r={id:$('#region-id').value||genId('r'),name:$('#region-name').value,icon:$('#region-icon').value||'🗺️',type:$('#region-type').value,distance:parseInt($('#region-distance').value)||0,reqEncounters:parseInt($('#region-reqEncounters').value)||0,connections:$('#region-connections').value.split(',').map(c=>c.trim()).filter(c=>c)};if(!r.name){toast('Falta nombre','error');return}const i=D.regions.findIndex(x=>x.id===r.id);if(i>=0)D.regions[i]=r;else D.regions.push(r);D.save();this.renderAll();this.clear('region');toast('Guardado','success')},
     editRegion(id){const r=D.find('regions',id);if(!r)return;$('#region-id').value=r.id;$('#region-name').value=r.name||'';$('#region-icon').value=r.icon||'';$('#region-type').value=r.type||'safe';$('#region-distance').value=r.distance||0;$('#region-reqEncounters').value=r.reqEncounters||0;$('#region-connections').value=(r.connections||[]).join(',')},
-    
     saveRace(){const r={id:$('#race-id').value||genId('ra'),name:$('#race-name').value,icon:$('#race-icon').value||'👤',sprite:$('#race-sprite').value||'',bonus:{health:parseInt($('#race-hp').value)||0,armor:parseInt($('#race-armor').value)||0,speed:parseInt($('#race-speed').value)||10,precision:parseInt($('#race-precision').value)||0}};if(!r.name){toast('Falta nombre','error');return}const i=D.races.findIndex(x=>x.id===r.id);if(i>=0)D.races[i]=r;else D.races.push(r);D.save();this.renderAll();this.clear('race');toast('Guardado','success')},
     editRace(id){const r=D.find('races',id);if(!r)return;$('#race-id').value=r.id;$('#race-name').value=r.name||'';$('#race-icon').value=r.icon||'';$('#race-sprite').value=r.sprite||'';$('#race-hp').value=r.bonus?.health||'';$('#race-armor').value=r.bonus?.armor||'';$('#race-speed').value=r.bonus?.speed||10;$('#race-precision').value=r.bonus?.precision||''},
-    
     saveWeapon(){const w={id:$('#weapon-id').value||genId('w'),name:$('#weapon-name').value,damage:$('#weapon-damage').value||'1d4',icon:$('#weapon-icon').value||'⚔️',sprite:$('#weapon-sprite').value||'',weight:parseInt($('#weapon-weight').value)||0,value:parseInt($('#weapon-value').value)||10,rarity:$('#weapon-rarity').value,desc:$('#weapon-desc').value||''};if(!w.name){toast('Falta nombre','error');return}const i=D.weapons.findIndex(x=>x.id===w.id);if(i>=0)D.weapons[i]=w;else D.weapons.push(w);D.save();this.renderAll();this.clear('weapon');toast('Guardado','success')},
     editWeapon(id){const w=D.find('weapons',id);if(!w)return;$('#weapon-id').value=w.id;$('#weapon-name').value=w.name||'';$('#weapon-damage').value=w.damage||'';$('#weapon-icon').value=w.icon||'';$('#weapon-sprite').value=w.sprite||'';$('#weapon-weight').value=w.weight||0;$('#weapon-value').value=w.value||'';$('#weapon-rarity').value=w.rarity||'common';$('#weapon-desc').value=w.desc||''},
-    
     saveArmor(){const a={id:$('#armor-id').value||genId('a'),name:$('#armor-name').value,defense:parseInt($('#armor-defense').value)||0,icon:$('#armor-icon').value||'🛡️',sprite:$('#armor-sprite').value||'',weight:parseInt($('#armor-weight').value)||0,value:parseInt($('#armor-value').value)||10,rarity:$('#armor-rarity').value,desc:$('#armor-desc').value||''};if(!a.name){toast('Falta nombre','error');return}const i=D.armors.findIndex(x=>x.id===a.id);if(i>=0)D.armors[i]=a;else D.armors.push(a);D.save();this.renderAll();this.clear('armor');toast('Guardado','success')},
     editArmor(id){const a=D.find('armors',id);if(!a)return;$('#armor-id').value=a.id;$('#armor-name').value=a.name||'';$('#armor-defense').value=a.defense||'';$('#armor-icon').value=a.icon||'';$('#armor-sprite').value=a.sprite||'';$('#armor-weight').value=a.weight||0;$('#armor-value').value=a.value||'';$('#armor-rarity').value=a.rarity||'common';$('#armor-desc').value=a.desc||''},
-    
     saveItem(){const it={id:$('#item-id').value||genId('i'),name:$('#item-name').value,type:$('#item-type').value,icon:$('#item-icon').value||'📦',sprite:$('#item-sprite').value||'',effect:$('#item-effect').value||'',value:parseInt($('#item-value').value)||10,rarity:$('#item-rarity').value,desc:$('#item-desc').value||''};if(!it.name){toast('Falta nombre','error');return}const i=D.items.findIndex(x=>x.id===it.id);if(i>=0)D.items[i]=it;else D.items.push(it);D.save();this.renderAll();this.clear('item');toast('Guardado','success')},
     editItem(id){const it=D.find('items',id);if(!it)return;$('#item-id').value=it.id;$('#item-name').value=it.name||'';$('#item-type').value=it.type||'potion';$('#item-icon').value=it.icon||'';$('#item-sprite').value=it.sprite||'';$('#item-effect').value=it.effect||'';$('#item-value').value=it.value||'';$('#item-rarity').value=it.rarity||'common';$('#item-desc').value=it.desc||''},
-    
     saveEnemy(){const regions=Array.from($$('#enemy-regions input:checked')).map(c=>c.value);const e={id:$('#enemy-id').value||genId('e'),name:$('#enemy-name').value,health:parseInt($('#enemy-health').value)||20,damage:$('#enemy-damage').value||'1d6',difficulty:parseInt($('#enemy-difficulty').value)||10,armor:parseInt($('#enemy-armor').value)||0,speed:parseInt($('#enemy-speed').value)||10,icon:$('#enemy-icon').value||'👹',sprite:$('#enemy-sprite').value||'',loot:[parseInt($('#enemy-loot-min').value)||5,parseInt($('#enemy-loot-max').value)||20],regions};if(!e.name){toast('Falta nombre','error');return}const i=D.enemies.findIndex(x=>x.id===e.id);if(i>=0)D.enemies[i]=e;else D.enemies.push(e);D.save();this.renderAll();this.clear('enemy');toast('Guardado','success')},
     editEnemy(id){const e=D.find('enemies',id);if(!e)return;$('#enemy-id').value=e.id;$('#enemy-name').value=e.name||'';$('#enemy-health').value=e.health||'';$('#enemy-damage').value=e.damage||'';$('#enemy-difficulty').value=e.difficulty||'';$('#enemy-armor').value=e.armor||'';$('#enemy-speed').value=e.speed||'';$('#enemy-icon').value=e.icon||'';$('#enemy-sprite').value=e.sprite||'';$('#enemy-loot-min').value=e.loot?.[0]||'';$('#enemy-loot-max').value=e.loot?.[1]||'';setTimeout(()=>$$('#enemy-regions input').forEach(c=>c.checked=(e.regions||[]).includes(c.value)),50)},
-    
     saveNpc(){const sells=Array.from($$('#npc-sells input:checked')).map(c=>c.value);const n={id:$('#npc-id').value||genId('n'),name:$('#npc-name').value,role:$('#npc-role').value,icon:$('#npc-icon').value||'🧔',sprite:$('#npc-sprite').value||'',region:$('#npc-region').value,dialogue:$('#npc-dialogue').value||'',sells};if(!n.name){toast('Falta nombre','error');return}const i=D.npcs.findIndex(x=>x.id===n.id);if(i>=0)D.npcs[i]=n;else D.npcs.push(n);D.save();this.renderAll();this.clear('npc');toast('Guardado','success')},
     editNpc(id){const n=D.find('npcs',id);if(!n)return;$('#npc-id').value=n.id;$('#npc-name').value=n.name||'';$('#npc-role').value=n.role||'blacksmith';$('#npc-icon').value=n.icon||'';$('#npc-sprite').value=n.sprite||'';$('#npc-region').value=n.region||'';$('#npc-dialogue').value=n.dialogue||'';setTimeout(()=>$$('#npc-sells input').forEach(c=>c.checked=(n.sells||[]).includes(c.value)),50)},
-    
     del(t,id){if(!confirm('¿Eliminar?'))return;D[t]=D[t].filter(x=>x.id!==id);D.save();this.renderAll();toast('Eliminado','info')},
-    
     renderAll(){this.renderRegions();this.renderRaces();this.renderWeapons();this.renderArmors();this.renderItems();this.renderEnemies();this.renderNpcs();this.updateSelects()},
-    renderRegions(){$('#regions-list').innerHTML=D.regions.map(r=>`<div class="item-card"><span class="item-card-icon">${r.icon}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats">${r.type} D:${r.distance}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="Ed.editRegion('${r.id}')">✏️</button><button class="icon-btn delete" onclick="Ed.del('regions','${r.id}')">🗑️</button></div></div>`).join('')},
+    renderRegions(){$('#regions-list').innerHTML=D.regions.map(r=>`<div class="item-card"><span class="item-card-icon">${r.icon}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats">${r.type}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="Ed.editRegion('${r.id}')">✏️</button><button class="icon-btn delete" onclick="Ed.del('regions','${r.id}')">🗑️</button></div></div>`).join('')},
     renderRaces(){$('#races-list').innerHTML=D.races.map(r=>`<div class="item-card"><span class="item-card-icon">${sprite(r)}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats">⚡${r.bonus?.speed||10}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="Ed.editRace('${r.id}')">✏️</button><button class="icon-btn delete" onclick="Ed.del('races','${r.id}')">🗑️</button></div></div>`).join('')},
-    renderWeapons(){$('#weapons-list').innerHTML=D.weapons.map(w=>`<div class="item-card"><span class="item-card-icon">${sprite(w)}</span><div class="item-card-info"><div class="item-card-name">${w.name}</div><div class="item-card-stats">${w.damage} ⚖️${w.weight||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="Ed.editWeapon('${w.id}')">✏️</button><button class="icon-btn delete" onclick="Ed.del('weapons','${w.id}')">🗑️</button></div></div>`).join('')},
-    renderArmors(){$('#armors-list').innerHTML=D.armors.map(a=>`<div class="item-card"><span class="item-card-icon">${sprite(a)}</span><div class="item-card-info"><div class="item-card-name">${a.name}</div><div class="item-card-stats">🛡️${a.defense} ⚖️${a.weight||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="Ed.editArmor('${a.id}')">✏️</button><button class="icon-btn delete" onclick="Ed.del('armors','${a.id}')">🗑️</button></div></div>`).join('')},
+    renderWeapons(){$('#weapons-list').innerHTML=D.weapons.map(w=>`<div class="item-card"><span class="item-card-icon">${sprite(w)}</span><div class="item-card-info"><div class="item-card-name">${w.name}</div><div class="item-card-stats">${w.damage} ⚖${w.weight||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="Ed.editWeapon('${w.id}')">✏️</button><button class="icon-btn delete" onclick="Ed.del('weapons','${w.id}')">🗑️</button></div></div>`).join('')},
+    renderArmors(){$('#armors-list').innerHTML=D.armors.map(a=>`<div class="item-card"><span class="item-card-icon">${sprite(a)}</span><div class="item-card-info"><div class="item-card-name">${a.name}</div><div class="item-card-stats">🛡️${a.defense} ⚖${a.weight||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="Ed.editArmor('${a.id}')">✏️</button><button class="icon-btn delete" onclick="Ed.del('armors','${a.id}')">🗑️</button></div></div>`).join('')},
     renderItems(){$('#items-list').innerHTML=D.items.map(i=>`<div class="item-card"><span class="item-card-icon">${sprite(i)}</span><div class="item-card-info"><div class="item-card-name">${i.name}</div><div class="item-card-stats">${i.type}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="Ed.editItem('${i.id}')">✏️</button><button class="icon-btn delete" onclick="Ed.del('items','${i.id}')">🗑️</button></div></div>`).join('')},
     renderEnemies(){$('#enemies-list').innerHTML=D.enemies.map(e=>`<div class="item-card"><span class="item-card-icon">${sprite(e)}</span><div class="item-card-info"><div class="item-card-name">${e.name}</div><div class="item-card-stats">HP:${e.health} ⚡${e.speed||10}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="Ed.editEnemy('${e.id}')">✏️</button><button class="icon-btn delete" onclick="Ed.del('enemies','${e.id}')">🗑️</button></div></div>`).join('')},
     renderNpcs(){$('#npcs-list').innerHTML=D.npcs.map(n=>`<div class="item-card"><span class="item-card-icon">${sprite(n)}</span><div class="item-card-info"><div class="item-card-name">${n.name}</div><div class="item-card-stats">${n.role}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="Ed.editNpc('${n.id}')">✏️</button><button class="icon-btn delete" onclick="Ed.del('npcs','${n.id}')">🗑️</button></div></div>`).join('')},
