@@ -221,7 +221,7 @@ body{font-family:'Crimson Text',serif;background:var(--bg);color:var(--text);min
     </div>
 </div>
 
-<div class="char-create" id="charCreate" style="display:none">
+<div class="char-create hidden" id="charCreate">
     <div class="create-box">
         <div class="create-logo"><h1>⚔️ Crear Personaje</h1><p>Elige tu nombre y raza</p></div>
         <div class="create-section">
@@ -431,6 +431,8 @@ const showDice=async(r,s=20,c=false)=>{$('#diceLabel').textContent=`D${s}`;$('#d
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
 const sprite=(it)=>it?.sprite?`<img src="${it.sprite}" onerror="this.outerHTML='${it.icon||'📦'}'">`:(it?.icon||'📦');
 
+let domReady=false;
+
 const Auth={
     user:null,
     showTab(t){$$('.auth-tab').forEach(x=>x.classList.remove('active'));$$('.auth-form').forEach(x=>x.classList.add('hidden'));if(t==='login'){$$('.auth-tab')[0].classList.add('active');$('#loginForm').classList.remove('hidden')}else{$$('.auth-tab')[1].classList.add('active');$('#registerForm').classList.remove('hidden')}$('#authError').classList.add('hidden')},
@@ -439,7 +441,7 @@ const Auth={
     async register(e){e.preventDefault();if($('#regPassword').value!==$('#regConfirm').value){this.showError('Las contraseñas no coinciden');return}$('#regBtn').disabled=true;try{await firebase.auth().createUserWithEmailAndPassword($('#regEmail').value,$('#regPassword').value)}catch(err){this.showError(this.tr(err.code));$('#regBtn').disabled=false}},
     guest(){this.user={guest:true,email:'Invitado'};this.onAuth()},
     logout(){if(this.user?.guest){this.user=null;$('#authScreen').classList.remove('hidden');$('#userInfo').innerHTML=''}else firebase.auth().signOut()},
-    onAuth(){const doInit=()=>{$('#authScreen').classList.add('hidden');$('#userInfo').innerHTML=`<span>👤 ${(this.user?.email||'').split('@')[0]||'Invitado'}</span><button class="logout-btn" onclick="Auth.logout()">Salir</button>`;Game.init()};if(document.readyState==='loading'){document.addEventListener('DOMContentLoaded',doInit)}else{doInit()}},
+    onAuth(){const doInit=()=>{$('#authScreen').classList.add('hidden');$('#userInfo').innerHTML=`<span>👤 ${(this.user?.email||'').split('@')[0]||'Invitado'}</span><button class="logout-btn" onclick="Auth.logout()">Salir</button>`;Game.init()};if(domReady){doInit()}else{document.addEventListener('DOMContentLoaded',doInit)}},
     tr(c){return{'auth/email-already-in-use':'Correo ya registrado','auth/invalid-email':'Correo inválido','auth/weak-password':'Contraseña muy débil','auth/user-not-found':'Usuario no encontrado','auth/wrong-password':'Contraseña incorrecta','auth/invalid-credential':'Credenciales inválidas'}[c]||'Error de autenticación'}
 };
 
@@ -480,12 +482,12 @@ const Regions={
 const Game={
     selectedRace:null,
     init(){try{if(this.load())return;this.showCreate()}catch(e){console.error('Game.init error:',e);this.showCreate()}},
-    showCreate(){try{const el=$('#charCreate');if(el){el.style.display='flex';$('#raceGrid').innerHTML=D.races.map(r=>`<div class="race-option" data-id="${r.id}" onclick="Game.selectRace('${r.id}')"><div class="race-option-icon">${sprite(r)}</div><div class="race-option-name">${r.name}</div><div class="race-option-stats">HP+${r.bonus.health||0} ⚡${r.bonus.speed||10}</div></div>`).join('');this.selectRace(D.races[0].id)}}catch(e){console.error('showCreate error:',e)}},
+    showCreate(){try{const el=$('#charCreate');if(el){el.classList.remove('hidden');$('#raceGrid').innerHTML=D.races.map(r=>`<div class="race-option" data-id="${r.id}" onclick="Game.selectRace('${r.id}')"><div class="race-option-icon">${sprite(r)}</div><div class="race-option-name">${r.name}</div><div class="race-option-stats">HP+${r.bonus.health||0} ⚡${r.bonus.speed||10}</div></div>`).join('');this.selectRace(D.races[0].id)}}catch(e){console.error('showCreate error:',e)}},
     selectRace(id){this.selectedRace=D.find('races',id);$$('.race-option').forEach(el=>el.classList.toggle('selected',el.dataset.id===id))},
-    createChar(){const name=$('#heroName').value.trim()||pick(['Aldric','Brynn','Cedric','Dara','Freya','Kira','Theron']);const race=this.selectedRace||pick(D.races);$('#charCreate').style.display='none';const wpn={...D.weapons[0],uid:genId('i')};const arm={...D.armors[0],uid:genId('i')};G.p={name,race,maxHp:20+(race.bonus.health||0),hp:20+(race.bonus.health||0),baseSpeed:race.bonus.speed||10,weapon:wpn,armor:arm,inv:[{...D.items[0],uid:genId('i')}],maxSlots:10,gold:0,silver:25,effs:[]};G.combat=false;G.region=D.getRegion('pueblo');G.regionProg={pueblo:{enc:0}};G.traveling=null;Story.clear();Story.add(`<strong style="color:var(--gold-b)">⚔️ Aventuras de Acero y Runas ⚔️</strong>`);Story.add(`Eres <strong>${G.p.name}</strong>, ${race.name} ${race.icon}`,'narrative');Story.add(`💀 MODO HARDCORE: Si mueres, pierdes todo.`,'system');this.updateUI();this.explore()},
+    createChar(){const name=$('#heroName').value.trim()||pick(['Aldric','Brynn','Cedric','Dara','Freya','Kira','Theron']);const race=this.selectedRace||pick(D.races);$('#charCreate').classList.add('hidden');const wpn={...D.weapons[0],uid:genId('i')};const arm={...D.armors[0],uid:genId('i')};G.p={name,race,maxHp:20+(race.bonus.health||0),hp:20+(race.bonus.health||0),baseSpeed:race.bonus.speed||10,weapon:wpn,armor:arm,inv:[{...D.items[0],uid:genId('i')}],maxSlots:10,gold:0,silver:25,effs:[]};G.combat=false;G.region=D.getRegion('pueblo');G.regionProg={pueblo:{enc:0}};G.traveling=null;Story.clear();Story.add(`<strong style="color:var(--gold-b)">⚔️ Aventuras de Acero y Runas ⚔️</strong>`);Story.add(`Eres <strong>${G.p.name}</strong>, ${race.name} ${race.icon}`,'narrative');Story.add(`💀 MODO HARDCORE: Si mueres, pierdes todo.`,'system');this.updateUI();this.explore()},
     newGame(){if(!confirm('¿Crear nuevo personaje? Se perderá el progreso actual.'))return;this.deleteSave();G.p=null;G.combat=false;G.enemies=[];Story.clear();this.showCreate()},
     save(){localStorage.setItem('rpg_save',JSON.stringify({p:G.p,region:G.region,regionProg:G.regionProg}));toast('Guardado','success')},
-    load(){const s=localStorage.getItem('rpg_save');if(!s)return false;try{const d=JSON.parse(s);G.p=d.p;G.region=D.getRegion(d.region?.id)||D.getRegion('pueblo');G.regionProg=d.regionProg||{};G.combat=false;G.traveling=null;Story.add('Partida cargada.','system');this.updateUI();this.explore();return true}catch(e){return false}},
+    load(){const s=localStorage.getItem('rpg_save');if(!s)return false;try{const d=JSON.parse(s);if(!d||!d.p||!d.p.name||!d.p.race){console.log('Invalid save');return false}G.p=d.p;G.region=D.getRegion(d.region?.id)||D.getRegion('pueblo');G.regionProg=d.regionProg||{};G.combat=false;G.traveling=null;Story.add('Partida cargada.','system');this.updateUI();this.explore();return true}catch(e){console.error('Load error:',e);return false}},
     deleteSave(){localStorage.removeItem('rpg_save')},
     getWeight(){return(G.p.weapon?.weight||0)+(G.p.armor?.weight||0)},
     getSpeed(){return Math.max(1,G.p.baseSpeed-this.getWeight())},
@@ -594,10 +596,12 @@ const Ed={
 };
 
 document.addEventListener('DOMContentLoaded',()=>{
-    FB.init();D.load();Ed.renderAll();
+    domReady=true;
+    D.load();Ed.renderAll();
     $$('.nav-btn').forEach(b=>b.onclick=()=>{$$('.nav-btn').forEach(x=>x.classList.remove('active'));$$('.tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(`#tab-${b.dataset.tab}`).classList.add('active')});
     $$('.editor-tab').forEach(t=>t.onclick=()=>{$$('.editor-tab').forEach(x=>x.classList.remove('active'));$$('.editor-section').forEach(x=>x.classList.remove('active'));t.classList.add('active');$(`#editor-${t.dataset.editor}`).classList.add('active');Ed.updateSelects()});
     $$('.modal-overlay').forEach(o=>o.onclick=e=>{if(e.target===o)o.classList.remove('active')});
+    FB.init();
 });
 </script>
 </body>
