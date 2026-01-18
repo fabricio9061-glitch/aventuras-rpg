@@ -11,12 +11,12 @@
     <style>
         :root{--bg-dark:#0a0908;--bg-panel:#1a1614;--bg-light:#2a2320;--bg-input:#151210;--gold:#d4a437;--gold-dim:#a67c00;--gold-bright:#ffd700;--red:#8b0000;--red-bright:#dc143c;--green:#2d5a27;--green-bright:#4caf50;--blue:#1e3a5f;--blue-bright:#4a9eff;--purple:#9c27b0;--orange:#ff6b35;--cyan:#00bcd4;--text:#e8dcc4;--text-dim:#8a8078;--border:#3d3530}
         *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:'Crimson Text',Georgia,serif;background:var(--bg-dark);color:var(--text);min-height:100vh;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+        body{font-family:'Crimson Text',Georgia,serif;background:var(--bg-dark);color:var(--text);min-height:100vh;min-height:100dvh;-webkit-tap-highlight-color:transparent}
         ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:3px}
         .hidden{display:none!important}
         
-        .auth-screen,.char-create{position:fixed;inset:0;background:var(--bg-dark);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:1rem;overflow-y:auto;-webkit-overflow-scrolling:touch}
-        .auth-box,.create-box{background:var(--bg-panel);border:2px solid var(--gold-dim);border-radius:12px;padding:2rem;width:100%;max-width:400px;margin:auto}
+        .auth-screen,.char-create{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg-dark);z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:1rem}
+        .auth-box,.create-box{background:var(--bg-panel);border:2px solid var(--gold-dim);border-radius:12px;padding:1.5rem;width:100%;max-width:400px;margin:1rem auto}
         .auth-logo,.create-logo{text-align:center;margin-bottom:1.5rem}
         .auth-logo h1,.create-logo h1{font-family:'Cinzel',serif;color:var(--gold-bright);font-size:1.5rem;margin-bottom:.5rem}
         .auth-logo p,.create-logo p{color:var(--text-dim);font-size:.85rem}
@@ -34,8 +34,8 @@
         .auth-guest:hover{background:rgba(212,164,55,.1)}
         .create-section{margin-bottom:1rem}
         .create-section label{display:block;font-size:.75rem;color:var(--text-dim);text-transform:uppercase;margin-bottom:.5rem;letter-spacing:.05em}
-        .race-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(100px,1fr));gap:.5rem}
-        .race-option{background:var(--bg-light);border:2px solid var(--border);border-radius:8px;padding:.7rem;text-align:center;cursor:pointer;transition:all .2s}
+        .race-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:.4rem;padding:.25rem}
+        .race-option{background:var(--bg-light);border:2px solid var(--border);border-radius:6px;padding:.5rem .3rem;text-align:center;cursor:pointer;transition:all .2s}
         .race-option:hover{border-color:var(--gold-dim)}
         .race-option:active{transform:scale(.97)}
         .race-option.selected{border-color:var(--gold-bright);background:rgba(212,164,55,.1)}
@@ -318,7 +318,7 @@
         }
         @media(max-width:500px){
             html{font-size:14px}
-            body{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none;overscroll-behavior:none}
+            body{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
             .main-nav{padding:.2rem;gap:.15rem}
             .nav-btn{font-size:.65rem;padding:.35rem .6rem}
             .status-bar{font-size:.55rem;padding:.15rem .3rem}
@@ -385,18 +385,21 @@
             .region-card-icon{font-size:1.3rem}
             .region-card-name{font-size:.7rem}
             .region-card-type{font-size:.5rem}
-            .auth-box,.create-box{padding:1.2rem;border-radius:8px;max-width:95vw}
-            .auth-logo h1,.create-logo h1{font-size:1.2rem}
-            .auth-logo p,.create-logo p{font-size:.75rem}
-            .auth-input,.create-input{padding:.6rem;font-size:.9rem}
-            .auth-btn,.create-btn{padding:.6rem;font-size:.9rem}
-            .race-grid{grid-template-columns:repeat(3,1fr);gap:.3rem}
-            .race-option{padding:.4rem;border-radius:6px}
-            .race-option-icon{width:36px;height:36px;font-size:1.5rem}
-            .race-option-icon img{max-width:36px;max-height:36px}
-            .race-option-name{font-size:.7rem}
-            .race-option-stats{font-size:.55rem}
-            .create-section label{font-size:.55rem}
+            .auth-screen,.char-create{padding:.5rem}
+            .auth-box,.create-box{padding:1rem;border-radius:8px;max-width:95vw;margin:.5rem auto}
+            .auth-logo h1,.create-logo h1{font-size:1.1rem}
+            .auth-logo p,.create-logo p{font-size:.7rem}
+            .auth-logo,.create-logo{margin-bottom:1rem}
+            .auth-input,.create-input{padding:.5rem;font-size:.85rem}
+            .auth-btn,.create-btn{padding:.5rem;font-size:.85rem}
+            .race-grid{grid-template-columns:repeat(3,1fr);gap:.25rem}
+            .race-option{padding:.35rem;border-radius:5px}
+            .race-option-icon{width:32px;height:32px;font-size:1.3rem}
+            .race-option-icon img{max-width:32px;max-height:32px}
+            .race-option-name{font-size:.65rem}
+            .race-option-stats{font-size:.5rem}
+            .create-section{margin-bottom:.7rem}
+            .create-section label{font-size:.55rem;margin-bottom:.3rem}
             .user-info{font-size:.6rem}
             .logout-btn{font-size:.55rem;padding:.15rem .35rem}
             .item-card{padding:.35rem;border-radius:4px}
@@ -818,16 +821,26 @@ const Auth={
     },
     logout(){
         this.user=null;
-        G.p=null;G.combat=false;G.enemies=[];
+        G.p=null;G.combat=false;G.enemies=[];G.traveling=null;
+        localStorage.removeItem('rpg_save');
         try{firebase.auth().signOut()}catch(e){}
         closeAllModals();
         $('#authScreen').classList.remove('hidden');
-        $('#authScreen').style.display='flex';
+        $('#authScreen').style.display='';
         $('#charCreate').classList.add('hidden');
         $('#charCreate').style.display='none';
         $('#combatArena').classList.add('hidden');
         $('#userInfo').innerHTML='';
         Story.clear();
+        // Reset input fields
+        $('#authEmail').value='';
+        $('#authPass').value='';
+        $('#regEmail').value='';
+        $('#regPass').value='';
+        $('#heroName').value='';
+        // Show login form
+        $('#loginForm').classList.remove('hidden');
+        $('#registerForm').classList.add('hidden');
     }
 };
 
@@ -1067,7 +1080,7 @@ const Game={
     armor(){if(!G.p)return 0;return(G.p.armor?.defense||0)+(G.p.race?.bonus?.armor||0)},
     setActions(acts){const c=$('#actionsContainer');c.innerHTML='';acts.forEach(a=>{const b=document.createElement('button');b.className=`btn ${a.cls||''}`;b.textContent=a.text;b.disabled=a.disabled||false;b.onclick=a.fn;c.appendChild(b)})},
     exploreActions(){
-        if(!G.p||!G.region)return;
+        if(!G.p||!G.region){console.log('No player or region');return}
         const actions=[{text:'🗺️ Viajar',fn:()=>Regions.openSelector()}];
         if(G.region.type==='danger'){
             actions.unshift({text:'⚔️ Explorar',fn:()=>Explore.start(),cls:'btn-primary'});
