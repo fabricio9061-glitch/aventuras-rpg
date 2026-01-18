@@ -15,8 +15,8 @@
         ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:3px}
         .hidden{display:none!important}
         
-        .auth-screen,.char-create{position:fixed;inset:0;background:var(--bg-dark);z-index:9999;display:flex;align-items:center;justify-content:center;padding:1rem}
-        .auth-box,.create-box{background:var(--bg-panel);border:2px solid var(--gold-dim);border-radius:12px;padding:2rem;width:100%;max-width:400px}
+        .auth-screen,.char-create{position:fixed;inset:0;background:var(--bg-dark);z-index:9999;display:flex;align-items:flex-start;justify-content:center;padding:1rem;overflow-y:auto;-webkit-overflow-scrolling:touch}
+        .auth-box,.create-box{background:var(--bg-panel);border:2px solid var(--gold-dim);border-radius:12px;padding:2rem;width:100%;max-width:400px;margin:auto}
         .auth-logo,.create-logo{text-align:center;margin-bottom:1.5rem}
         .auth-logo h1,.create-logo h1{font-family:'Cinzel',serif;color:var(--gold-bright);font-size:1.5rem;margin-bottom:.5rem}
         .auth-logo p,.create-logo p{color:var(--text-dim);font-size:.85rem}
@@ -735,7 +735,7 @@ const hpClass=p=>p>60?'':p>30?'medium':p>15?'low':'critical';
 const sprite=i=>i?.sprite?`<img src="${i.sprite}">`:(i?.icon||'📦');
 const genId=p=>`${p}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
 const toast=(m,t='info')=>{const e=document.createElement('div');e.className=`toast ${t}`;e.textContent=m;$('#toastContainer').appendChild(e);setTimeout(()=>e.remove(),3000)};
-const openModal=id=>$(`#${id}`).classList.add('active'),closeModal=id=>$(`#${id}`).classList.remove('active');
+const openModal=id=>$(`#${id}`).classList.add('active'),closeModal=id=>$(`#${id}`).classList.remove('active'),closeAllModals=()=>$$('.modal-overlay').forEach(m=>m.classList.remove('active'));
 const showDice=async(r,s=20,c=false)=>{$('#diceLabel').textContent=`D${s}`;$('#diceResult').textContent=r;$('#diceResult').classList.toggle('crit',c);$('#diceOverlay').classList.add('active');await new Promise(r=>setTimeout(r,450));$('#diceOverlay').classList.remove('active')};
 const scrollChron=()=>{const c=$('#chroniclesContent');c.scrollTop=c.scrollHeight};
 const delay=ms=>new Promise(r=>setTimeout(r,ms));
@@ -818,11 +818,16 @@ const Auth={
     },
     logout(){
         this.user=null;
+        G.p=null;G.combat=false;G.enemies=[];
         try{firebase.auth().signOut()}catch(e){}
+        closeAllModals();
         $('#authScreen').classList.remove('hidden');
         $('#authScreen').style.display='flex';
         $('#charCreate').classList.add('hidden');
+        $('#charCreate').style.display='none';
+        $('#combatArena').classList.add('hidden');
         $('#userInfo').innerHTML='';
+        Story.clear();
     }
 };
 
@@ -871,6 +876,7 @@ const Story={add(t,c=''){const e=document.createElement('div');e.className=`stor
 // ==================== REGIONS WITH TRAVEL SYSTEM ====================
 const Regions={
     openSelector(){
+        if(!G.region){toast('No hay región','error');return}
         if(G.combat){toast('No en combate','error');return}
         const map=$('#travelMap');
         const current=G.region;
@@ -1058,9 +1064,10 @@ const Game={
         $('#charPanel').classList.toggle('in-combat',G.combat);
         $('#actionsPanel').classList.toggle('in-combat',G.combat);
     },
-    armor(){return(G.p.armor?.defense||0)+(G.p.race.bonus.armor||0)},
+    armor(){if(!G.p)return 0;return(G.p.armor?.defense||0)+(G.p.race?.bonus?.armor||0)},
     setActions(acts){const c=$('#actionsContainer');c.innerHTML='';acts.forEach(a=>{const b=document.createElement('button');b.className=`btn ${a.cls||''}`;b.textContent=a.text;b.disabled=a.disabled||false;b.onclick=a.fn;c.appendChild(b)})},
     exploreActions(){
+        if(!G.p||!G.region)return;
         const actions=[{text:'🗺️ Viajar',fn:()=>Regions.openSelector()}];
         if(G.region.type==='danger'){
             actions.unshift({text:'⚔️ Explorar',fn:()=>Explore.start(),cls:'btn-primary'});
@@ -1133,12 +1140,12 @@ const Combat={
     defeat(){$('#combatArena').classList.add('hidden');G.combat=false;this.duringTravel=false;G.traveling=null;Story.add('<strong style="color:var(--red-bright)">💀 Has muerto...</strong>','combat');Story.add('Tu aventura termina aquí.','system');Game.deleteSave();Game.setActions([{text:'🔄 Nueva Partida',fn:()=>{G.p=null;Story.clear();Game.showCreate()},cls:'btn-primary'}])},
     escape(){$('#combatArena').classList.add('hidden');G.combat=false;G.enemies=[];Story.add('Escapas.','system');Game.updateUI();if(this.duringTravel){this.duringTravel=false;G.traveling=null;Story.add('Vuelves al punto de partida.','travel')}Game.exploreActions()},
     log(t){$('#combatLog').innerHTML+=`<div class="log-entry">${t}</div>`;$('#combatLog').scrollTop=999999},
-    updateUI(){const grid=$('#combatGrid');grid.innerHTML='';const pDiv=document.createElement('div');pDiv.className=`combatant player ${G.p.hp<=0?'dead':''}`;const pHpPct=(G.p.hp/G.p.maxHp)*100;pDiv.innerHTML=`<div class="combatant-order">⚡${G.p.speed}</div><div class="combatant-sprite">${sprite({icon:G.p.race.icon,sprite:G.p.race.sprite})}</div><div class="combatant-name">${G.p.name}</div><div class="combatant-stats">⚔️${G.p.weapon?.damage||'1d2'} 🛡️${Game.armor()}</div><div class="hp-container"><div class="hp-fill ${hpClass(pHpPct)}" style="width:${pHpPct}%"></div><div class="hp-text">${G.p.hp}/${G.p.maxHp}</div></div><div class="effects-row">${(G.p.effects||[]).map(e=>`<span class="effect-tag eff-${e.type}">${e.type}${e.turns}</span>`).join('')}</div>`;grid.appendChild(pDiv);if(G.p.pet&&G.p.pet.hp>0){const petDiv=document.createElement('div');petDiv.className='combatant pet';const petHpPct=(G.p.pet.hp/G.p.pet.maxHp)*100;petDiv.innerHTML=`<div class="combatant-order">⚡${G.p.pet.speed||12}</div><div class="combatant-sprite">${G.p.pet.icon}</div><div class="combatant-name">${G.p.pet.name}</div><div class="combatant-stats">⚔️${G.p.pet.damage}</div><div class="hp-container"><div class="hp-fill" style="width:${petHpPct}%"></div><div class="hp-text">${G.p.pet.hp}/${G.p.pet.maxHp}</div></div>`;grid.appendChild(petDiv)}const vs=document.createElement('div');vs.className='combat-vs';vs.textContent='⚔';grid.appendChild(vs);G.enemies.forEach(e=>{const eDiv=document.createElement('div');eDiv.className=`combatant enemy ${e.hp<=0?'dead':''}`;eDiv.dataset.uid=e.uid;const eHpPct=(e.hp/e.maxHp)*100;eDiv.innerHTML=`<div class="combatant-order">⚡${e.speed||10}</div><div class="combatant-sprite">${sprite(e)}</div><div class="combatant-name">${e.name}</div><div class="combatant-stats">⚔️${e.damage} 🛡️${e.armor||0}</div><div class="hp-container"><div class="hp-fill ${hpClass(eHpPct)}" style="width:${eHpPct}%"></div><div class="hp-text">${Math.max(0,e.hp)}/${e.maxHp}</div></div><div class="effects-row">${(e.effects||[]).map(ef=>`<span class="effect-tag eff-${ef.type}">${ef.type}${ef.turns}</span>`).join('')}</div>`;grid.appendChild(eDiv)});$('#turnCounter').textContent=G.turn}
+    updateUI(){if(!G.p)return;const grid=$('#combatGrid');grid.innerHTML='';const pDiv=document.createElement('div');pDiv.className=`combatant player ${G.p.hp<=0?'dead':''}`;const pHpPct=(G.p.hp/G.p.maxHp)*100;pDiv.innerHTML=`<div class="combatant-order">⚡${G.p.speed}</div><div class="combatant-sprite">${sprite({icon:G.p.race.icon,sprite:G.p.race.sprite})}</div><div class="combatant-name">${G.p.name}</div><div class="combatant-stats">⚔️${G.p.weapon?.damage||'1d2'} 🛡️${Game.armor()}</div><div class="hp-container"><div class="hp-fill ${hpClass(pHpPct)}" style="width:${pHpPct}%"></div><div class="hp-text">${G.p.hp}/${G.p.maxHp}</div></div><div class="effects-row">${(G.p.effects||[]).map(e=>`<span class="effect-tag eff-${e.type}">${e.type}${e.turns}</span>`).join('')}</div>`;grid.appendChild(pDiv);if(G.p.pet&&G.p.pet.hp>0){const petDiv=document.createElement('div');petDiv.className='combatant pet';const petHpPct=(G.p.pet.hp/G.p.pet.maxHp)*100;petDiv.innerHTML=`<div class="combatant-order">⚡${G.p.pet.speed||12}</div><div class="combatant-sprite">${G.p.pet.icon}</div><div class="combatant-name">${G.p.pet.name}</div><div class="combatant-stats">⚔️${G.p.pet.damage}</div><div class="hp-container"><div class="hp-fill" style="width:${petHpPct}%"></div><div class="hp-text">${G.p.pet.hp}/${G.p.pet.maxHp}</div></div>`;grid.appendChild(petDiv)}const vs=document.createElement('div');vs.className='combat-vs';vs.textContent='⚔';grid.appendChild(vs);G.enemies.forEach(e=>{const eDiv=document.createElement('div');eDiv.className=`combatant enemy ${e.hp<=0?'dead':''}`;eDiv.dataset.uid=e.uid;const eHpPct=(e.hp/e.maxHp)*100;eDiv.innerHTML=`<div class="combatant-order">⚡${e.speed||10}</div><div class="combatant-sprite">${sprite(e)}</div><div class="combatant-name">${e.name}</div><div class="combatant-stats">⚔️${e.damage} 🛡️${e.armor||0}</div><div class="hp-container"><div class="hp-fill ${hpClass(eHpPct)}" style="width:${eHpPct}%"></div><div class="hp-text">${Math.max(0,e.hp)}/${e.maxHp}</div></div><div class="effects-row">${(e.effects||[]).map(ef=>`<span class="effect-tag eff-${ef.type}">${ef.type}${ef.turns}</span>`).join('')}</div>`;grid.appendChild(eDiv)});$('#turnCounter').textContent=G.turn}
 };
 
 const Inv={
-    open(){this.render();openModal('inventoryModal')},
-    render(){$('#inventoryInfo').textContent=`${G.p.inv.length}/${G.p.maxSlots}`;const g=$('#inventoryGrid');g.innerHTML='';G.p.inv.forEach(it=>{const s=document.createElement('div');s.className=`inv-slot rarity-${it.rarity||'common'}`;s.innerHTML=`<div class="inv-slot-icon">${sprite(it)}</div><div class="inv-slot-name">${it.name}</div>`;s.onclick=()=>this.detail(it,'inv');g.appendChild(s)});for(let i=G.p.inv.length;i<G.p.maxSlots;i++){const s=document.createElement('div');s.className='inv-slot empty';s.innerHTML='<div class="inv-slot-name" style="color:var(--text-dim)">vacío</div>';g.appendChild(s)}},
+    open(){if(!G.p)return;this.render();openModal('inventoryModal')},
+    render(){if(!G.p)return;$('#inventoryInfo').textContent=`${G.p.inv.length}/${G.p.maxSlots}`;const g=$('#inventoryGrid');g.innerHTML='';G.p.inv.forEach(it=>{const s=document.createElement('div');s.className=`inv-slot rarity-${it.rarity||'common'}`;s.innerHTML=`<div class="inv-slot-icon">${sprite(it)}</div><div class="inv-slot-name">${it.name}</div>`;s.onclick=()=>this.detail(it,'inv');g.appendChild(s)});for(let i=G.p.inv.length;i<G.p.maxSlots;i++){const s=document.createElement('div');s.className='inv-slot empty';s.innerHTML='<div class="inv-slot-name" style="color:var(--text-dim)">vacío</div>';g.appendChild(s)}},
     detail(it,ctx){G.item=it;$('#detailIcon').innerHTML=sprite(it);$('#detailName').textContent=it.name;$('#detailType').textContent=it.damage?'Arma':it.defense!==undefined?'Armadura':it.type||'Item';$('#detailDesc').textContent=it.desc||'Sin descripción.';let st='';if(it.damage)st+=`<div class="item-stat-box"><div class="item-stat-label">Daño</div><div class="item-stat-value">${it.damage}</div></div>`;if(it.defense!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Defensa</div><div class="item-stat-value">${it.defense}</div></div>`;if(it.effect&&(it.type==='potion'||it.type==='food'))st+=`<div class="item-stat-box"><div class="item-stat-label">Cura</div><div class="item-stat-value">${it.effect}</div></div>`;if(it.value)st+=`<div class="item-stat-box"><div class="item-stat-label">Valor</div><div class="item-stat-value">${it.value}MP</div></div>`;$('#detailStats').innerHTML=st;const canEq=!G.combat&&G.region.type==='safe';let acts='';if(ctx.startsWith('eq-')){if(canEq)acts=`<button class="btn btn-danger" onclick="Inv.unequip('${ctx.split('-')[1]}')">❌ Quitar</button>`;else acts='<span style="color:var(--text-dim)">Solo zona segura</span>'}else{if(it.damage&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('weapon')">⚔️ Equipar</button>`;if(it.defense!==undefined&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('armor')">🛡️ Equipar</button>`;if(it.type==='potion'||it.type==='food')acts+=`<button class="btn btn-primary" onclick="Inv.use()">✨ Usar</button>`;if(it.type==='antidote')acts+=`<button class="btn btn-primary" onclick="Inv.use()">💊 Usar</button>`;if(it.type==='escape'&&G.combat)acts+=`<button class="btn btn-primary" onclick="Inv.use()">💨 Usar</button>`;if(it.type==='backpack')acts+=`<button class="btn btn-primary" onclick="Inv.use()">🎒 Usar</button>`}acts+=`<button class="btn" onclick="closeModal('itemDetailModal')">Cerrar</button>`;$('#detailActions').innerHTML=acts;openModal('itemDetailModal')},
     equip(slot){const it=G.item;if(!it?.uid)return;closeModal('itemDetailModal');if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon=it}else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor=it}G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);toast('Equipado','success');Game.updateUI();this.render()},
     unequip(slot){if(G.p.inv.length>=G.p.maxSlots){toast('Inventario lleno','error');return}closeModal('itemDetailModal');if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon={name:'Puños',damage:'1d2',icon:'✊'}}else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor={name:'Sin armadura',defense:0,icon:'👤'}}toast('Desequipado','info');Game.updateUI()},
@@ -1242,8 +1249,8 @@ document.addEventListener('DOMContentLoaded',()=>{
     $$('.editor-tab').forEach(t=>t.addEventListener('click',()=>{$$('.editor-tab').forEach(x=>x.classList.remove('active'));$$('.editor-section').forEach(x=>x.classList.remove('active'));t.classList.add('active');$(`#editor-${t.dataset.editor}`).classList.add('active');Editor.updateSelects()}));
     $$('.modal-close').forEach(b=>b.addEventListener('click',()=>closeModal(b.dataset.close)));
     $$('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('active')}));
-    $('#weaponSlot').addEventListener('click',()=>{if(G.combat||G.region.type!=='safe'){toast('Solo zona segura','error');return}if(G.p.weapon?.uid)Inv.detail(G.p.weapon,'eq-weapon')});
-    $('#armorSlot').addEventListener('click',()=>{if(G.combat||G.region.type!=='safe'){toast('Solo zona segura','error');return}if(G.p.armor?.uid)Inv.detail(G.p.armor,'eq-armor')});
+    $('#weaponSlot').addEventListener('click',()=>{if(!G.p||!G.region)return;if(G.combat||G.region.type!=='safe'){toast('Solo zona segura','error');return}if(G.p.weapon?.uid)Inv.detail(G.p.weapon,'eq-weapon')});
+    $('#armorSlot').addEventListener('click',()=>{if(!G.p||!G.region)return;if(G.combat||G.region.type!=='safe'){toast('Solo zona segura','error');return}if(G.p.armor?.uid)Inv.detail(G.p.armor,'eq-armor')});
 });
 </script>
 </body>
