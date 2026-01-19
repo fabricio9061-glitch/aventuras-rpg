@@ -255,6 +255,7 @@
         .item-card-info{flex:1;min-width:0}
         .item-card-name{font-size:.7rem;color:var(--gold);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
         .item-card-stats{font-size:.55rem;color:var(--text-dim)}
+        .item-id{background:var(--bg-dark);color:var(--cyan);padding:0 .25rem;border-radius:3px;font-family:monospace;font-size:.5rem;margin-right:.3rem}
         .item-card-actions{display:flex;gap:.15rem}
         .icon-btn{background:none;border:1px solid var(--border);color:var(--text-dim);padding:.12rem .2rem;cursor:pointer;font-size:.5rem;border-radius:3px;transition:all .2s}
         .icon-btn:hover{border-color:var(--gold-dim);color:var(--gold)}
@@ -1462,15 +1463,15 @@ const Editor={
     edit(t,p,id){const it=Data.find(t,id);if(!it)return;Object.keys(it).forEach(k=>{const e=$(`#${p}-${k}`);if(e)e.value=it[k]||''})},
     del(t,id){if(!confirm('¿Eliminar?'))return;Data[t]=Data[t].filter(x=>x.id!==id);Data.save();this.renderAll();toast('Eliminado','info')},
     renderAll(){this.renderRegions();this.renderRaces();this.renderWeapons();this.renderArmors();this.renderItems();this.renderEnemies();this.renderPets();this.renderNpcs();this.renderRecipes();this.updateSelects()},
-    renderRegions(){$('#regions-list').innerHTML=Data.regions.map(r=>`<div class="item-card" onclick="Editor.editRegion('${r.id}')"><span class="item-card-icon">${r.icon}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats">${r.type==='safe'?'🏠':'⚠️'} Dist:${r.distance||0} Req:${r.reqEncounters||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRegion('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRegion('${r.id}')">🗑️</button></div></div>`).join('')},
-    renderRaces(){$('#races-list').innerHTML=Data.races.map(r=>`<div class="item-card" onclick="Editor.editRace('${r.id}')"><span class="item-card-icon">${sprite(r)}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats">⚡${r.bonus?.speed||10}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRace('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRace('${r.id}')">🗑️</button></div></div>`).join('')},
-    renderWeapons(){$('#weapons-list').innerHTML=Data.weapons.map(w=>`<div class="item-card${w.fromPlugin?' plugin-item':''}" onclick="Editor.edit('weapons','weapon','${w.id}')"><span class="item-card-icon">${sprite(w)}${w.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${w.name}</div><div class="item-card-stats">${w.damage} ⚖️${w.weight||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('weapons','weapon','${w.id}')">✏️</button>${w.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('weapons','${w.id}')">🗑️</button>`}</div></div>`).join('')},
-    renderArmors(){$('#armors-list').innerHTML=Data.armors.map(a=>`<div class="item-card${a.fromPlugin?' plugin-item':''}" onclick="Editor.edit('armors','armor','${a.id}')"><span class="item-card-icon">${sprite(a)}${a.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${a.name}</div><div class="item-card-stats">Def:${a.defense} ⚖️${a.weight||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('armors','armor','${a.id}')">✏️</button>${a.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('armors','${a.id}')">🗑️</button>`}</div></div>`).join('')},
-    renderItems(){$('#items-list').innerHTML=Data.items.map(i=>`<div class="item-card${i.fromPlugin?' plugin-item':''}" onclick="Editor.edit('items','item','${i.id}')"><span class="item-card-icon">${sprite(i)}${i.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${i.name}</div><div class="item-card-stats">${i.type||i.desc||''}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('items','item','${i.id}')">✏️</button>${i.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('items','${i.id}')">🗑️</button>`}</div></div>`).join('')},
-    renderEnemies(){$('#enemies-list').innerHTML=Data.enemies.map(e=>{const w=e.weaponId?Data.find('weapons',e.weaponId):null;const a=e.armorId?Data.find('armors',e.armorId):null;const equip=(w?`⚔️${w.icon}`:'')+(a?`🛡️${a.icon}`:'');return`<div class="item-card" onclick="Editor.editEnemy('${e.id}')"><span class="item-card-icon">${sprite(e)}</span><div class="item-card-info"><div class="item-card-name">${e.name}</div><div class="item-card-stats">HP:${e.health} ⚡${e.speed||10} ${e.canGroup?'👥':'👤'} ${equip}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editEnemy('${e.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('enemies','${e.id}')">🗑️</button></div></div>`}).join('')},
-    renderPets(){$('#pets-list').innerHTML=Data.pets.map(p=>`<div class="item-card" onclick="Editor.editPet('${p.id}')"><span class="item-card-icon">${sprite(p)}</span><div class="item-card-info"><div class="item-card-name">${p.name}</div><div class="item-card-stats">⚡${p.speed||12}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editPet('${p.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('pets','${p.id}')">🗑️</button></div></div>`).join('')},
+    renderRegions(){$('#regions-list').innerHTML=Data.regions.map(r=>`<div class="item-card" onclick="Editor.editRegion('${r.id}')"><span class="item-card-icon">${r.icon}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats"><span class="item-id">${r.id}</span> ${r.type==='safe'?'🏠':'⚠️'} Dist:${r.distance||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRegion('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRegion('${r.id}')">🗑️</button></div></div>`).join('')},
+    renderRaces(){$('#races-list').innerHTML=Data.races.map(r=>`<div class="item-card" onclick="Editor.editRace('${r.id}')"><span class="item-card-icon">${sprite(r)}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats"><span class="item-id">${r.id}</span> ⚡${r.bonus?.speed||10}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRace('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRace('${r.id}')">🗑️</button></div></div>`).join('')},
+    renderWeapons(){$('#weapons-list').innerHTML=Data.weapons.map(w=>`<div class="item-card${w.fromPlugin?' plugin-item':''}" onclick="Editor.edit('weapons','weapon','${w.id}')"><span class="item-card-icon">${sprite(w)}${w.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${w.name}</div><div class="item-card-stats"><span class="item-id">${w.id}</span> ${w.damage} ⚖️${w.weight||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('weapons','weapon','${w.id}')">✏️</button>${w.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('weapons','${w.id}')">🗑️</button>`}</div></div>`).join('')},
+    renderArmors(){$('#armors-list').innerHTML=Data.armors.map(a=>`<div class="item-card${a.fromPlugin?' plugin-item':''}" onclick="Editor.edit('armors','armor','${a.id}')"><span class="item-card-icon">${sprite(a)}${a.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${a.name}</div><div class="item-card-stats"><span class="item-id">${a.id}</span> Def:${a.defense} ⚖️${a.weight||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('armors','armor','${a.id}')">✏️</button>${a.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('armors','${a.id}')">🗑️</button>`}</div></div>`).join('')},
+    renderItems(){$('#items-list').innerHTML=Data.items.map(i=>`<div class="item-card${i.fromPlugin?' plugin-item':''}" onclick="Editor.edit('items','item','${i.id}')"><span class="item-card-icon">${sprite(i)}${i.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${i.name}</div><div class="item-card-stats"><span class="item-id">${i.id}</span> ${i.type||''}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('items','item','${i.id}')">✏️</button>${i.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('items','${i.id}')">🗑️</button>`}</div></div>`).join('')},
+    renderEnemies(){$('#enemies-list').innerHTML=Data.enemies.map(e=>{const w=e.weaponId?Data.find('weapons',e.weaponId):null;const a=e.armorId?Data.find('armors',e.armorId):null;const equip=(w?`⚔️${w.icon}`:'')+(a?`🛡️${a.icon}`:'');return`<div class="item-card" onclick="Editor.editEnemy('${e.id}')"><span class="item-card-icon">${sprite(e)}</span><div class="item-card-info"><div class="item-card-name">${e.name}</div><div class="item-card-stats"><span class="item-id">${e.id}</span> HP:${e.health} ${equip}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editEnemy('${e.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('enemies','${e.id}')">🗑️</button></div></div>`}).join('')},
+    renderPets(){$('#pets-list').innerHTML=Data.pets.map(p=>`<div class="item-card" onclick="Editor.editPet('${p.id}')"><span class="item-card-icon">${sprite(p)}</span><div class="item-card-info"><div class="item-card-name">${p.name}</div><div class="item-card-stats"><span class="item-id">${p.id}</span> ⚡${p.speed||12}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editPet('${p.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('pets','${p.id}')">🗑️</button></div></div>`).join('')},
     renderNpcs(){const roles={merchant:'Comerciante',blacksmith:'Herrero',alchemist:'Alquimista',innkeeper:'Tabernero',healer:'Curandero',guard:'Guardia',villager:'Aldeano'};$('#npcs-list').innerHTML=Data.npcs.map(n=>`<div class="item-card" onclick="Editor.editNpc('${n.id}')"><span class="item-card-icon">${sprite(n)}</span><div class="item-card-info"><div class="item-card-name">${n.name}</div><div class="item-card-stats">${roles[n.role]||n.role}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editNpc('${n.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('npcs','${n.id}')">🗑️</button></div></div>`).join('')},
-    renderRecipes(){$('#recipes-list').innerHTML=(Data.recipes||[]).map(r=>{const result=Data.findItem(r.result);const ingNames=(r.ingredients||[]).map(i=>{const it=Data.findItem(i);return it?it.icon+it.name:'?'}).join('+');return`<div class="item-card" onclick="Editor.editRecipe('${r.id}')"><span class="item-card-icon">${r.icon||'🔨'}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats">${ingNames} → ${result?result.icon+result.name:'?'}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRecipe('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRecipe('${r.id}')">🗑️</button></div></div>`}).join('')},
+    renderRecipes(){$('#recipes-list').innerHTML=(Data.recipes||[]).map(r=>{const result=Data.findItem(r.result);const ingNames=(r.ingredients||[]).map(i=>{const it=Data.findItem(i);return it?it.icon:'?'}).join('+');return`<div class="item-card" onclick="Editor.editRecipe('${r.id}')"><span class="item-card-icon">${r.icon||'🔨'}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats"><span class="item-id">${r.id}</span> ${ingNames}→${result?result.icon:''}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRecipe('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRecipe('${r.id}')">🗑️</button></div></div>`}).join('')},
     updateSelects(){
         const dangerRegions=Data.regions.filter(r=>r.type==='danger');
         const regHtml=dangerRegions.map(r=>`<label><input type="checkbox" value="${r.id}"> ${r.icon} ${r.name}</label>`).join('');
@@ -1502,28 +1503,56 @@ document.addEventListener('DOMContentLoaded',()=>{
 <!-- Sistema de Plugins - Extensiones sin modificar código principal -->
 <script src="rpg-plugins.js"></script>
 <script>
-// Integración de plugins con el juego - se ejecuta después de cargar todo
+// Integración de plugins con el juego
 window.addEventListener('DOMContentLoaded',function(){
     setTimeout(function(){
         if(typeof Plugins!=='undefined' && Plugins.specialItems){
             console.log('✅ Plugins detectados');
-            const items = Object.values(Plugins.specialItems);
-            console.log('📦 Items en plugins:', items.length);
+            var keys = Object.keys(Plugins.specialItems);
+            console.log('📦 Items en plugins:', keys.length);
             
-            items.forEach(function(item){
+            keys.forEach(function(key){
+                var item = Plugins.specialItems[key];
                 if(!item || !item.id) return;
-                const copy = JSON.parse(JSON.stringify(item));
-                copy.fromPlugin = true;
                 
-                if(item.damage && !Data.weapons.find(function(w){return w.id===item.id})){
-                    Data.weapons.push(copy);
-                    console.log('  + Arma:', item.name);
-                }else if(item.defense !== undefined && !Data.armors.find(function(a){return a.id===item.id})){
-                    Data.armors.push(copy);
-                    console.log('  + Armadura:', item.name);
-                }else if(!Data.items.find(function(i){return i.id===item.id})){
-                    Data.items.push(copy);
-                    console.log('  + Item:', item.name);
+                // Crear copia simple con propiedades básicas
+                var copy = {
+                    id: item.id,
+                    name: item.name,
+                    icon: item.icon,
+                    value: item.value || 0,
+                    rarity: item.rarity || 'common',
+                    desc: item.desc || '',
+                    fromPlugin: true
+                };
+                
+                // Verificar si es arma (tiene damage)
+                if(item.damage){
+                    copy.damage = item.damage;
+                    copy.weight = item.weight || 0;
+                    copy.effect = item.effect || '';
+                    if(!Data.weapons.find(function(w){return w.id===item.id})){
+                        Data.weapons.push(copy);
+                        console.log('  + Arma:', item.name, '('+item.id+')');
+                    }
+                }
+                // Verificar si es armadura (tiene defense)
+                else if(typeof item.defense === 'number'){
+                    copy.defense = item.defense;
+                    copy.weight = item.weight || 0;
+                    if(!Data.armors.find(function(a){return a.id===item.id})){
+                        Data.armors.push(copy);
+                        console.log('  + Armadura:', item.name, '('+item.id+')');
+                    }
+                }
+                // Es item general
+                else {
+                    copy.type = item.type || 'misc';
+                    copy.effect = item.effect || '0';
+                    if(!Data.items.find(function(i){return i.id===item.id})){
+                        Data.items.push(copy);
+                        console.log('  + Item:', item.name, '('+item.id+')');
+                    }
                 }
             });
             
@@ -1533,12 +1562,12 @@ window.addEventListener('DOMContentLoaded',function(){
                 Editor.renderArmors();
                 Editor.renderItems();
                 Editor.updateSelects();
-                console.log('✅ Editor actualizado');
+                console.log('✅ Editor actualizado con', keys.length, 'items de plugins');
             }
         }else{
-            console.log('⚠️ Plugins no disponible o sin items');
+            console.log('⚠️ Plugins no disponible');
         }
-    }, 500);
+    }, 300);
 });
 
 // Hook de velocidad
