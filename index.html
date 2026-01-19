@@ -1500,62 +1500,60 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 </script>
 <!-- Sistema de Plugins - Extensiones sin modificar código principal -->
-<script src="rpg-plugins.js" onerror="console.log('⚠️ rpg-plugins.js no encontrado - los items especiales no estarán disponibles')"></script>
+<script src="rpg-plugins.js"></script>
 <script>
-// Integración de plugins con el juego
-if(typeof Plugins!=='undefined'){
-    console.log('✅ Plugins cargados correctamente');
-    
-    // Registrar items especiales en Data
-    Data.loadPluginItems=function(){
-        let added=0;
-        Object.values(Plugins.specialItems).forEach(item=>{
-            // Asegurar que tiene propiedades necesarias
-            if(!item.id)return;
-            item.fromPlugin=true; // Marcar como item de plugin
+// Integración de plugins con el juego - se ejecuta después de cargar todo
+window.addEventListener('DOMContentLoaded',function(){
+    setTimeout(function(){
+        if(typeof Plugins!=='undefined' && Plugins.specialItems){
+            console.log('✅ Plugins detectados');
+            const items = Object.values(Plugins.specialItems);
+            console.log('📦 Items en plugins:', items.length);
             
-            if(item.damage&&!Data.weapons.find(w=>w.id===item.id)){
-                Data.weapons.push({...item});
-                added++;
-            }else if(item.defense!==undefined&&!Data.armors.find(a=>a.id===item.id)){
-                Data.armors.push({...item});
-                added++;
-            }else if(!Data.items.find(i=>i.id===item.id)){
-                Data.items.push({...item});
-                added++;
+            items.forEach(function(item){
+                if(!item || !item.id) return;
+                const copy = JSON.parse(JSON.stringify(item));
+                copy.fromPlugin = true;
+                
+                if(item.damage && !Data.weapons.find(function(w){return w.id===item.id})){
+                    Data.weapons.push(copy);
+                    console.log('  + Arma:', item.name);
+                }else if(item.defense !== undefined && !Data.armors.find(function(a){return a.id===item.id})){
+                    Data.armors.push(copy);
+                    console.log('  + Armadura:', item.name);
+                }else if(!Data.items.find(function(i){return i.id===item.id})){
+                    Data.items.push(copy);
+                    console.log('  + Item:', item.name);
+                }
+            });
+            
+            // Actualizar editor
+            if(typeof Editor !== 'undefined'){
+                Editor.renderWeapons();
+                Editor.renderArmors();
+                Editor.renderItems();
+                Editor.updateSelects();
+                console.log('✅ Editor actualizado');
             }
-        });
-        console.log(`📦 ${added} items de plugins agregados`);
-        // Actualizar el editor si está disponible
-        if(typeof Editor!=='undefined'){
-            Editor.renderWeapons();
-            Editor.renderArmors();
-            Editor.renderItems();
-            Editor.updateSelects();
+        }else{
+            console.log('⚠️ Plugins no disponible o sin items');
         }
-    };
-    
-    // Cargar después de que DOM esté listo
-    if(document.readyState==='complete'){
-        Data.loadPluginItems();
-    }else{
-        window.addEventListener('load',()=>Data.loadPluginItems());
-    }
-    
-    // Hook: Modificar Game.speed para incluir bonus de accesorios
+    }, 500);
+});
+
+// Hook de velocidad
+if(typeof Plugins!=='undefined'){
     const origSpeed=Game.speed;
     Game.speed=function(){
         let spd=origSpeed.call(this);
         if(G.p){
-            (G.p.inv||[]).forEach(item=>{
-                const special=Plugins.getSpecialItem(item.id);
+            (G.p.inv||[]).forEach(function(item){
+                var special=Plugins.specialItems[item.id];
                 if(special&&special.speedBonus)spd+=special.speedBonus;
             });
         }
         return spd;
     };
-}else{
-    console.log('⚠️ Sistema de Plugins no disponible');
 }
 </script>
 </body>
