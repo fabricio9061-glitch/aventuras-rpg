@@ -918,6 +918,8 @@ load(){
         if(d){
             console.log('Firebase data loaded:',Object.keys(d));
             Object.keys(d).forEach(k=>{if(Data[k])Data[k]=d[k]});
+            // Cargar plugins DESPUÉS de Firebase
+            if(typeof loadPluginItems === 'function') loadPluginItems();
             Editor.renderAll();
         }
     }).catch(e=>console.error('Firebase load error:',e));
@@ -1500,81 +1502,73 @@ document.addEventListener('DOMContentLoaded',()=>{
     $('#armorSlot').addEventListener('click',()=>{if(!G.p||!G.region)return;if(G.combat||G.region.type!=='safe'){toast('Solo zona segura','error');return}if(G.p.armor?.uid)Inv.detail(G.p.armor,'eq-armor')});
 });
 </script>
-<!-- Sistema de Plugins - Extensiones sin modificar código principal -->
+<!-- Sistema de Plugins -->
 <script src="rpg-plugins.js"></script>
 <script>
-// Integración de plugins con el juego
-window.addEventListener('DOMContentLoaded',function(){
-    setTimeout(function(){
-        if(typeof Plugins!=='undefined' && Plugins.specialItems){
-            console.log('✅ Plugins detectados');
-            var keys = Object.keys(Plugins.specialItems);
-            console.log('📦 Items en plugins:', keys.length);
-            
-            keys.forEach(function(key){
-                var item = Plugins.specialItems[key];
-                if(!item || !item.id) return;
-                
-                // Crear copia simple con propiedades básicas
-                var copy = {
-                    id: item.id,
-                    name: item.name,
-                    icon: item.icon,
-                    value: item.value || 0,
-                    rarity: item.rarity || 'common',
-                    desc: item.desc || '',
-                    fromPlugin: true
-                };
-                
-                // Verificar si es arma (tiene damage)
-                if(item.damage){
-                    copy.damage = item.damage;
-                    copy.weight = item.weight || 0;
-                    copy.effect = item.effect || '';
-                    if(!Data.weapons.find(function(w){return w.id===item.id})){
-                        Data.weapons.push(copy);
-                        console.log('  + Arma:', item.name, '('+item.id+')');
-                    }
-                }
-                // Verificar si es armadura (tiene defense)
-                else if(typeof item.defense === 'number'){
-                    copy.defense = item.defense;
-                    copy.weight = item.weight || 0;
-                    if(!Data.armors.find(function(a){return a.id===item.id})){
-                        Data.armors.push(copy);
-                        console.log('  + Armadura:', item.name, '('+item.id+')');
-                    }
-                }
-                // Es item general
-                else {
-                    copy.type = item.type || 'misc';
-                    copy.effect = item.effect || '0';
-                    if(!Data.items.find(function(i){return i.id===item.id})){
-                        Data.items.push(copy);
-                        console.log('  + Item:', item.name, '('+item.id+')');
-                    }
-                }
-            });
-            
-            // Actualizar editor
-            if(typeof Editor !== 'undefined'){
-                Editor.renderWeapons();
-                Editor.renderArmors();
-                Editor.renderItems();
-                Editor.updateSelects();
-                console.log('✅ Editor actualizado con', keys.length, 'items de plugins');
+// Función global para cargar items de plugins
+function loadPluginItems(){
+    if(typeof Plugins==='undefined' || !Plugins.specialItems) return;
+    
+    var keys = Object.keys(Plugins.specialItems);
+    var added = 0;
+    
+    keys.forEach(function(key){
+        var item = Plugins.specialItems[key];
+        if(!item || !item.id) return;
+        
+        var copy = {
+            id: item.id,
+            name: item.name,
+            icon: item.icon,
+            value: item.value || 0,
+            rarity: item.rarity || 'common',
+            desc: item.desc || '',
+            fromPlugin: true
+        };
+        
+        if(item.damage){
+            copy.damage = item.damage;
+            copy.weight = item.weight || 0;
+            copy.effect = item.effect || '';
+            if(!Data.weapons.find(function(w){return w.id===item.id})){
+                Data.weapons.push(copy);
+                added++;
             }
-        }else{
-            console.log('⚠️ Plugins no disponible');
         }
-    }, 300);
-});
+        else if(typeof item.defense === 'number'){
+            copy.defense = item.defense;
+            copy.weight = item.weight || 0;
+            if(!Data.armors.find(function(a){return a.id===item.id})){
+                Data.armors.push(copy);
+                added++;
+            }
+        }
+        else {
+            copy.type = item.type || 'misc';
+            copy.effect = item.effect || '0';
+            if(!Data.items.find(function(i){return i.id===item.id})){
+                Data.items.push(copy);
+                added++;
+            }
+        }
+    });
+    
+    if(added > 0){
+        console.log('🔌 Plugins: +' + added + ' items agregados');
+        if(typeof Editor !== 'undefined'){
+            Editor.renderWeapons();
+            Editor.renderArmors();
+            Editor.renderItems();
+            Editor.updateSelects();
+        }
+    }
+}
 
 // Hook de velocidad
 if(typeof Plugins!=='undefined'){
-    const origSpeed=Game.speed;
+    var origSpeed=Game.speed;
     Game.speed=function(){
-        let spd=origSpeed.call(this);
+        var spd=origSpeed.call(this);
         if(G.p){
             (G.p.inv||[]).forEach(function(item){
                 var special=Plugins.specialItems[item.id];
@@ -1584,6 +1578,11 @@ if(typeof Plugins!=='undefined'){
         return spd;
     };
 }
+
+// Cargar plugins después de Firebase (fallback)
+window.addEventListener('load', function(){
+    setTimeout(loadPluginItems, 1500);
+});
 </script>
 </body>
 </html>
