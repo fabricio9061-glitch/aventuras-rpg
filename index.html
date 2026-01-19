@@ -131,7 +131,13 @@
         .combat-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem;padding:.5rem;border-top:1px solid var(--border)}
         
         /* Combat Log */
-        .combat-log{max-height:180px;overflow-y:auto;padding:.5rem;background:var(--bg-dark);border-top:1px solid var(--border);font-size:.7rem}
+        .combat-log{max-height:120px;overflow-y:auto;padding:.4rem;background:var(--bg-dark);border-top:1px solid var(--border);font-size:.65rem;scroll-behavior:smooth}
+        .combat-log .log-entry{padding:.15rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
+        .combat-log .log-entry:last-child{border-bottom:none}
+        .combat-log .log-turn{text-align:center;color:var(--gold);font-weight:bold;padding:.3rem;margin:.2rem 0}
+        .combat-log .log-order{display:none}
+        .combat-log .log-calc{display:inline;font-size:.6rem;opacity:.8}
+        .combat-actions{padding:.5rem;background:var(--bg-panel);border-top:1px solid var(--border);position:sticky;top:0;z-index:10}
         .log-entry{padding:.12rem 0;border-bottom:1px dashed rgba(255,255,255,.05)}
         .log-entry:last-child{border-bottom:none}
         .log-player{color:var(--gold)}.log-enemy{color:var(--red-bright)}.log-pet{color:var(--cyan)}.log-damage{color:var(--orange)}.log-heal{color:var(--green-bright)}.log-miss{color:var(--text-dim);font-style:italic}.log-crit{color:var(--gold-bright);font-weight:bold}
@@ -241,6 +247,9 @@
         .multi-select label:hover{background:var(--bg-light)}
         .items-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.35rem;margin-top:.6rem;max-height:250px;overflow-y:auto;padding:.15rem}
         .item-card{background:var(--bg-dark);border:1px solid var(--border);border-radius:4px;padding:.4rem;display:flex;align-items:center;gap:.35rem;cursor:pointer;transition:all .2s}
+        .item-card.plugin-item{border-color:var(--cyan);background:linear-gradient(135deg,var(--bg-dark),rgba(0,255,255,.05))}
+        .plugin-badge{position:absolute;top:-4px;right:-4px;font-size:.5rem}
+        .item-card-icon{position:relative}
         .item-card:hover{border-color:var(--gold-dim)}
         .item-card-icon{font-size:1.2rem;width:28px;text-align:center}.item-card-icon img{width:28px;height:28px;object-fit:contain}
         .item-card-info{flex:1;min-width:0}
@@ -1084,6 +1093,15 @@ const Game={
     },
     newGame(){if(!confirm('¿Crear nuevo personaje? Se perderá el progreso actual.'))return;this.deleteSave();G.p=null;G.combat=false;G.enemies=[];Story.clear();this.showCreate()},
     deleteSave(){localStorage.removeItem('rpg_save')},
+    fullReset(){
+        // Limpiar completamente el estado
+        G.p=null;G.combat=false;G.enemies=[];G.turn=0;G.region=null;
+        G.turnOrder=[];G.currentActor=0;G.regionProgress={};G.traveling=null;
+        Story.clear();
+        $('#combatArena').classList.add('hidden');
+        $('#actionsPanel').classList.add('hidden');
+        this.showCreate();
+    },
     save(){localStorage.setItem('rpg_save',JSON.stringify({p:G.p,region:G.region,regionProgress:G.regionProgress}));toast('Guardado','success')},
     load(){const s=localStorage.getItem('rpg_save');if(!s)return false;try{const d=JSON.parse(s);if(!d||!d.p||!d.p.name||!d.p.race){console.log('Invalid save');return false}G.p=d.p;G.region=d.region?Data.getRegion(d.region.id):Data.getRegion('pueblo');G.regionProgress=d.regionProgress||{};G.combat=false;G.traveling=null;Story.add('Partida cargada.','system');this.updateUI();this.exploreActions();return true}catch(e){console.error('Load error:',e);return false}},
     updateUI(){
@@ -1158,7 +1176,7 @@ const Combat={
         this.newTurn();
     },
     calcTurnOrder(){const combatants=[];combatants.push({type:'player',entity:G.p,speed:Game.speed(),init:d20()});if(G.p.pet&&G.p.pet.hp>0)combatants.push({type:'pet',entity:G.p.pet,speed:G.p.pet.speed||12,init:d20()});G.enemies.filter(e=>e.hp>0).forEach(e=>{combatants.push({type:'enemy',entity:e,speed:e.speed||10,init:d20()})});combatants.sort((a,b)=>{if(b.speed!==a.speed)return b.speed-a.speed;return b.init-a.init});return combatants},
-    newTurn(){G.turn++;G.p.defending=false;G.turnOrder=this.calcTurnOrder();G.currentActor=0;this.log(`<div class="log-turn">══ TURNO ${G.turn} ══</div>`);let orderHtml='<div class="log-order">';G.turnOrder.forEach((c,i)=>{const cls=c.type==='player'?'player':c.type==='pet'?'pet':'enemy';orderHtml+=`<span class="log-order-tag ${cls}">${i+1}.${c.entity.name} ⚡${c.speed}</span>`});orderHtml+='</div>';this.log(orderHtml);this.updateUI();this.nextActor()},
+    newTurn(){G.turn++;G.p.defending=false;G.turnOrder=this.calcTurnOrder();G.currentActor=0;this.log(`<div class="log-turn">─ Turno ${G.turn} ─</div>`);this.updateUI();this.nextActor()},
     async nextActor(){const aliveEnemies=G.enemies.filter(e=>e.hp>0);if(aliveEnemies.length===0){this.victory();return}if(G.p.hp<=0){this.defeat();return}while(G.currentActor<G.turnOrder.length){const actor=G.turnOrder[G.currentActor];if((actor.type==='player'&&G.p.hp>0)||(actor.type==='pet'&&G.p.pet?.hp>0)||(actor.type==='enemy'&&actor.entity.hp>0))break;G.currentActor++}if(G.currentActor>=G.turnOrder.length){this.processAllEffects();await delay(300);this.newTurn();return}const actor=G.turnOrder[G.currentActor];this.highlightActor(actor);
         // Plugin hooks: inicio de turno
         if(typeof Plugins!=='undefined'){
@@ -1171,19 +1189,19 @@ const Combat={
         if(actor.type==='player')this.showPlayerActions();else if(actor.type==='pet')await this.petAction();else await this.enemyAction(actor.entity)},
     highlightActor(actor){$$('.combatant').forEach(c=>c.classList.remove('active'));const el=actor.type==='player'?$(`.combatant.player`):actor.type==='pet'?$(`.combatant.pet`):$(`[data-uid="${actor.entity.uid}"]`);if(el)el.classList.add('active')},
     showPlayerActions(){const ca=$('#combatActions');ca.innerHTML='';const aliveEnemies=G.enemies.filter(e=>e.hp>0);if(aliveEnemies.length>1){ca.innerHTML=`<div style="width:100%;text-align:center;font-size:.65rem;color:var(--text-dim);margin-bottom:.2rem">Objetivo:</div>`;const targetDiv=document.createElement('div');targetDiv.className='target-select';aliveEnemies.forEach(e=>{const btn=document.createElement('button');btn.className='target-btn';btn.innerHTML=`${e.icon} ${e.name}`;btn.onclick=()=>this.playerAttack(e);targetDiv.appendChild(btn)});ca.appendChild(targetDiv)}else{const atk=document.createElement('button');atk.className='btn btn-primary';atk.textContent='⚔️ Atacar';atk.onclick=()=>this.playerAttack(aliveEnemies[0]);ca.appendChild(atk)}[{text:'🛡️ Defender',fn:()=>this.playerDefend()},{text:'🎒 Item',fn:()=>Inv.open()},{text:'💨 Huir',fn:()=>this.playerFlee(),cls:'btn-danger'}].forEach(a=>{const b=document.createElement('button');b.className=`btn ${a.cls||''}`;b.textContent=a.text;b.onclick=a.fn;ca.appendChild(b)})},
-    async playerAttack(target){const p=G.p;const atkRoll=d20();const prec=p.race.bonus.precision||0;const total=atkRoll+prec;const isCrit=atkRoll===20;const isPifia=atkRoll===1;await showDice(atkRoll,20,isCrit);this.log(`<span class="log-player">${p.name}</span> → <span class="log-enemy">${target.name}</span>`);this.log(`┌ Ataque: D20=<strong>${atkRoll}</strong>${prec?`+${prec}`:''} = ${total} vs ${target.difficulty}`);if(isPifia){this.log(`└ <span class="log-miss">¡PIFIA! Fallo automático</span>`);if(typeof Plugins!=='undefined')Plugins.trigger('onAttack',p,target,0,false)}else if(total>=target.difficulty||isCrit){const dmgRoll=rollDetailed(p.weapon?.damage||'1d2');const bonus=p.race.bonus.damage||0;let baseDmg=dmgRoll.total+bonus;
+    async playerAttack(target){const p=G.p;const atkRoll=d20();const prec=p.race.bonus.precision||0;const total=atkRoll+prec;const isCrit=atkRoll===20;const isPifia=atkRoll===1;await showDice(atkRoll,20,isCrit);if(isPifia){this.log(`<span class="log-miss">D20=1 ¡PIFIA!</span>`);if(typeof Plugins!=='undefined')Plugins.trigger('onAttack',p,target,0,false)}else if(total>=target.difficulty||isCrit){const dmgRoll=rollDetailed(p.weapon?.damage||'1d2');const bonus=p.race.bonus.damage||0;let baseDmg=dmgRoll.total+bonus;
         // Plugin: modificar daño por efectos (ej: furia)
-        const fury=(p.effects||[]).find(e=>e.type==='fury');if(fury){const furyBonus=Math.floor(baseDmg*0.5);baseDmg+=furyBonus;this.log(`├ 🔥 Furia: +${furyBonus}`)}
-        this.log(`├ Daño: ${dmgRoll.dice}=[${dmgRoll.rolls}]${bonus?`+${bonus}`:''} = ${baseDmg}`);if(isCrit){baseDmg*=2;this.log(`├ <span class="log-crit">¡CRÍTICO! x2 = ${baseDmg}</span>`)}const armor=target.armor||0;let finalDmg=Math.max(0,baseDmg-armor);
+        const fury=(p.effects||[]).find(e=>e.type==='fury');if(fury){const furyBonus=Math.floor(baseDmg*0.5);baseDmg+=furyBonus;this.log(`🔥+${furyBonus}`)}
+        if(isCrit){baseDmg*=2;this.log(`<span class="log-crit">¡CRIT x2!</span>`)}const armor=target.armor||0;let finalDmg=Math.max(0,baseDmg-armor);
         // Plugin hook: modificar daño final
         if(typeof Plugins!=='undefined')finalDmg=Plugins.trigger('onAttack',p,target,finalDmg,true)||finalDmg;
-        if(finalDmg>0){this.log(`<div class="log-calc">⚔️ ${baseDmg} − ${armor} arm = <strong>${finalDmg}</strong></div>`);target.hp-=finalDmg;this.log(`└ <span class="log-damage">${target.name} -${finalDmg} HP (${Math.max(0,target.hp)}/${target.maxHp})</span>`);
+        if(finalDmg>0){this.log(`<span class="log-player">${p.name}</span>→${target.name}: <span class="log-damage">${finalDmg}</span> (${baseDmg}-${armor})`);target.hp-=finalDmg;
         // Plugin: efectos al causar daño (vampirismo, etc)
-        if(typeof Plugins!=='undefined'){const special=Plugins.getSpecialItem(p.weapon?.id);if(special&&special.onDealDamage)special.onDealDamage(p,target,finalDmg)}}else{this.log(`<div class="log-calc blocked">🛡️ ${baseDmg} − ${armor} arm = 0 BLOQUEADO</div>`);this.log(`└ <span class="log-miss">${target.name} bloquea</span>`)}if(p.weapon?.effect&&finalDmg>0)this.applyEff(target,p.weapon.effect);if(target.hp<=0)this.log(`<span class="log-damage">💀 ${target.name} derrotado!</span>`)}else{this.log(`└ <span class="log-miss">Falla</span>`);if(typeof Plugins!=='undefined')Plugins.trigger('onAttack',p,target,0,false)}this.updateUI();G.currentActor++;await delay(350);this.nextActor()},
+        if(typeof Plugins!=='undefined'){const special=Plugins.getSpecialItem(p.weapon?.id);if(special&&special.onDealDamage)special.onDealDamage(p,target,finalDmg)}}else{this.log(`<span class="log-miss">${target.name} bloquea</span>`)}if(p.weapon?.effect&&finalDmg>0)this.applyEff(target,p.weapon.effect);if(target.hp<=0)this.log(`<span class="log-damage">💀${target.name}</span>`)}else{this.log(`<span class="log-miss">D20=${atkRoll} Falla</span>`);if(typeof Plugins!=='undefined')Plugins.trigger('onAttack',p,target,0,false)}this.updateUI();G.currentActor++;await delay(350);this.nextActor()},
     playerDefend(){G.p.defending=true;this.log(`<span class="log-player">${G.p.name}</span> defiende <span class="log-heal">+4 Eva</span>`);G.currentActor++;this.updateUI();this.nextActor()},
     async playerFlee(){const r=d20();await showDice(r,20,r>=12);this.log(`Huida: D20=${r} vs 12`);if(r>=12){this.log('<span class="log-heal">¡Escape!</span>');this.escape()}else{this.log('<span class="log-miss">¡No escapas!</span>');G.currentActor++;await delay(300);this.nextActor()}},
     async petAction(){const pet=G.p.pet;const aliveEnemies=G.enemies.filter(e=>e.hp>0);if(aliveEnemies.length===0)return;const target=pick(aliveEnemies);const dmgRoll=rollDetailed(pet.damage);const baseDmg=dmgRoll.total;const armor=target.armor||0;const finalDmg=Math.max(0,baseDmg-armor);this.log(`<span class="log-pet">${pet.icon} ${pet.name}</span> → <span class="log-enemy">${target.name}</span>`);this.log(`├ Daño: ${dmgRoll.dice}=[${dmgRoll.rolls}] = ${baseDmg}`);if(finalDmg>0){this.log(`<div class="log-calc">⚔️ ${baseDmg} − ${armor} = ${finalDmg}</div>`);target.hp-=finalDmg;this.log(`└ <span class="log-damage">${target.name} -${finalDmg} (${Math.max(0,target.hp)}/${target.maxHp})</span>`);if(target.hp<=0)this.log(`<span class="log-damage">💀 ${target.name} derrotado!</span>`)}else{this.log(`<div class="log-calc blocked">🛡️ ${baseDmg} − ${armor} = 0 BLOQUEADO</div>`)}this.updateUI();G.currentActor++;await delay(350);this.nextActor()},
-    async enemyAction(enemy){const p=G.p;const evaBonus=(p.race.bonus.evasion||0)+(p.defending?4:0);const dodgeRoll=d20();const dodgeTotal=dodgeRoll+evaBonus;this.log(`<span class="log-enemy">${enemy.name}</span> → <span class="log-player">${p.name}</span>`);this.log(`┌ Esquive: D20=${dodgeRoll}${evaBonus?`+${evaBonus}`:''} = ${dodgeTotal} vs 12`);if(dodgeTotal>=12){this.log(`└ <span class="log-heal">¡Esquivado!</span>`)}else{const dmgRoll=rollDetailed(enemy.damage);let baseDmg=dmgRoll.total;const isCrit=Math.random()<0.1;this.log(`├ Daño: ${dmgRoll.dice}=[${dmgRoll.rolls}] = ${baseDmg}`);if(isCrit){baseDmg=Math.ceil(baseDmg*1.25);this.log(`├ <span class="log-crit">¡Crítico! x1.25 = ${baseDmg}</span>`)}const playerArmor=Game.armor();let finalDmg=Math.max(0,baseDmg-playerArmor);
+    async enemyAction(enemy){const p=G.p;const evaBonus=(p.race.bonus.evasion||0)+(p.defending?4:0);const dodgeRoll=d20();const dodgeTotal=dodgeRoll+evaBonus;if(dodgeTotal>=12){this.log(`<span class="log-heal">${enemy.name}→ ¡Esquivado!</span>`)}else{const dmgRoll=rollDetailed(enemy.damage);let baseDmg=dmgRoll.total;const isCrit=Math.random()<0.1;if(isCrit){baseDmg=Math.ceil(baseDmg*1.25)}const playerArmor=Game.armor();let finalDmg=Math.max(0,baseDmg-playerArmor);
         // Plugin: hooks de daño recibido (escudo de espinas, etc)
         if(typeof Plugins!=='undefined'&&finalDmg>0){
             const special=Plugins.getSpecialItem(p.armor?.id);
@@ -1194,7 +1212,7 @@ const Combat={
                 if(custom&&custom.onTakeDamage)finalDmg=custom.onTakeDamage(p,eff,finalDmg);
             });
         }
-        if(finalDmg>0){this.log(`<div class="log-calc">⚔️ ${baseDmg} − ${playerArmor} arm = ${finalDmg}</div>`);p.hp-=finalDmg;this.log(`└ <span class="log-damage">${p.name} -${finalDmg} HP (${Math.max(0,p.hp)}/${p.maxHp})</span>`);if(enemy.effect)this.applyEff(p,enemy.effect)}else{this.log(`<div class="log-calc blocked">🛡️ ${baseDmg} − ${playerArmor} = 0 BLOQUEADO</div>`);this.log(`└ <span class="log-heal">${p.name} bloquea</span>`)}}this.updateUI();Game.updateUI();G.currentActor++;if(p.hp<=0){this.defeat();return}await delay(350);this.nextActor()},
+        if(finalDmg>0){this.log(`<span class="log-enemy">${enemy.name}</span>→${p.name}: <span class="log-damage">${finalDmg}</span>${isCrit?' ¡Crit!':''}`);p.hp-=finalDmg;if(enemy.effect)this.applyEff(p,enemy.effect)}else{this.log(`<span class="log-heal">${p.name} bloquea</span>`)}}this.updateUI();Game.updateUI();G.currentActor++;if(p.hp<=0){this.defeat();return}await delay(350);this.nextActor()},
     applyEff(t,type){const effs={bleed:{dmg:1,turns:3},poison:{dmg:2,turns:2},fire:{dmg:'1d4',turns:2}};const ef=effs[type];if(!ef)return;if(!t.effects)t.effects=[];const ex=t.effects.find(e=>e.type===type);if(ex)ex.turns=ef.turns;else t.effects.push({type,dmg:ef.dmg,turns:ef.turns});this.log(`<span style="color:var(--orange)">⚡ ${type.toUpperCase()} → ${t.name}</span>`)},
     processAllEffects(){this.processEff(G.p);if(G.p.pet)this.processEff(G.p.pet);G.enemies.forEach(e=>this.processEff(e));this.updateUI();Game.updateUI()},
     processEff(t){if(!t.effects?.length||t.hp<=0)return;let total=0;t.effects.forEach(ef=>{const d=typeof ef.dmg==='string'?roll(ef.dmg):ef.dmg;total+=d;ef.turns--});t.effects=t.effects.filter(e=>e.turns>0);if(total>0){t.hp=Math.max(0,t.hp-total);this.log(`<span style="color:var(--orange)">🔥 ${t.name} -${total} efectos (HP:${t.hp})</span>`)}},
@@ -1223,7 +1241,22 @@ const Combat={
             Game.exploreActions();
         }
     },
-    defeat(){$('#combatArena').classList.add('hidden');G.combat=false;if(typeof Plugins!=='undefined')Plugins.trigger('onCombatEnd',false);this.duringTravel=false;G.traveling=null;Story.add('<strong style="color:var(--red-bright)">💀 Has muerto...</strong>','combat');Story.add('Tu aventura termina aquí.','system');Game.deleteSave();Game.setActions([{text:'🔄 Nueva Partida',fn:()=>{G.p=null;Story.clear();Game.showCreate()},cls:'btn-primary'}])},
+    defeat(){
+        $('#combatArena').classList.add('hidden');
+        G.combat=false;
+        if(typeof Plugins!=='undefined')Plugins.trigger('onCombatEnd',false);
+        this.duringTravel=false;
+        G.traveling=null;
+        G.enemies=[];
+        Story.add('<div style="text-align:center;padding:1rem;background:rgba(139,0,0,.3);border-radius:8px;margin:.5rem 0"><div style="font-size:2rem">💀</div><strong style="color:var(--red-bright);font-size:1.2rem">¡Has muerto!</strong><div style="color:var(--text-dim);margin-top:.3rem">Tu aventura termina aquí...</div></div>','combat');
+        Game.deleteSave();
+        // Mostrar botón prominente de reinicio
+        const resetHtml=`<div style="text-align:center;padding:1rem">
+            <button class="btn btn-primary" style="font-size:1.1rem;padding:.8rem 2rem;animation:pulse 1.5s infinite" onclick="Game.fullReset()">🔄 Nueva Aventura</button>
+        </div>`;
+        $('#actionsContainer').innerHTML=resetHtml;
+        $('#actionsPanel').classList.remove('hidden');
+    },
     escape(){$('#combatArena').classList.add('hidden');G.combat=false;G.enemies=[];Story.add('Escapas.','system');Game.updateUI();if(this.duringTravel){this.duringTravel=false;G.traveling=null;Story.add('Vuelves al punto de partida.','travel')}Game.exploreActions()},
     log(t){$('#combatLog').innerHTML+=`<div class="log-entry">${t}</div>`;$('#combatLog').scrollTop=999999},
     updateUI(){if(!G.p)return;const grid=$('#combatGrid');grid.innerHTML='';const pDiv=document.createElement('div');pDiv.className=`combatant player ${G.p.hp<=0?'dead':''}`;const pHpPct=(G.p.hp/G.p.maxHp)*100;pDiv.innerHTML=`<div class="combatant-order">⚡${Game.speed()}</div><div class="combatant-sprite">${sprite({icon:G.p.race.icon,sprite:G.p.race.sprite})}</div><div class="combatant-name">${G.p.name}</div><div class="combatant-stats">⚔️${G.p.weapon?.damage||'1d2'} 🛡️${Game.armor()}</div><div class="hp-container"><div class="hp-fill ${hpClass(pHpPct)}" style="width:${pHpPct}%"></div><div class="hp-text">${G.p.hp}/${G.p.maxHp}</div></div><div class="effects-row">${(G.p.effects||[]).map(e=>`<span class="effect-tag eff-${e.type}">${e.type}${e.turns}</span>`).join('')}</div>`;grid.appendChild(pDiv);if(G.p.pet&&G.p.pet.hp>0){const petDiv=document.createElement('div');petDiv.className='combatant pet';const petHpPct=(G.p.pet.hp/G.p.pet.maxHp)*100;petDiv.innerHTML=`<div class="combatant-order">⚡${G.p.pet.speed||12}</div><div class="combatant-sprite">${G.p.pet.icon}</div><div class="combatant-name">${G.p.pet.name}</div><div class="combatant-stats">⚔️${G.p.pet.damage}</div><div class="hp-container"><div class="hp-fill" style="width:${petHpPct}%"></div><div class="hp-text">${G.p.pet.hp}/${G.p.pet.maxHp}</div></div>`;grid.appendChild(petDiv)}const vs=document.createElement('div');vs.className='combat-vs';vs.textContent='⚔';grid.appendChild(vs);G.enemies.forEach(e=>{const eDiv=document.createElement('div');eDiv.className=`combatant enemy ${e.hp<=0?'dead':''}`;eDiv.dataset.uid=e.uid;const eHpPct=(e.hp/e.maxHp)*100;const weaponInfo=e.weapon?`${e.weapon.icon}${e.damage}`:e.damage;eDiv.innerHTML=`<div class="combatant-order">⚡${e.speed||10}</div><div class="combatant-sprite">${sprite(e)}</div><div class="combatant-name">${e.name}</div><div class="combatant-stats">⚔️${weaponInfo} 🛡️${e.armor||0}</div><div class="hp-container"><div class="hp-fill ${hpClass(eHpPct)}" style="width:${eHpPct}%"></div><div class="hp-text">${Math.max(0,e.hp)}/${e.maxHp}</div></div><div class="effects-row">${(e.effects||[]).map(ef=>`<span class="effect-tag eff-${ef.type}">${ef.type}${ef.turns}</span>`).join('')}</div>`;grid.appendChild(eDiv)});$('#turnCounter').textContent=G.turn}
@@ -1431,9 +1464,9 @@ const Editor={
     renderAll(){this.renderRegions();this.renderRaces();this.renderWeapons();this.renderArmors();this.renderItems();this.renderEnemies();this.renderPets();this.renderNpcs();this.renderRecipes();this.updateSelects()},
     renderRegions(){$('#regions-list').innerHTML=Data.regions.map(r=>`<div class="item-card" onclick="Editor.editRegion('${r.id}')"><span class="item-card-icon">${r.icon}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats">${r.type==='safe'?'🏠':'⚠️'} Dist:${r.distance||0} Req:${r.reqEncounters||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRegion('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRegion('${r.id}')">🗑️</button></div></div>`).join('')},
     renderRaces(){$('#races-list').innerHTML=Data.races.map(r=>`<div class="item-card" onclick="Editor.editRace('${r.id}')"><span class="item-card-icon">${sprite(r)}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats">⚡${r.bonus?.speed||10}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRace('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRace('${r.id}')">🗑️</button></div></div>`).join('')},
-    renderWeapons(){$('#weapons-list').innerHTML=Data.weapons.map(w=>`<div class="item-card" onclick="Editor.edit('weapons','weapon','${w.id}')"><span class="item-card-icon">${sprite(w)}</span><div class="item-card-info"><div class="item-card-name">${w.name}</div><div class="item-card-stats">${w.damage} ⚖️${w.weight||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('weapons','weapon','${w.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('weapons','${w.id}')">🗑️</button></div></div>`).join('')},
-    renderArmors(){$('#armors-list').innerHTML=Data.armors.map(a=>`<div class="item-card" onclick="Editor.edit('armors','armor','${a.id}')"><span class="item-card-icon">${sprite(a)}</span><div class="item-card-info"><div class="item-card-name">${a.name}</div><div class="item-card-stats">Def:${a.defense} ⚖️${a.weight||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('armors','armor','${a.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('armors','${a.id}')">🗑️</button></div></div>`).join('')},
-    renderItems(){$('#items-list').innerHTML=Data.items.map(i=>`<div class="item-card" onclick="Editor.edit('items','item','${i.id}')"><span class="item-card-icon">${sprite(i)}</span><div class="item-card-info"><div class="item-card-name">${i.name}</div><div class="item-card-stats">${i.type}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('items','item','${i.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('items','${i.id}')">🗑️</button></div></div>`).join('')},
+    renderWeapons(){$('#weapons-list').innerHTML=Data.weapons.map(w=>`<div class="item-card${w.fromPlugin?' plugin-item':''}" onclick="Editor.edit('weapons','weapon','${w.id}')"><span class="item-card-icon">${sprite(w)}${w.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${w.name}</div><div class="item-card-stats">${w.damage} ⚖️${w.weight||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('weapons','weapon','${w.id}')">✏️</button>${w.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('weapons','${w.id}')">🗑️</button>`}</div></div>`).join('')},
+    renderArmors(){$('#armors-list').innerHTML=Data.armors.map(a=>`<div class="item-card${a.fromPlugin?' plugin-item':''}" onclick="Editor.edit('armors','armor','${a.id}')"><span class="item-card-icon">${sprite(a)}${a.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${a.name}</div><div class="item-card-stats">Def:${a.defense} ⚖️${a.weight||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('armors','armor','${a.id}')">✏️</button>${a.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('armors','${a.id}')">🗑️</button>`}</div></div>`).join('')},
+    renderItems(){$('#items-list').innerHTML=Data.items.map(i=>`<div class="item-card${i.fromPlugin?' plugin-item':''}" onclick="Editor.edit('items','item','${i.id}')"><span class="item-card-icon">${sprite(i)}${i.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${i.name}</div><div class="item-card-stats">${i.type||i.desc||''}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('items','item','${i.id}')">✏️</button>${i.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('items','${i.id}')">🗑️</button>`}</div></div>`).join('')},
     renderEnemies(){$('#enemies-list').innerHTML=Data.enemies.map(e=>{const w=e.weaponId?Data.find('weapons',e.weaponId):null;const a=e.armorId?Data.find('armors',e.armorId):null;const equip=(w?`⚔️${w.icon}`:'')+(a?`🛡️${a.icon}`:'');return`<div class="item-card" onclick="Editor.editEnemy('${e.id}')"><span class="item-card-icon">${sprite(e)}</span><div class="item-card-info"><div class="item-card-name">${e.name}</div><div class="item-card-stats">HP:${e.health} ⚡${e.speed||10} ${e.canGroup?'👥':'👤'} ${equip}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editEnemy('${e.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('enemies','${e.id}')">🗑️</button></div></div>`}).join('')},
     renderPets(){$('#pets-list').innerHTML=Data.pets.map(p=>`<div class="item-card" onclick="Editor.editPet('${p.id}')"><span class="item-card-icon">${sprite(p)}</span><div class="item-card-info"><div class="item-card-name">${p.name}</div><div class="item-card-stats">⚡${p.speed||12}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editPet('${p.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('pets','${p.id}')">🗑️</button></div></div>`).join('')},
     renderNpcs(){const roles={merchant:'Comerciante',blacksmith:'Herrero',alchemist:'Alquimista',innkeeper:'Tabernero',healer:'Curandero',guard:'Guardia',villager:'Aldeano'};$('#npcs-list').innerHTML=Data.npcs.map(n=>`<div class="item-card" onclick="Editor.editNpc('${n.id}')"><span class="item-card-icon">${sprite(n)}</span><div class="item-card-info"><div class="item-card-name">${n.name}</div><div class="item-card-stats">${roles[n.role]||n.role}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editNpc('${n.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('npcs','${n.id}')">🗑️</button></div></div>`).join('')},
@@ -1467,23 +1500,47 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 </script>
 <!-- Sistema de Plugins - Extensiones sin modificar código principal -->
-<script src="rpg-plugins.js"></script>
+<script src="rpg-plugins.js" onerror="console.log('⚠️ rpg-plugins.js no encontrado - los items especiales no estarán disponibles')"></script>
 <script>
 // Integración de plugins con el juego
 if(typeof Plugins!=='undefined'){
+    console.log('✅ Plugins cargados correctamente');
+    
     // Registrar items especiales en Data
     Data.loadPluginItems=function(){
+        let added=0;
         Object.values(Plugins.specialItems).forEach(item=>{
+            // Asegurar que tiene propiedades necesarias
+            if(!item.id)return;
+            item.fromPlugin=true; // Marcar como item de plugin
+            
             if(item.damage&&!Data.weapons.find(w=>w.id===item.id)){
-                Data.weapons.push(item);
+                Data.weapons.push({...item});
+                added++;
             }else if(item.defense!==undefined&&!Data.armors.find(a=>a.id===item.id)){
-                Data.armors.push(item);
+                Data.armors.push({...item});
+                added++;
             }else if(!Data.items.find(i=>i.id===item.id)){
-                Data.items.push(item);
+                Data.items.push({...item});
+                added++;
             }
         });
+        console.log(`📦 ${added} items de plugins agregados`);
+        // Actualizar el editor si está disponible
+        if(typeof Editor!=='undefined'){
+            Editor.renderWeapons();
+            Editor.renderArmors();
+            Editor.renderItems();
+            Editor.updateSelects();
+        }
     };
-    setTimeout(()=>Data.loadPluginItems(),100);
+    
+    // Cargar después de que DOM esté listo
+    if(document.readyState==='complete'){
+        Data.loadPluginItems();
+    }else{
+        window.addEventListener('load',()=>Data.loadPluginItems());
+    }
     
     // Hook: Modificar Game.speed para incluir bonus de accesorios
     const origSpeed=Game.speed;
@@ -1497,6 +1554,8 @@ if(typeof Plugins!=='undefined'){
         }
         return spd;
     };
+}else{
+    console.log('⚠️ Sistema de Plugins no disponible');
 }
 </script>
 </body>
