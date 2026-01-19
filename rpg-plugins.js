@@ -1,438 +1,373 @@
 /**
- * RPG Editor-Plugin Integration System
- * Integración entre el editor y el sistema de plugins
+ * RPG Plugins System - Extensiones para Aventuras RPG v8
  * 
- * ARQUITECTURA:
- * - Los plugins definen COMPORTAMIENTO (lógica, eventos, efectos)
- * - El editor gestiona DATOS CONFIGURABLES (nombres, valores, descripciones)
- * - El runtime COMBINA ambos en tiempo de ejecución
+ * Este archivo permite crear items, efectos y mecánicas complejas
+ * sin modificar el archivo principal.
+ * 
+ * HOOKS DISPONIBLES:
+ * - onTurnStart(entity, isPlayer) → Se ejecuta al inicio de cada turno
+ * - onTurnEnd(entity, isPlayer) → Se ejecuta al final de cada turno
+ * - onCombatStart() → Al iniciar combate
+ * - onCombatEnd(victory) → Al terminar combate
+ * - onAttack(attacker, target, damage) → Al atacar (puede modificar daño)
+ * - onDamage(entity, damage, source) → Al recibir daño (puede modificar daño)
+ * - onHeal(entity, amount) → Al curarse
+ * - onEquip(item, slot) → Al equipar item
+ * - onUnequip(item, slot) → Al desequipar
+ * - onExplore() → Al explorar
+ * - onRest() → Al descansar en zona segura
  */
 
-const EditorPluginBridge = {
-    // Almacenamiento de datos editables separado de la lógica
-    editableData: {},
+const Plugins = {
+    // Registro de todos los plugins activos
+    registry: [],
     
-    // Inicializar el puente
-    init() {
-        this.syncPluginItems();
-        this.setupEditorHooks();
-        console.log('🔌 Editor-Plugin Bridge inicializado');
-    },
+    // Items especiales con efectos complejos
+    specialItems: {},
     
-    /**
-     * Sincroniza ítems del sistema de plugins con datos editables
-     * Extrae solo las propiedades configurables
-     */
-    syncPluginItems() {
-        if (!window.Plugins) {
-            console.warn('Sistema de plugins no encontrado');
+    // Efectos de estado personalizados
+    customEffects: {},
+    
+    // Registro de un plugin
+    register(plugin) {
+        if (!plugin.id) {
+            console.error('Plugin sin ID');
             return;
         }
-        
-        Object.entries(Plugins.specialItems).forEach(([id, plugin]) => {
-            // Si no existe data editable, crearla desde el plugin
-            if (!this.editableData[id]) {
-                this.editableData[id] = this.extractEditableData(plugin);
+        this.registry.push(plugin);
+        console.log(`✨ Plugin registrado: ${plugin.name || plugin.id}`);
+    },
+    
+    // Ejecutar un hook en todos los plugins
+    trigger(hookName, ...args) {
+        let result = null;
+        this.registry.forEach(plugin => {
+            if (typeof plugin[hookName] === 'function') {
+                const r = plugin[hookName](...args);
+                if (r !== undefined) result = r;
             }
         });
-        
-        console.log(`📦 ${Object.keys(this.editableData).length} ítems sincronizados`);
+        return result;
     },
     
-    /**
-     * Extrae solo los datos editables de un plugin
-     * La lógica (funciones) permanece en el plugin
-     */
-    extractEditableData(plugin) {
-        return {
-            id: plugin.id,
-            name: plugin.name,
-            icon: plugin.icon,
-            type: plugin.type || 'weapon',
-            desc: plugin.desc || '',
-            value: plugin.value || 0,
-            rarity: plugin.rarity || 'common',
-            
-            // Propiedades de arma
-            damage: plugin.damage,
-            weight: plugin.weight,
-            
-            // Propiedades de armadura
-            defense: plugin.defense,
-            
-            // Propiedades configurables extras
-            speedBonus: plugin.speedBonus,
-            critBonus: plugin.critBonus,
-            
-            // Metadatos
-            passive: plugin.passive || false,
-            consumable: plugin.type === 'potion',
-            
-            // Referencia al plugin (no editable)
-            _pluginRef: plugin.id
-        };
+    // Registrar un item especial
+    registerItem(itemDef) {
+        this.specialItems[itemDef.id] = itemDef;
+        console.log(`📦 Item especial registrado: ${itemDef.name}`);
     },
     
-    /**
-     * Obtiene un ítem completo (datos + comportamiento)
-     * Esta es la función que usa el motor del juego
-     */
-    getItem(id) {
-        const data = this.editableData[id];
-        const plugin = Plugins.specialItems[id];
-        
-        if (!data && !plugin) return null;
-        
-        // Combinar datos editables con comportamiento del plugin
-        return {
-            ...(data || {}),
-            ...(plugin || {}),
-            // Los datos editables sobrescriben propiedades básicas
-            name: data?.name || plugin?.name,
-            icon: data?.icon || plugin?.icon,
-            desc: data?.desc || plugin?.desc,
-            value: data?.value ?? plugin?.value,
-            rarity: data?.rarity || plugin?.rarity,
-            damage: data?.damage || plugin?.damage,
-            defense: data?.defense || plugin?.defense
-        };
+    // Registrar efecto personalizado
+    registerEffect(effectDef) {
+        this.customEffects[effectDef.id] = effectDef;
+        console.log(`✨ Efecto registrado: ${effectDef.name}`);
     },
     
-    /**
-     * Obtiene todos los ítems para el editor
-     */
-    getAllItemsForEditor() {
-        const items = [];
-        
-        // Combinar ítems de plugins y datos editables
-        const allIds = new Set([
-            ...Object.keys(Plugins.specialItems || {}),
-            ...Object.keys(this.editableData)
-        ]);
-        
-        allIds.forEach(id => {
-            const item = this.getItem(id);
-            if (item) {
-                items.push({
-                    ...item,
-                    isPlugin: !!Plugins.specialItems[id],
-                    isEditable: true
-                });
+    // Obtener definición de item especial
+    getSpecialItem(id) {
+        return this.specialItems[id];
+    },
+    
+    // Procesar efectos de items equipados
+    processEquippedEffects(entity, hookName, ...args) {
+        // Revisar arma
+        if (entity.weapon) {
+            const special = this.specialItems[entity.weapon.id];
+            if (special && typeof special[hookName] === 'function') {
+                special[hookName](entity, ...args);
             }
-        });
-        
-        return items;
-    },
-    
-    /**
-     * Actualiza datos editables de un ítem
-     * NO modifica el comportamiento del plugin
-     */
-    updateItemData(id, updates) {
-        if (!this.editableData[id]) {
-            this.editableData[id] = { id };
         }
-        
-        // Solo actualizar propiedades permitidas
-        const allowedProps = [
-            'name', 'icon', 'desc', 'value', 'rarity',
-            'damage', 'defense', 'weight', 'type',
-            'speedBonus', 'critBonus'
-        ];
-        
-        allowedProps.forEach(prop => {
-            if (updates[prop] !== undefined) {
-                this.editableData[id][prop] = updates[prop];
+        // Revisar armadura
+        if (entity.armor) {
+            const special = this.specialItems[entity.armor.id];
+            if (special && typeof special[hookName] === 'function') {
+                special[hookName](entity, ...args);
+            }
+        }
+        // Revisar accesorios (si se implementan)
+        if (entity.accessory) {
+            const special = this.specialItems[entity.accessory.id];
+            if (special && typeof special[hookName] === 'function') {
+                special[hookName](entity, ...args);
+            }
+        }
+        // Revisar inventario para items pasivos
+        (entity.inv || []).forEach(item => {
+            const special = this.specialItems[item.id];
+            if (special && special.passive && typeof special[hookName] === 'function') {
+                special[hookName](entity, item, ...args);
             }
         });
-        
-        // Guardar en localStorage
-        this.saveToStorage();
-        
-        console.log(`💾 Ítem ${id} actualizado`);
-        return this.getItem(id);
     },
     
-    /**
-     * Crea un nuevo ítem editable (sin comportamiento de plugin)
-     */
-    createNewItem(data) {
-        const id = data.id || `item_${Date.now()}`;
-        this.editableData[id] = {
-            id,
-            name: data.name || 'Nuevo Ítem',
-            icon: data.icon || '⚔️',
-            type: data.type || 'weapon',
-            desc: data.desc || '',
-            value: data.value || 0,
-            rarity: data.rarity || 'common',
-            damage: data.damage,
-            defense: data.defense,
-            weight: data.weight || 1
-        };
-        
-        this.saveToStorage();
-        return this.editableData[id];
+    // Procesar efectos personalizados
+    processCustomEffects(entity) {
+        (entity.effects || []).forEach(eff => {
+            const custom = this.customEffects[eff.type];
+            if (custom && typeof custom.onTick === 'function') {
+                custom.onTick(entity, eff);
+            }
+        });
+    }
+};
+
+// ═══════════════════════════════════════════════════════════════════
+// ITEMS ESPECIALES DE EJEMPLO
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Orbe de Regeneración
+ * Cura 1 HP al inicio de cada turno mientras está en el inventario
+ */
+Plugins.registerItem({
+    id: 'orb_regen',
+    name: 'Orbe de Regeneración',
+    icon: '🔮',
+    type: 'accessory',
+    value: 100,
+    rarity: 'epic',
+    desc: 'Cura 1 HP al inicio de cada turno.',
+    passive: true, // Se activa solo por tenerlo en inventario
+    
+    onTurnStart(entity, item) {
+        if (entity.hp < entity.maxHp) {
+            entity.hp = Math.min(entity.maxHp, entity.hp + 1);
+            if (typeof Combat !== 'undefined' && G.combat) {
+                Combat.log(`<span class="log-heal">🔮 Orbe regenera +1 HP</span>`);
+            }
+        }
+    }
+});
+
+/**
+ * Espada Vampírica
+ * Roba 20% del daño causado como vida
+ */
+Plugins.registerItem({
+    id: 'sword_vampire',
+    name: 'Espada Vampírica',
+    icon: '🗡️',
+    damage: '1d8',
+    weight: 3,
+    value: 200,
+    rarity: 'legendary',
+    desc: 'Roba 20% del daño como vida.',
+    
+    onDealDamage(attacker, target, damage) {
+        const stolen = Math.max(1, Math.floor(damage * 0.2));
+        attacker.hp = Math.min(attacker.maxHp, attacker.hp + stolen);
+        if (typeof Combat !== 'undefined') {
+            Combat.log(`<span class="log-heal">🩸 Vampirismo: +${stolen} HP</span>`);
+        }
+        return damage;
+    }
+});
+
+/**
+ * Escudo de Espinas
+ * Refleja 25% del daño recibido al atacante
+ */
+Plugins.registerItem({
+    id: 'shield_thorns',
+    name: 'Escudo de Espinas',
+    icon: '🛡️',
+    defense: 3,
+    weight: 4,
+    value: 150,
+    rarity: 'rare',
+    desc: 'Refleja 25% del daño recibido.',
+    
+    onTakeDamage(defender, attacker, damage) {
+        const reflected = Math.max(1, Math.floor(damage * 0.25));
+        if (attacker && attacker.hp) {
+            attacker.hp -= reflected;
+            if (typeof Combat !== 'undefined') {
+                Combat.log(`<span class="log-damage">🌵 Espinas reflejan ${reflected} daño a ${attacker.name}</span>`);
+            }
+        }
+        return damage;
+    }
+});
+
+/**
+ * Amuleto de Velocidad
+ * +3 velocidad mientras está equipado
+ */
+Plugins.registerItem({
+    id: 'amulet_speed',
+    name: 'Amuleto de Velocidad',
+    icon: '⚡',
+    type: 'accessory',
+    value: 80,
+    rarity: 'rare',
+    desc: '+3 velocidad en combate.',
+    speedBonus: 3,
+    
+    getSpeedBonus() {
+        return 3;
+    }
+});
+
+/**
+ * Anillo de Crítico
+ * +15% probabilidad de crítico
+ */
+Plugins.registerItem({
+    id: 'ring_crit',
+    name: 'Anillo del Crítico',
+    icon: '💍',
+    type: 'accessory',
+    value: 120,
+    rarity: 'epic',
+    desc: '+15% probabilidad de crítico.',
+    critBonus: 0.15,
+    
+    getCritBonus() {
+        return 0.15;
+    }
+});
+
+/**
+ * Poción de Furia
+ * Consumible: +50% daño por 3 turnos
+ */
+Plugins.registerItem({
+    id: 'potion_fury',
+    name: 'Poción de Furia',
+    icon: '🧪',
+    type: 'potion',
+    value: 50,
+    rarity: 'rare',
+    desc: '+50% daño por 3 turnos.',
+    
+    onUse(entity, item) {
+        // Agregar efecto de furia
+        entity.effects = entity.effects || [];
+        entity.effects.push({
+            type: 'fury',
+            turns: 3,
+            damageBonus: 0.5
+        });
+        if (typeof Story !== 'undefined') {
+            Story.add(`🔥 ¡${entity.name} entra en furia!`, 'combat');
+        }
+        return true; // Consumir item
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// EFECTOS PERSONALIZADOS
+// ═══════════════════════════════════════════════════════════════════
+
+/**
+ * Efecto: Furia
+ * Aumenta el daño mientras está activo
+ */
+Plugins.registerEffect({
+    id: 'fury',
+    name: 'Furia',
+    icon: '🔥',
+    color: 'var(--orange)',
+    
+    onTick(entity, effect) {
+        // El efecto se procesa en el cálculo de daño
     },
     
-    /**
-     * Elimina un ítem editable
-     * Los ítems de plugins solo se ocultan, no se eliminan
-     */
-    deleteItem(id) {
-        if (Plugins.specialItems[id]) {
-            // Marcar como oculto en lugar de eliminar
-            this.editableData[id] = this.editableData[id] || {};
-            this.editableData[id]._hidden = true;
+    getDamageMultiplier(effect) {
+        return 1 + (effect.damageBonus || 0.5);
+    }
+});
+
+/**
+ * Efecto: Escudo Mágico
+ * Absorbe cierta cantidad de daño
+ */
+Plugins.registerEffect({
+    id: 'shield',
+    name: 'Escudo',
+    icon: '🛡️',
+    color: 'var(--cyan)',
+    
+    onTakeDamage(entity, effect, damage) {
+        const absorbed = Math.min(damage, effect.amount || 10);
+        effect.amount -= absorbed;
+        if (effect.amount <= 0) {
+            entity.effects = entity.effects.filter(e => e !== effect);
+        }
+        if (typeof Combat !== 'undefined') {
+            Combat.log(`<span class="log-heal">🛡️ Escudo absorbe ${absorbed} daño</span>`);
+        }
+        return damage - absorbed;
+    }
+});
+
+/**
+ * Efecto: Bendición
+ * Cura al inicio de cada turno
+ */
+Plugins.registerEffect({
+    id: 'bless',
+    name: 'Bendición',
+    icon: '✨',
+    color: 'var(--gold)',
+    
+    onTick(entity, effect) {
+        const heal = effect.healPerTurn || 2;
+        if (entity.hp < entity.maxHp) {
+            entity.hp = Math.min(entity.maxHp, entity.hp + heal);
+            if (typeof Combat !== 'undefined' && G.combat) {
+                Combat.log(`<span class="log-heal">✨ Bendición: +${heal} HP</span>`);
+            }
+        }
+    }
+});
+
+// ═══════════════════════════════════════════════════════════════════
+// PLUGIN DE EJEMPLO: Sistema de Combo
+// ═══════════════════════════════════════════════════════════════════
+
+Plugins.register({
+    id: 'combo_system',
+    name: 'Sistema de Combo',
+    
+    comboCount: 0,
+    
+    onCombatStart() {
+        this.comboCount = 0;
+    },
+    
+    onAttack(attacker, target, damage, hit) {
+        if (!G.p || attacker !== G.p) return damage;
+        
+        if (hit) {
+            this.comboCount++;
+            if (this.comboCount >= 3) {
+                const bonus = Math.floor(damage * 0.1 * (this.comboCount - 2));
+                if (bonus > 0 && typeof Combat !== 'undefined') {
+                    Combat.log(`<span class="log-crit">🔥 Combo x${this.comboCount}: +${bonus} daño</span>`);
+                }
+                return damage + bonus;
+            }
         } else {
-            delete this.editableData[id];
+            this.comboCount = 0;
         }
-        this.saveToStorage();
+        return damage;
     },
     
-    /**
-     * Configurar hooks del editor
-     */
-    setupEditorHooks() {
-        // Hook para cuando el editor cargue
-        window.addEventListener('editor:loaded', () => {
-            this.loadFromStorage();
-            this.syncPluginItems();
-        });
-        
-        // Hook para cuando se guarde el juego
-        window.addEventListener('game:save', () => {
-            this.saveToStorage();
-        });
-    },
-    
-    /**
-     * Guardar datos editables en localStorage
-     */
-    saveToStorage() {
-        try {
-            localStorage.setItem('rpg_editable_items', JSON.stringify(this.editableData));
-        } catch (e) {
-            console.error('Error guardando datos editables:', e);
-        }
-    },
-    
-    /**
-     * Cargar datos editables desde localStorage
-     */
-    loadFromStorage() {
-        try {
-            const saved = localStorage.getItem('rpg_editable_items');
-            if (saved) {
-                this.editableData = JSON.parse(saved);
-                console.log('📁 Datos editables cargados');
-            }
-        } catch (e) {
-            console.error('Error cargando datos editables:', e);
-        }
-    },
-    
-    /**
-     * Obtiene metadatos sobre un ítem para el editor
-     */
-    getItemMetadata(id) {
-        const plugin = Plugins.specialItems[id];
-        
-        return {
-            hasLogic: !!plugin,
-            hasCustomEffects: !!(plugin?.onUse || plugin?.onEquip || plugin?.onTurnStart),
-            editableProps: this.getEditableProps(id),
-            behaviorDescription: this.getBehaviorDescription(plugin)
-        };
-    },
-    
-    /**
-     * Lista las propiedades editables de un ítem
-     */
-    getEditableProps(id) {
-        const item = this.getItem(id);
-        const props = [];
-        
-        if (item) {
-            if (item.type === 'weapon' || !item.type) {
-                props.push('damage', 'weight');
-            }
-            if (item.type === 'armor') {
-                props.push('defense', 'weight');
-            }
-            if (item.type === 'accessory') {
-                props.push('speedBonus', 'critBonus');
-            }
-            props.push('name', 'icon', 'desc', 'value', 'rarity');
-        }
-        
-        return props;
-    },
-    
-    /**
-     * Genera descripción del comportamiento del plugin
-     */
-    getBehaviorDescription(plugin) {
-        if (!plugin) return null;
-        
-        const behaviors = [];
-        
-        if (plugin.onUse) behaviors.push('🎯 Efecto al usar');
-        if (plugin.onEquip) behaviors.push('⚡ Efecto al equipar');
-        if (plugin.onTurnStart) behaviors.push('🔄 Efecto cada turno');
-        if (plugin.onDealDamage) behaviors.push('⚔️ Modifica daño causado');
-        if (plugin.onTakeDamage) behaviors.push('🛡️ Modifica daño recibido');
-        if (plugin.passive) behaviors.push('✨ Efecto pasivo');
-        
-        return behaviors.length > 0 ? behaviors.join(', ') : null;
+    onCombatEnd() {
+        this.comboCount = 0;
     }
-};
+});
 
-/**
- * Adaptador para el editor existente
- * Conecta el editor con el sistema de plugins
- */
-const EditorAdapter = {
-    /**
-     * Obtiene todos los ítems para mostrar en el editor
-     */
-    getWeapons() {
-        return EditorPluginBridge.getAllItemsForEditor()
-            .filter(item => !item.type || item.type === 'weapon');
-    },
-    
-    getArmors() {
-        return EditorPluginBridge.getAllItemsForEditor()
-            .filter(item => item.type === 'armor');
-    },
-    
-    getAccessories() {
-        return EditorPluginBridge.getAllItemsForEditor()
-            .filter(item => item.type === 'accessory');
-    },
-    
-    getPotions() {
-        return EditorPluginBridge.getAllItemsForEditor()
-            .filter(item => item.type === 'potion');
-    },
-    
-    getAllItems() {
-        return EditorPluginBridge.getAllItemsForEditor();
-    },
-    
-    /**
-     * Guarda cambios de un ítem desde el editor
-     */
-    saveItem(id, data) {
-        return EditorPluginBridge.updateItemData(id, data);
-    },
-    
-    /**
-     * Crea un nuevo ítem desde el editor
-     */
-    createItem(data) {
-        return EditorPluginBridge.createNewItem(data);
-    },
-    
-    /**
-     * Elimina un ítem desde el editor
-     */
-    deleteItem(id) {
-        return EditorPluginBridge.deleteItem(id);
-    },
-    
-    /**
-     * Obtiene metadatos para mostrar en el editor
-     */
-    getItemInfo(id) {
-        return EditorPluginBridge.getItemMetadata(id);
-    }
-};
+// ═══════════════════════════════════════════════════════════════════
+// EXPORTAR PARA USO GLOBAL
+// ═══════════════════════════════════════════════════════════════════
 
-/**
- * Runtime Integration
- * Conecta el sistema con el motor del juego
- */
-const RuntimeIntegration = {
-    /**
-     * Obtiene un ítem para usar en el juego
-     * Combina datos editables con comportamiento del plugin
-     */
-    getGameItem(id) {
-        return EditorPluginBridge.getItem(id);
-    },
-    
-    /**
-     * Ejecuta el comportamiento de un ítem
-     */
-    executeItemBehavior(itemId, event, ...args) {
-        const plugin = Plugins.specialItems[itemId];
-        if (plugin && typeof plugin[event] === 'function') {
-            return plugin[event](...args);
-        }
-        return null;
-    },
-    
-    /**
-     * Verifica si un ítem tiene un comportamiento específico
-     */
-    hasItemBehavior(itemId, event) {
-        const plugin = Plugins.specialItems[itemId];
-        return plugin && typeof plugin[event] === 'function';
-    }
-};
+// Hacer disponible globalmente
+window.Plugins = window.Plugins || {};
 
-// Inicializar automáticamente cuando se cargue
-if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', () => {
-        EditorPluginBridge.init();
-    });
-} else {
-    EditorPluginBridge.init();
-}
+Plugins.specialItems = {};
 
-// Exportar para uso global
-window.EditorPluginBridge = EditorPluginBridge;
-window.EditorAdapter = EditorAdapter;
-window.RuntimeIntegration = RuntimeIntegration;
-
-console.log('✅ Editor-Plugin Integration cargado');
-
-/**
- * EJEMPLO DE USO EN EL EDITOR:
- * 
- * // Obtener todos los ítems para mostrar
- * const weapons = EditorAdapter.getWeapons();
- * 
- * // Actualizar un ítem
- * EditorAdapter.saveItem('sword_vampire', {
- *     name: 'Espada Vampírica Mejorada',
- *     damage: '1d10',
- *     value: 250
- * });
- * 
- * // Crear nuevo ítem
- * EditorAdapter.createItem({
- *     id: 'sword_fire',
- *     name: 'Espada de Fuego',
- *     type: 'weapon',
- *     damage: '1d8',
- *     icon: '🔥'
- * });
- * 
- * // Obtener info del ítem
- * const info = EditorAdapter.getItemInfo('sword_vampire');
- * console.log(info.behaviorDescription); // "⚔️ Modifica daño causado"
- */
-
-/**
- * EJEMPLO DE USO EN EL JUEGO:
- * 
- * // Obtener ítem con datos y comportamiento
- * const item = RuntimeIntegration.getGameItem('sword_vampire');
- * 
- * // Usar el ítem
- * if (RuntimeIntegration.hasItemBehavior(item.id, 'onUse')) {
- *     RuntimeIntegration.executeItemBehavior(item.id, 'onUse', player, item);
- * }
- */
+console.log('🎮 RPG Plugins System cargado');
+console.log(`   ${Object.keys(Plugins.specialItems).length} items especiales`);
+console.log(`   ${Object.keys(Plugins.customEffects).length} efectos personalizados`);
+console.log(`   ${Plugins.registry.length} plugins activos`);
