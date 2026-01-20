@@ -442,8 +442,6 @@
                 <input type="email" class="auth-input" id="authEmail" placeholder="Correo electrónico">
                 <input type="password" class="auth-input" id="authPass" placeholder="Contraseña">
                 <button class="auth-btn" onclick="Auth.login()">🔓 Iniciar Sesión</button>
-                <div class="auth-divider">— o —</div>
-                <button class="auth-btn auth-guest" onclick="Auth.guest()">👤 Jugar como Invitado</button>
                 <p style="text-align:center;margin-top:.8rem">
                     <span class="auth-link" onclick="Auth.showRegister()">Crear cuenta nueva</span>
                 </p>
@@ -456,9 +454,6 @@
                     <span class="auth-link" onclick="Auth.showLogin()">Ya tengo cuenta</span>
                 </p>
             </div>
-            <p style="text-align:center;margin-top:1rem">
-                <a href="#" onclick="clearAll();return false" style="color:var(--text-dim);font-size:.75rem">🔄 Limpiar sesión</a>
-            </p>
         </div>
     </div>
 
@@ -498,6 +493,8 @@
                     <div class="char-body">
                         <div class="char-hp-section">
                             <div class="hp-container"><div class="hp-fill" id="hpFill"></div><div class="hp-text" id="hpText">0/0</div></div>
+                            <div class="hp-container" id="manaBar" style="display:none;margin-top:3px"><div class="hp-fill" id="manaFill" style="background:linear-gradient(90deg,#4488ff,#66aaff)"></div><div class="hp-text" id="manaText" style="color:#88bbff">0/0</div></div>
+                            <div class="hp-container" style="margin-top:3px"><div class="hp-fill" id="foodFill" style="background:linear-gradient(90deg,#cc8833,#eebb55)"></div><div class="hp-text" id="foodText" style="color:#eebb55">0/0</div></div>
                         </div>
                         <div class="region-badge safe" id="regionBadge" onclick="Regions.openSelector()">
                             <span class="region-icon">🏘️</span><span class="region-name">Pueblo</span>
@@ -622,6 +619,10 @@
                     <div class="form-group"><label>+Velocidad</label><input type="number" id="race-speed"></div>
                     <div class="form-group"><label>+Precisión</label><input type="number" id="race-precision"></div>
                     <div class="form-group"><label>+Daño</label><input type="number" id="race-damage"></div>
+                    <div class="form-group"><label>✨ Usa Maná</label><select id="race-usesMana">
+                        <option value="false">No (guerrero/físico)</option>
+                        <option value="true">Sí (mago/hechicero)</option>
+                    </select></div>
                 </div>
                 <div class="form-group"><label>Descripción</label><textarea id="race-desc"></textarea></div>
                 <div class="form-actions"><button class="btn" onclick="Editor.clear('race')">🆕</button><button class="btn btn-primary" onclick="Editor.saveRace()">💾</button></div>
@@ -639,6 +640,10 @@
                     <div class="form-group"><label>Sprite</label><input type="text" id="weapon-sprite"></div>
                     <div class="form-group"><label>Rareza</label><select id="weapon-rarity"><option value="common">Común</option><option value="rare">Raro</option><option value="epic">Épico</option><option value="legendary">Legendario</option></select></div>
                     <div class="form-group"><label>Valor MP</label><input type="number" id="weapon-value"></div>
+                    <div class="form-group"><label>Tipo</label><select id="weapon-magic">
+                        <option value="false">⚔️ Física (espada, daga, arco)</option>
+                        <option value="true">✨ Mágica (bastón, pergamino, hechizo)</option>
+                    </select></div>
                     <div class="form-group"><label>Efecto</label><select id="weapon-effect"><option value="">Ninguno</option><option value="bleed">Sangrado</option><option value="poison">Veneno</option><option value="fire">Fuego</option></select></div>
                 </div>
                 <div class="form-group"><label>Descripción</label><textarea id="weapon-desc"></textarea></div>
@@ -668,12 +673,56 @@
                 <div class="form-grid">
                     <div class="form-group"><label>ID</label><input type="text" id="item-id"></div>
                     <div class="form-group"><label>Nombre</label><input type="text" id="item-name"></div>
-                    <div class="form-group"><label>Tipo</label><select id="item-type"><option value="potion">Poción</option><option value="food">Comida</option><option value="antidote">Antídoto</option><option value="escape">Escape</option><option value="backpack">Mochila</option><option value="misc">Otro</option></select></div>
+                    <div class="form-group"><label>Tipo</label><select id="item-type" onchange="Editor.onItemTypeChange()">
+                        <option value="potion">🧪 Poción</option>
+                        <option value="food">🍞 Comida</option>
+                        <option value="antidote">💊 Antídoto</option>
+                        <option value="escape">💨 Escape</option>
+                        <option value="backpack">🎒 Mochila</option>
+                        <option value="misc">📦 Otro/Crafteo</option>
+                    </select></div>
                     <div class="form-group"><label>Emoji</label><input type="text" id="item-icon" maxlength="2"></div>
                     <div class="form-group"><label>Sprite</label><input type="text" id="item-sprite"></div>
-                    <div class="form-group"><label>Efecto</label><input type="text" id="item-effect" placeholder="1d8"></div>
                     <div class="form-group"><label>Valor MP</label><input type="number" id="item-value"></div>
                     <div class="form-group"><label>Rareza</label><select id="item-rarity"><option value="common">Común</option><option value="rare">Raro</option><option value="epic">Épico</option><option value="legendary">Legendario</option></select></div>
+                </div>
+                <!-- Campos condicionales según tipo -->
+                <div id="item-type-fields" style="background:var(--bg-dark);padding:.5rem;border-radius:4px;margin-bottom:.5rem">
+                    <div id="item-potion-fields">
+                        <div class="form-grid">
+                            <div class="form-group"><label>Tipo Poción</label><select id="item-potion-type">
+                                <option value="health">❤️ Curación (HP)</option>
+                                <option value="mana">💙 Maná (MP)</option>
+                            </select></div>
+                            <div class="form-group"><label>Cantidad</label><input type="text" id="item-effect" placeholder="1d8 o número"></div>
+                        </div>
+                    </div>
+                    <div id="item-food-fields" style="display:none">
+                        <div class="form-grid">
+                            <div class="form-group"><label>🍖 Alimenta (1-20)</label><input type="number" id="item-food-value" min="1" max="20" placeholder="1-20"></div>
+                        </div>
+                    </div>
+                    <div id="item-antidote-fields" style="display:none">
+                        <div class="form-grid">
+                            <div class="form-group"><label>Cura efecto</label><select id="item-antidote-cures">
+                                <option value="poison">☠️ Veneno</option>
+                                <option value="bleed">🩸 Sangrado</option>
+                                <option value="fire">🔥 Quemadura</option>
+                                <option value="all">✨ Todos</option>
+                            </select></div>
+                        </div>
+                    </div>
+                    <div id="item-escape-fields" style="display:none">
+                        <div style="font-size:.65rem;color:var(--text-dim)">Items de escape: bombas de humo, pergaminos de teleportación, etc.</div>
+                    </div>
+                    <div id="item-backpack-fields" style="display:none">
+                        <div class="form-grid">
+                            <div class="form-group"><label>🎒 Espacios extra</label><input type="number" id="item-backpack-slots" min="1" max="20" placeholder="5"></div>
+                        </div>
+                    </div>
+                    <div id="item-misc-fields" style="display:none">
+                        <div style="font-size:.65rem;color:var(--text-dim)">Items misceláneos para crafteo u otros usos.</div>
+                    </div>
                 </div>
                 <div class="form-group"><label>Descripción</label><textarea id="item-desc"></textarea></div>
                 <div class="form-actions"><button class="btn" onclick="Editor.clear('item')">🆕</button><button class="btn btn-primary" onclick="Editor.saveItem()">💾</button></div>
@@ -697,10 +746,14 @@
                     <div class="form-group"><label>Loot Max</label><input type="number" id="enemy-loot-max"></div>
                 </div>
                 <div style="background:var(--bg-dark);padding:.4rem;border-radius:4px;margin-bottom:.5rem">
-                    <div style="font-size:.65rem;color:var(--gold);margin-bottom:.3rem">⚔️ Equipo del Enemigo</div>
+                    <div style="font-size:.65rem;color:var(--gold);margin-bottom:.3rem">⚔️ Equipo y Tipo</div>
                     <div class="form-grid">
                         <div class="form-group"><label>Arma</label><select id="enemy-weaponId"><option value="">Sin arma</option></select></div>
                         <div class="form-group"><label>Armadura</label><select id="enemy-armorId"><option value="">Sin armadura</option></select></div>
+                        <div class="form-group"><label>✨ Usa Maná</label><select id="enemy-usesMana">
+                            <option value="false">No (criatura física)</option>
+                            <option value="true">Sí (mago/hechicero)</option>
+                        </select></div>
                     </div>
                 </div>
                 <div style="background:var(--bg-dark);padding:.4rem;border-radius:4px;margin-bottom:.5rem">
@@ -762,7 +815,14 @@
                     <div class="form-group"><label>Resultado</label><select id="recipe-result"></select></div>
                 </div>
                 <div class="form-group"><label>Descripción</label><textarea id="recipe-desc"></textarea></div>
-                <div class="form-group"><label>Ingredientes (selecciona 2-4)</label><div class="multi-select" id="recipe-ingredients"></div></div>
+                <div class="form-group">
+                    <label>Ingredientes (puede repetir)</label>
+                    <div style="display:flex;gap:.3rem;margin-bottom:.3rem">
+                        <select id="recipe-ingredient-select" style="flex:1"></select>
+                        <button class="btn btn-sm" onclick="Editor.addIngredient()">+ Agregar</button>
+                    </div>
+                    <div id="recipe-ingredients-list" style="display:flex;flex-wrap:wrap;gap:.3rem;min-height:30px;padding:.3rem;background:var(--bg-dark);border-radius:4px"></div>
+                </div>
                 <div class="form-actions"><button class="btn" onclick="Editor.clear('recipe')">🆕</button><button class="btn btn-primary" onclick="Editor.saveRecipe()">💾</button></div>
                 <div class="items-list" id="recipes-list"></div>
             </div>
@@ -971,16 +1031,20 @@ const Regions={
             
             // Calcular nivel de peligro basado en enemigos de la zona
             let dangerLevel='';
+            let enemyCount=0;
+            let enemyInfo='';
             if(dest.type==='danger'){
                 const enemies=Data.getEnemiesForRegion(dest.id);
+                enemyCount=enemies.length;
                 const avgDanger=enemies.length>0?Math.round(enemies.reduce((s,e)=>{
                     const baseDmg=e.damage?parseInt(e.damage.split('d')[1]||4):4;
                     return s+(e.health||10)+baseDmg;
                 },0)/enemies.length):10;
-                if(avgDanger<=12)dangerLevel='<span style="color:#4a4">⚠️ Bajo</span>';
-                else if(avgDanger<=18)dangerLevel='<span style="color:#fa4">⚠️ Medio</span>';
-                else if(avgDanger<=25)dangerLevel='<span style="color:#f64">⚠️ Alto</span>';
-                else dangerLevel='<span style="color:#f22">☠️ Extremo</span>';
+                if(avgDanger<=12)dangerLevel='<span style="color:#4a4">Bajo</span>';
+                else if(avgDanger<=18)dangerLevel='<span style="color:#fa4">Medio</span>';
+                else if(avgDanger<=25)dangerLevel='<span style="color:#f64">Alto</span>';
+                else dangerLevel='<span style="color:#f22">Extremo</span>';
+                enemyInfo=`<div style="font-size:.55rem;display:flex;gap:.5rem;flex-wrap:wrap"><span>👹 ${enemyCount} tipo${enemyCount!==1?'s':''}</span><span>⚠️ ${dangerLevel}</span></div>`;
             }
             
             h+=`<div class="travel-route ${isUnlocked?'':'locked'}" onclick="${isUnlocked?`Regions.startTravel('${dest.id}')`:''}">
@@ -990,7 +1054,7 @@ const Regions={
                     <div class="travel-route-desc">${dest.desc}</div>
                     ${!isUnlocked?`<div class="travel-route-req">🔒 Necesitas ${dest.reqEncounters} encuentros (tienes ${progress.encounters})</div>`:''}
                     <div class="travel-route-steps">🚶 ${steps} ${steps===1?'paso':'pasos'} de viaje</div>
-                    ${dest.type==='danger'?`<div style="font-size:.6rem">Peligro: ${dangerLevel}</div>`:`<div style="font-size:.55rem;color:var(--green-bright)">🏠 Zona segura</div>`}
+                    ${dest.type==='danger'?enemyInfo:`<div style="font-size:.55rem;color:var(--green-bright)">🏠 Zona segura</div>`}
                 </div>
                 <div class="travel-route-arrow">${isUnlocked?'→':'🔒'}</div>
             </div>`;
@@ -1112,7 +1176,7 @@ const Game={
         const weapon={...Data.weapons[0],uid:genId('i')};
         const armor={...Data.armors[0],uid:genId('i')};
         const baseSpeed=race.bonus.speed||10;
-        G.p={name,race,maxHp:20+(race.bonus.health||0),hp:20+(race.bonus.health||0),speed:baseSpeed,weapon,armor,inv:[{...Data.items[0],uid:genId('i')}],maxSlots:10,gold:0,silver:25,effects:[],pet:null,defending:false};
+        G.p={name,race,maxHp:20+(race.bonus.health||0),hp:20+(race.bonus.health||0),maxMana:race.usesMana?20:0,mana:race.usesMana?20:0,maxFood:20,food:20,speed:baseSpeed,weapon,armor,inv:[{...Data.items[0],uid:genId('i')}],maxSlots:10,gold:0,silver:25,effects:[],pet:null,defending:false};
         G.combat=false;G.enemies=[];G.turn=0;
         G.region=Data.getRegion('pueblo');
         G.regionProgress={pueblo:{encounters:0}};
@@ -1143,7 +1207,16 @@ const Game={
         $('#charName').textContent=p.name;
         $('#charRace').textContent=p.race.name;
         const hp=(p.hp/p.maxHp)*100;
-        $('#hpFill').style.width=hp+'%';$('#hpFill').className=`hp-fill ${hpClass(hp)}`;$('#hpText').textContent=`${p.hp}/${p.maxHp}`;
+        $('#hpFill').style.width=hp+'%';$('#hpFill').className=`hp-fill ${hpClass(hp)}`;$('#hpText').textContent=`❤️${p.hp}/${p.maxHp}`;
+        // Mana bar (only for magic users)
+        if(p.maxMana>0){
+            $('#manaBar').style.display='block';
+            const mana=(p.mana/p.maxMana)*100;
+            $('#manaFill').style.width=mana+'%';$('#manaText').textContent=`💙${p.mana}/${p.maxMana}`;
+        }else{$('#manaBar').style.display='none'}
+        // Food bar
+        const food=(p.food/p.maxFood)*100;
+        $('#foodFill').style.width=food+'%';$('#foodText').textContent=`🍖${p.food}/${p.maxFood}`;
         const rb=$('#regionBadge');rb.className=`region-badge ${G.region.type}`;
         rb.innerHTML=`<span class="region-icon">${G.region.icon}</span><span class="region-name">${G.region.name}</span><div style="font-size:.5rem;color:var(--text-dim)">Click para viajar</div>`;
         $('#statArmor').textContent=this.armor();
@@ -1375,7 +1448,54 @@ const Inv={
     detail(it,ctx){G.item=it;$('#detailIcon').innerHTML=sprite(it);$('#detailName').textContent=it.name;$('#detailType').textContent=it.damage?'Arma':it.defense!==undefined?'Armadura':it.type||'Item';$('#detailDesc').textContent=it.desc||'Sin descripción.';let st='';if(it.damage)st+=`<div class="item-stat-box"><div class="item-stat-label">Daño</div><div class="item-stat-value">${it.damage}</div></div>`;if(it.defense!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Defensa</div><div class="item-stat-value">${it.defense}</div></div>`;if(it.weight!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Peso</div><div class="item-stat-value">${it.weight}</div></div>`;if(it.effect&&(it.type==='potion'||it.type==='food'))st+=`<div class="item-stat-box"><div class="item-stat-label">Cura</div><div class="item-stat-value">${it.effect}</div></div>`;if(it.value)st+=`<div class="item-stat-box"><div class="item-stat-label">Valor</div><div class="item-stat-value">${it.value}MP</div></div>`;$('#detailStats').innerHTML=st;const canEq=!G.combat&&G.region.type==='safe';let acts='';if(ctx.startsWith('eq-')){if(canEq)acts=`<button class="btn btn-danger" onclick="Inv.unequip('${ctx.split('-')[1]}')">❌ Quitar</button>`;else acts='<span style="color:var(--text-dim)">Solo zona segura</span>'}else{if(it.damage&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('weapon')">⚔️ Equipar</button>`;if(it.defense!==undefined&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('armor')">🛡️ Equipar</button>`;if(it.type==='potion'||it.type==='food')acts+=`<button class="btn btn-primary" onclick="Inv.use()">✨ Usar</button>`;if(it.type==='antidote')acts+=`<button class="btn btn-primary" onclick="Inv.use()">💊 Usar</button>`;if(it.type==='escape'&&G.combat)acts+=`<button class="btn btn-primary" onclick="Inv.use()">💨 Usar</button>`;if(it.type==='backpack')acts+=`<button class="btn btn-primary" onclick="Inv.use()">🎒 Usar</button>`}acts+=`<button class="btn" onclick="closeModal('itemDetailModal')">Cerrar</button>`;$('#detailActions').innerHTML=acts;openModal('itemDetailModal')},
     equip(slot){const it=G.item;if(!it?.uid)return;closeModal('itemDetailModal');if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon=it}else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor=it}G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);toast('Equipado','success');Game.updateUI();Game.autoSave();this.render()},
     unequip(slot){if(G.p.inv.length>=G.p.maxSlots){toast('Inventario lleno','error');return}closeModal('itemDetailModal');if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon={name:'Puños',damage:'1d2',icon:'✊'}}else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor={name:'Sin armadura',defense:0,icon:'👤'}}toast('Desequipado','info');Game.updateUI();Game.autoSave()},
-    use(){const it=G.item;if(!it?.uid)return;closeModal('itemDetailModal');closeModal('inventoryModal');if(it.type==='potion'||it.type==='food'){const h=roll(it.effect||'1d4');const a=Math.min(h,G.p.maxHp-G.p.hp);G.p.hp+=a;Story.add(`${it.icon} ${it.name}: <span style="color:var(--green-bright)">+${a} HP</span>`,'system');if(G.combat)Combat.log(`<span class="log-heal">${G.p.name} usa ${it.name}: +${a} HP</span>`)}else if(it.type==='antidote'){G.p.effects=G.p.effects.filter(e=>e.type!=='poison');Story.add('Veneno curado.','system')}else if(it.type==='escape'&&G.combat){G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);Story.add('¡Bomba de humo!','narrative');Combat.escape();return}else if(it.type==='backpack'){const s=parseInt(it.effect)||5;G.p.maxSlots+=s;Story.add(`+${s} espacios.`,'system')}G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);Game.updateUI();Game.autoSave();if(G.combat){Combat.updateUI();G.currentActor++;Combat.nextActor()}}
+    use(){
+        const it=G.item;if(!it?.uid)return;
+        closeModal('itemDetailModal');closeModal('inventoryModal');
+        
+        if(it.type==='potion'){
+            // Poción de salud o maná
+            const h=roll(it.effect||'1d4');
+            if(it.potionType==='mana'&&G.p.maxMana>0){
+                const a=Math.min(h,G.p.maxMana-G.p.mana);
+                G.p.mana+=a;
+                Story.add(`${it.icon} ${it.name}: <span style="color:#88bbff">+${a} Maná</span>`,'system');
+                if(G.combat)Combat.log(`<span class="log-heal">${G.p.name} usa ${it.name}: +${a} 💙</span>`);
+            }else{
+                const a=Math.min(h,G.p.maxHp-G.p.hp);
+                G.p.hp+=a;
+                Story.add(`${it.icon} ${it.name}: <span style="color:var(--green-bright)">+${a} HP</span>`,'system');
+                if(G.combat)Combat.log(`<span class="log-heal">${G.p.name} usa ${it.name}: +${a} ❤️</span>`);
+            }
+        }else if(it.type==='food'){
+            // Comida restaura alimentación
+            const f=it.foodValue||1;
+            const a=Math.min(f,G.p.maxFood-G.p.food);
+            G.p.food+=a;
+            Story.add(`${it.icon} ${it.name}: <span style="color:#eebb55">+${a} 🍖</span>`,'system');
+        }else if(it.type==='antidote'){
+            // Antídoto cura efecto específico o todos
+            const cures=it.cures||'poison';
+            if(cures==='all'){
+                G.p.effects=[];
+                Story.add('Todos los efectos curados.','system');
+            }else{
+                G.p.effects=G.p.effects.filter(e=>e.type!==cures);
+                Story.add(`${cures} curado.`,'system');
+            }
+        }else if(it.type==='escape'&&G.combat){
+            G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);
+            Story.add('¡Escape exitoso!','narrative');
+            Combat.escape();return;
+        }else if(it.type==='backpack'){
+            const s=it.slots||5;
+            G.p.maxSlots+=s;
+            Story.add(`+${s} espacios de inventario.`,'system');
+        }
+        
+        G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);
+        Game.updateUI();Game.autoSave();
+        if(G.combat){Combat.updateUI();G.currentActor++;Combat.nextActor()}
+    }
 };
 
 const Town={
@@ -1550,31 +1670,66 @@ const Craft={
 };
 
 const Editor={
-    clear(t){const fields={region:['region-id','region-name','region-icon','region-desc','region-narratives','region-distance','region-reqEncounters','region-connections'],race:['race-id','race-name','race-icon','race-sprite','race-hp','race-armor','race-speed','race-precision','race-damage','race-desc'],weapon:['weapon-id','weapon-name','weapon-damage','weapon-weight','weapon-icon','weapon-sprite','weapon-value','weapon-desc'],armor:['armor-id','armor-name','armor-defense','armor-weight','armor-icon','armor-sprite','armor-value','armor-desc'],item:['item-id','item-name','item-icon','item-sprite','item-effect','item-value','item-desc'],enemy:['enemy-id','enemy-name','enemy-health','enemy-damage','enemy-difficulty','enemy-armor','enemy-speed','enemy-icon','enemy-sprite','enemy-loot-min','enemy-loot-max','enemy-desc','enemy-groupMin','enemy-groupMax','enemy-groupChance','enemy-weaponId','enemy-armorId'],pet:['pet-id','pet-name','pet-health','pet-damage','pet-speed','pet-difficulty','pet-icon','pet-sprite','pet-desc'],npc:['npc-id','npc-name','npc-icon','npc-sprite','npc-dialogue'],recipe:['recipe-id','recipe-name','recipe-icon','recipe-result','recipe-desc']};(fields[t]||[]).forEach(id=>{const e=$(`#${id}`);if(e)e.value=''});$$('.multi-select input').forEach(c=>c.checked=false);if(t==='enemy'){$('#enemy-canGroup').value='false';$('#enemy-weaponId').value='';$('#enemy-armorId').value=''}},
+    clear(t){const fields={region:['region-id','region-name','region-icon','region-desc','region-narratives','region-distance','region-reqEncounters','region-connections'],race:['race-id','race-name','race-icon','race-sprite','race-hp','race-armor','race-speed','race-precision','race-damage','race-desc'],weapon:['weapon-id','weapon-name','weapon-damage','weapon-weight','weapon-icon','weapon-sprite','weapon-value','weapon-desc'],armor:['armor-id','armor-name','armor-defense','armor-weight','armor-icon','armor-sprite','armor-value','armor-desc'],item:['item-id','item-name','item-icon','item-sprite','item-effect','item-value','item-desc','item-food-value','item-backpack-slots'],enemy:['enemy-id','enemy-name','enemy-health','enemy-damage','enemy-difficulty','enemy-armor','enemy-speed','enemy-icon','enemy-sprite','enemy-loot-min','enemy-loot-max','enemy-desc','enemy-groupMin','enemy-groupMax','enemy-groupChance','enemy-weaponId','enemy-armorId'],pet:['pet-id','pet-name','pet-health','pet-damage','pet-speed','pet-difficulty','pet-icon','pet-sprite','pet-desc'],npc:['npc-id','npc-name','npc-icon','npc-sprite','npc-dialogue'],recipe:['recipe-id','recipe-name','recipe-icon','recipe-result','recipe-desc']};(fields[t]||[]).forEach(id=>{const e=$(`#${id}`);if(e)e.value=''});$$('.multi-select input').forEach(c=>c.checked=false);if(t==='enemy'){$('#enemy-canGroup').value='false';$('#enemy-weaponId').value='';$('#enemy-armorId').value='';$('#enemy-usesMana').value='false'}if(t==='weapon'){$('#weapon-magic').value='false'}if(t==='race'){$('#race-usesMana').value='false'}if(t==='item'){$('#item-type').value='potion';$('#item-potion-type').value='health';$('#item-antidote-cures').value='poison';this.onItemTypeChange()}if(t==='recipe'){this.recipeIngredients=[];this.renderIngredientsList()}},
     saveRegion(){const narratives=$('#region-narratives').value.split('\n').filter(n=>n.trim());const connections=$('#region-connections').value.split(',').map(c=>c.trim()).filter(c=>c);const r={id:$('#region-id').value||genId('reg'),name:$('#region-name').value,icon:$('#region-icon').value||'🗺️',type:$('#region-type').value,desc:$('#region-desc').value||'',distance:parseInt($('#region-distance').value)||0,reqEncounters:parseInt($('#region-reqEncounters').value)||0,connections,narratives};if(!r.name){toast('Falta nombre','error');return}const i=Data.regions.findIndex(x=>x.id===r.id);if(i>=0)Data.regions[i]=r;else Data.regions.push(r);Data.save();this.renderRegions();this.updateSelects();this.clear('region');toast('Guardado','success')},
     editRegion(id){const r=Data.find('regions',id);if(!r)return;$('#region-id').value=r.id;$('#region-name').value=r.name;$('#region-icon').value=r.icon||'';$('#region-type').value=r.type||'danger';$('#region-desc').value=r.desc||'';$('#region-distance').value=r.distance||0;$('#region-reqEncounters').value=r.reqEncounters||0;$('#region-connections').value=(r.connections||[]).join(',');$('#region-narratives').value=(r.narratives||[]).join('\n')},
     deleteRegion(id){if(!confirm('¿Eliminar?'))return;Data.regions=Data.regions.filter(r=>r.id!==id);Data.save();this.renderRegions();this.updateSelects();toast('Eliminado','info')},
-    saveRace(){const r={id:$('#race-id').value||genId('race'),name:$('#race-name').value,icon:$('#race-icon').value||'👤',sprite:$('#race-sprite').value||'',bonus:{health:parseInt($('#race-hp').value)||0,armor:parseInt($('#race-armor').value)||0,speed:parseInt($('#race-speed').value)||10,precision:parseInt($('#race-precision').value)||0,damage:parseInt($('#race-damage').value)||0},desc:$('#race-desc').value||''};if(!r.name){toast('Falta nombre','error');return}const i=Data.races.findIndex(x=>x.id===r.id);if(i>=0)Data.races[i]=r;else Data.races.push(r);Data.save();this.renderRaces();this.clear('race');toast('Guardado','success')},
+    saveRace(){const r={id:$('#race-id').value||genId('race'),name:$('#race-name').value,icon:$('#race-icon').value||'👤',sprite:$('#race-sprite').value||'',usesMana:$('#race-usesMana').value==='true',bonus:{health:parseInt($('#race-hp').value)||0,armor:parseInt($('#race-armor').value)||0,speed:parseInt($('#race-speed').value)||10,precision:parseInt($('#race-precision').value)||0,damage:parseInt($('#race-damage').value)||0},desc:$('#race-desc').value||''};if(!r.name){toast('Falta nombre','error');return}const i=Data.races.findIndex(x=>x.id===r.id);if(i>=0)Data.races[i]=r;else Data.races.push(r);Data.save();this.renderRaces();this.clear('race');toast('Guardado','success')},
     editRace(id){const r=Data.find('races',id);if(!r)return;$('#race-id').value=r.id;$('#race-name').value=r.name;$('#race-icon').value=r.icon||'';$('#race-sprite').value=r.sprite||'';$('#race-hp').value=r.bonus?.health||'';$('#race-armor').value=r.bonus?.armor||'';$('#race-speed').value=r.bonus?.speed||'';$('#race-precision').value=r.bonus?.precision||'';$('#race-damage').value=r.bonus?.damage||'';$('#race-desc').value=r.desc||''},
     deleteRace(id){if(!confirm('¿Eliminar?'))return;Data.races=Data.races.filter(r=>r.id!==id);Data.save();this.renderRaces();toast('Eliminado','info')},
-    saveWeapon(){const w={id:$('#weapon-id').value||genId('w'),name:$('#weapon-name').value,damage:$('#weapon-damage').value||'1d4',weight:parseInt($('#weapon-weight').value)||0,icon:$('#weapon-icon').value||'⚔️',sprite:$('#weapon-sprite').value||'',rarity:$('#weapon-rarity').value,value:parseInt($('#weapon-value').value)||10,effect:$('#weapon-effect').value||null,desc:$('#weapon-desc').value||''};if(!w.name){toast('Falta nombre','error');return}const i=Data.weapons.findIndex(x=>x.id===w.id);if(i>=0)Data.weapons[i]=w;else Data.weapons.push(w);Data.save();this.renderWeapons();this.updateSelects();this.clear('weapon');toast('Guardado','success')},
+    saveWeapon(){const w={id:$('#weapon-id').value||genId('w'),name:$('#weapon-name').value,damage:$('#weapon-damage').value||'1d4',weight:parseInt($('#weapon-weight').value)||0,icon:$('#weapon-icon').value||'⚔️',sprite:$('#weapon-sprite').value||'',rarity:$('#weapon-rarity').value,value:parseInt($('#weapon-value').value)||10,magic:$('#weapon-magic').value==='true',effect:$('#weapon-effect').value||null,desc:$('#weapon-desc').value||''};if(!w.name){toast('Falta nombre','error');return}const i=Data.weapons.findIndex(x=>x.id===w.id);if(i>=0)Data.weapons[i]=w;else Data.weapons.push(w);Data.save();this.renderWeapons();this.updateSelects();this.clear('weapon');toast('Guardado','success')},
     saveArmor(){const a={id:$('#armor-id').value||genId('a'),name:$('#armor-name').value,defense:parseInt($('#armor-defense').value)||0,weight:parseInt($('#armor-weight').value)||0,icon:$('#armor-icon').value||'🛡️',sprite:$('#armor-sprite').value||'',rarity:$('#armor-rarity').value,value:parseInt($('#armor-value').value)||10,desc:$('#armor-desc').value||''};if(!a.name){toast('Falta nombre','error');return}const i=Data.armors.findIndex(x=>x.id===a.id);if(i>=0)Data.armors[i]=a;else Data.armors.push(a);Data.save();this.renderArmors();this.updateSelects();this.clear('armor');toast('Guardado','success')},
-    saveItem(){const it={id:$('#item-id').value||genId('i'),name:$('#item-name').value,type:$('#item-type').value,icon:$('#item-icon').value||'📦',sprite:$('#item-sprite').value||'',effect:$('#item-effect').value||'',value:parseInt($('#item-value').value)||10,rarity:$('#item-rarity').value,desc:$('#item-desc').value||''};if(!it.name){toast('Falta nombre','error');return}const i=Data.items.findIndex(x=>x.id===it.id);if(i>=0)Data.items[i]=it;else Data.items.push(it);Data.save();this.renderItems();this.updateSelects();this.clear('item');toast('Guardado','success')},
-    saveEnemy(){const regions=Array.from($$('#enemy-regions input:checked')).map(c=>c.value);const drops=Array.from($$('#enemy-drops input:checked')).map(c=>c.value);if(regions.length===0){toast('Selecciona región','error');return}const canGroup=$('#enemy-canGroup').value==='true';const e={id:$('#enemy-id').value||genId('e'),name:$('#enemy-name').value,health:parseInt($('#enemy-health').value)||20,damage:$('#enemy-damage').value||'1d6',difficulty:parseInt($('#enemy-difficulty').value)||10,armor:parseInt($('#enemy-armor').value)||0,speed:parseInt($('#enemy-speed').value)||10,icon:$('#enemy-icon').value||'👹',sprite:$('#enemy-sprite').value||'',effect:$('#enemy-effect').value||null,weaponId:$('#enemy-weaponId').value||null,armorId:$('#enemy-armorId').value||null,loot:[parseInt($('#enemy-loot-min').value)||5,parseInt($('#enemy-loot-max').value)||20],regions,drops,desc:$('#enemy-desc').value||'',canGroup,groupMin:parseInt($('#enemy-groupMin').value)||2,groupMax:parseInt($('#enemy-groupMax').value)||4,groupChance:parseInt($('#enemy-groupChance').value)||30};if(!e.name){toast('Falta nombre','error');return}const i=Data.enemies.findIndex(x=>x.id===e.id);if(i>=0)Data.enemies[i]=e;else Data.enemies.push(e);Data.save();this.renderEnemies();this.clear('enemy');toast('Guardado','success')},
+    saveItem(){
+        const type=$('#item-type').value;
+        const it={
+            id:$('#item-id').value||genId('i'),
+            name:$('#item-name').value,
+            type:type,
+            icon:$('#item-icon').value||'📦',
+            sprite:$('#item-sprite').value||'',
+            value:parseInt($('#item-value').value)||10,
+            rarity:$('#item-rarity').value,
+            desc:$('#item-desc').value||''
+        };
+        // Type-specific fields
+        if(type==='potion'){
+            it.potionType=$('#item-potion-type').value;
+            it.effect=$('#item-effect').value||'1d8';
+        }else if(type==='food'){
+            it.foodValue=parseInt($('#item-food-value').value)||1;
+        }else if(type==='antidote'){
+            it.cures=$('#item-antidote-cures').value;
+        }else if(type==='backpack'){
+            it.slots=parseInt($('#item-backpack-slots').value)||5;
+        }
+        if(!it.name){toast('Falta nombre','error');return}
+        const i=Data.items.findIndex(x=>x.id===it.id);
+        if(i>=0)Data.items[i]=it;else Data.items.push(it);
+        Data.save();this.renderItems();this.updateSelects();this.clear('item');toast('Guardado','success')
+    },
+    saveEnemy(){const regions=Array.from($$('#enemy-regions input:checked')).map(c=>c.value);const drops=Array.from($$('#enemy-drops input:checked')).map(c=>c.value);if(regions.length===0){toast('Selecciona región','error');return}const canGroup=$('#enemy-canGroup').value==='true';const e={id:$('#enemy-id').value||genId('e'),name:$('#enemy-name').value,health:parseInt($('#enemy-health').value)||20,damage:$('#enemy-damage').value||'1d6',difficulty:parseInt($('#enemy-difficulty').value)||10,armor:parseInt($('#enemy-armor').value)||0,speed:parseInt($('#enemy-speed').value)||10,icon:$('#enemy-icon').value||'👹',sprite:$('#enemy-sprite').value||'',effect:$('#enemy-effect').value||null,usesMana:$('#enemy-usesMana').value==='true',weaponId:$('#enemy-weaponId').value||null,armorId:$('#enemy-armorId').value||null,loot:[parseInt($('#enemy-loot-min').value)||5,parseInt($('#enemy-loot-max').value)||20],regions,drops,desc:$('#enemy-desc').value||'',canGroup,groupMin:parseInt($('#enemy-groupMin').value)||2,groupMax:parseInt($('#enemy-groupMax').value)||4,groupChance:parseInt($('#enemy-groupChance').value)||30};if(!e.name){toast('Falta nombre','error');return}const i=Data.enemies.findIndex(x=>x.id===e.id);if(i>=0)Data.enemies[i]=e;else Data.enemies.push(e);Data.save();this.renderEnemies();this.clear('enemy');toast('Guardado','success')},
     editEnemy(id){const e=Data.find('enemies',id);if(!e)return;$('#enemy-id').value=e.id;$('#enemy-name').value=e.name;$('#enemy-health').value=e.health||'';$('#enemy-damage').value=e.damage||'';$('#enemy-difficulty').value=e.difficulty||'';$('#enemy-armor').value=e.armor||'';$('#enemy-speed').value=e.speed||'';$('#enemy-icon').value=e.icon||'';$('#enemy-sprite').value=e.sprite||'';$('#enemy-effect').value=e.effect||'';$('#enemy-weaponId').value=e.weaponId||'';$('#enemy-armorId').value=e.armorId||'';$('#enemy-loot-min').value=e.loot?.[0]||'';$('#enemy-loot-max').value=e.loot?.[1]||'';$('#enemy-desc').value=e.desc||'';$('#enemy-canGroup').value=e.canGroup?'true':'false';$('#enemy-groupMin').value=e.groupMin||'';$('#enemy-groupMax').value=e.groupMax||'';$('#enemy-groupChance').value=e.groupChance||'';setTimeout(()=>{$$('#enemy-regions input').forEach(c=>c.checked=(e.regions||[]).includes(c.value));$$('#enemy-drops input').forEach(c=>c.checked=(e.drops||[]).includes(c.value))},50)},
     savePet(){const regions=Array.from($$('#pet-regions input:checked')).map(c=>c.value);const p={id:$('#pet-id').value||genId('p'),name:$('#pet-name').value,health:parseInt($('#pet-health').value)||20,damage:$('#pet-damage').value||'1d4',speed:parseInt($('#pet-speed').value)||12,difficulty:parseInt($('#pet-difficulty').value)||24,icon:$('#pet-icon').value||'🐺',sprite:$('#pet-sprite').value||'',regions,desc:$('#pet-desc').value||''};if(!p.name){toast('Falta nombre','error');return}const i=Data.pets.findIndex(x=>x.id===p.id);if(i>=0)Data.pets[i]=p;else Data.pets.push(p);Data.save();this.renderPets();this.clear('pet');toast('Guardado','success')},
     editPet(id){const p=Data.find('pets',id);if(!p)return;$('#pet-id').value=p.id;$('#pet-name').value=p.name;$('#pet-health').value=p.health||'';$('#pet-damage').value=p.damage||'';$('#pet-speed').value=p.speed||'';$('#pet-difficulty').value=p.difficulty||'';$('#pet-icon').value=p.icon||'';$('#pet-sprite').value=p.sprite||'';$('#pet-desc').value=p.desc||'';setTimeout(()=>$$('#pet-regions input').forEach(c=>c.checked=(p.regions||[]).includes(c.value)),50)},
     saveNpc(){const sells=Array.from($$('#npc-sells input:checked')).map(c=>c.value);const n={id:$('#npc-id').value||genId('n'),name:$('#npc-name').value,role:$('#npc-role').value,icon:$('#npc-icon').value||'🧔',sprite:$('#npc-sprite').value||'',region:$('#npc-region').value,dialogue:$('#npc-dialogue').value||'',sells};if(!n.name){toast('Falta nombre','error');return}const i=Data.npcs.findIndex(x=>x.id===n.id);if(i>=0)Data.npcs[i]=n;else Data.npcs.push(n);Data.save();this.renderNpcs();this.clear('npc');toast('Guardado','success')},
     editNpc(id){const n=Data.find('npcs',id);if(!n)return;$('#npc-id').value=n.id;$('#npc-name').value=n.name;$('#npc-role').value=n.role||'merchant';$('#npc-icon').value=n.icon||'';$('#npc-sprite').value=n.sprite||'';$('#npc-region').value=n.region||'';$('#npc-dialogue').value=n.dialogue||'';setTimeout(()=>$$('#npc-sells input').forEach(c=>c.checked=(n.sells||[]).includes(c.value)),50)},
-    saveRecipe(){const ingredients=Array.from($$('#recipe-ingredients input:checked')).map(c=>c.value);if(ingredients.length<2){toast('Mínimo 2 ingredientes','error');return}const r={id:$('#recipe-id').value||genId('r'),name:$('#recipe-name').value,icon:$('#recipe-icon').value||'🔨',result:$('#recipe-result').value,ingredients,desc:$('#recipe-desc').value||''};if(!r.name||!r.result){toast('Falta nombre o resultado','error');return}const i=Data.recipes.findIndex(x=>x.id===r.id);if(i>=0)Data.recipes[i]=r;else Data.recipes.push(r);Data.save();this.renderRecipes();this.clear('recipe');toast('Guardado','success')},
-    editRecipe(id){const r=Data.find('recipes',id);if(!r)return;$('#recipe-id').value=r.id;$('#recipe-name').value=r.name;$('#recipe-icon').value=r.icon||'';$('#recipe-result').value=r.result||'';$('#recipe-desc').value=r.desc||'';setTimeout(()=>$$('#recipe-ingredients input').forEach(c=>c.checked=(r.ingredients||[]).includes(c.value)),50)},
+    saveRecipe(){
+        const ingredients=this.recipeIngredients;
+        if(ingredients.length<2){toast('Mínimo 2 ingredientes','error');return}
+        const r={id:$('#recipe-id').value||genId('r'),name:$('#recipe-name').value,icon:$('#recipe-icon').value||'🔨',result:$('#recipe-result').value,ingredients:[...ingredients],desc:$('#recipe-desc').value||''};
+        if(!r.name||!r.result){toast('Falta nombre o resultado','error');return}
+        const i=Data.recipes.findIndex(x=>x.id===r.id);
+        if(i>=0)Data.recipes[i]=r;else Data.recipes.push(r);
+        Data.save();this.renderRecipes();this.clear('recipe');this.recipeIngredients=[];this.renderIngredientsList();toast('Guardado','success')
+    },
+    editRecipe(id){const r=Data.find('recipes',id);if(!r)return;$('#recipe-id').value=r.id;$('#recipe-name').value=r.name;$('#recipe-icon').value=r.icon||'';$('#recipe-result').value=r.result||'';$('#recipe-desc').value=r.desc||'';this.recipeIngredients=[...(r.ingredients||[])];this.renderIngredientsList()},
     deleteRecipe(id){if(!confirm('¿Eliminar?'))return;Data.recipes=Data.recipes.filter(r=>r.id!==id);Data.save();this.renderRecipes();toast('Eliminado','info')},
     edit(t,p,id){const it=Data.find(t,id);if(!it)return;Object.keys(it).forEach(k=>{const e=$(`#${p}-${k}`);if(e)e.value=it[k]||''})},
     del(t,id){if(!confirm('¿Eliminar?'))return;Data[t]=Data[t].filter(x=>x.id!==id);Data.save();this.renderAll();toast('Eliminado','info')},
     renderAll(){this.renderRegions();this.renderRaces();this.renderWeapons();this.renderArmors();this.renderItems();this.renderEnemies();this.renderPets();this.renderNpcs();this.renderRecipes();this.updateSelects()},
     renderRegions(){$('#regions-list').innerHTML=Data.regions.map(r=>`<div class="item-card" onclick="Editor.editRegion('${r.id}')"><span class="item-card-icon">${r.icon}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats"><span class="item-id">${r.id}</span> ${r.type==='safe'?'🏠':'⚠️'} Dist:${r.distance||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRegion('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRegion('${r.id}')">🗑️</button></div></div>`).join('')},
-    renderRaces(){$('#races-list').innerHTML=Data.races.map(r=>`<div class="item-card" onclick="Editor.editRace('${r.id}')"><span class="item-card-icon">${sprite(r)}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats"><span class="item-id">${r.id}</span> ⚡${r.bonus?.speed||10}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRace('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRace('${r.id}')">🗑️</button></div></div>`).join('')},
-    renderWeapons(){$('#weapons-list').innerHTML=Data.weapons.map(w=>`<div class="item-card${w.fromPlugin?' plugin-item':''}" onclick="Editor.edit('weapons','weapon','${w.id}')"><span class="item-card-icon">${sprite(w)}${w.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${w.name}</div><div class="item-card-stats"><span class="item-id">${w.id}</span> ${w.damage} ⚖️${w.weight||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('weapons','weapon','${w.id}')">✏️</button>${w.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('weapons','${w.id}')">🗑️</button>`}</div></div>`).join('')},
+    renderRaces(){$('#races-list').innerHTML=Data.races.map(r=>`<div class="item-card" onclick="Editor.editRace('${r.id}')"><span class="item-card-icon">${sprite(r)}</span><div class="item-card-info"><div class="item-card-name">${r.name}${r.usesMana?' 💙':''}</div><div class="item-card-stats"><span class="item-id">${r.id}</span> ⚡${r.bonus?.speed||10}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRace('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRace('${r.id}')">🗑️</button></div></div>`).join('')},
+    renderWeapons(){$('#weapons-list').innerHTML=Data.weapons.map(w=>`<div class="item-card${w.fromPlugin?' plugin-item':''}" onclick="Editor.edit('weapons','weapon','${w.id}')"><span class="item-card-icon">${sprite(w)}${w.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${w.name}${w.magic?' ✨':''}</div><div class="item-card-stats"><span class="item-id">${w.id}</span> ${w.damage} ⚖️${w.weight||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('weapons','weapon','${w.id}')">✏️</button>${w.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('weapons','${w.id}')">🗑️</button>`}</div></div>`).join('')},
     renderArmors(){$('#armors-list').innerHTML=Data.armors.map(a=>`<div class="item-card${a.fromPlugin?' plugin-item':''}" onclick="Editor.edit('armors','armor','${a.id}')"><span class="item-card-icon">${sprite(a)}${a.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${a.name}</div><div class="item-card-stats"><span class="item-id">${a.id}</span> Def:${a.defense} ⚖️${a.weight||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('armors','armor','${a.id}')">✏️</button>${a.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('armors','${a.id}')">🗑️</button>`}</div></div>`).join('')},
     renderItems(){$('#items-list').innerHTML=Data.items.map(i=>`<div class="item-card${i.fromPlugin?' plugin-item':''}" onclick="Editor.edit('items','item','${i.id}')"><span class="item-card-icon">${sprite(i)}${i.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${i.name}</div><div class="item-card-stats"><span class="item-id">${i.id}</span> ${i.type||''}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('items','item','${i.id}')">✏️</button>${i.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('items','${i.id}')">🗑️</button>`}</div></div>`).join('')},
     renderEnemies(){$('#enemies-list').innerHTML=Data.enemies.map(e=>{const w=e.weaponId?Data.find('weapons',e.weaponId):null;const a=e.armorId?Data.find('armors',e.armorId):null;const equip=(w?`⚔️${w.icon}`:'')+(a?`🛡️${a.icon}`:'');return`<div class="item-card" onclick="Editor.editEnemy('${e.id}')"><span class="item-card-icon">${sprite(e)}</span><div class="item-card-info"><div class="item-card-name">${e.name}</div><div class="item-card-stats"><span class="item-id">${e.id}</span> HP:${e.health} ${equip}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editEnemy('${e.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('enemies','${e.id}')">🗑️</button></div></div>`}).join('')},
@@ -1589,12 +1744,43 @@ const Editor={
         $('#npc-region').innerHTML=safeRegions.map(r=>`<option value="${r.id}">${r.icon} ${r.name}</option>`).join('');
         const allItems=[...Data.weapons,...Data.armors,...Data.items];
         const itemsHtml=allItems.map(it=>`<label><input type="checkbox" value="${it.id}"> ${it.icon||'📦'} ${it.name}</label>`).join('');
-        $('#enemy-drops').innerHTML=itemsHtml;$('#npc-sells').innerHTML=itemsHtml;$('#recipe-ingredients').innerHTML=itemsHtml;
+        $('#enemy-drops').innerHTML=itemsHtml;$('#npc-sells').innerHTML=itemsHtml;
         // Enemy weapon/armor selects
-        $('#enemy-weaponId').innerHTML='<option value="">Sin arma (usa daño base)</option>'+Data.weapons.map(w=>`<option value="${w.id}">${w.icon} ${w.name} (${w.damage})</option>`).join('');
+        $('#enemy-weaponId').innerHTML='<option value="">Sin arma (usa daño base)</option>'+Data.weapons.map(w=>`<option value="${w.id}">${w.icon} ${w.name} (${w.damage})${w.magic?' ✨':''}</option>`).join('');
         $('#enemy-armorId').innerHTML='<option value="">Sin armadura (usa armadura base)</option>'+Data.armors.map(a=>`<option value="${a.id}">${a.icon} ${a.name} (Def:${a.defense})</option>`).join('');
-        // Recipe result select
+        // Recipe selects
         $('#recipe-result').innerHTML=allItems.map(it=>`<option value="${it.id}">${it.icon||'📦'} ${it.name}</option>`).join('');
+        $('#recipe-ingredient-select').innerHTML=allItems.map(it=>`<option value="${it.id}">${it.icon||'📦'} ${it.name}</option>`).join('');
+    },
+    // Item type change handler
+    onItemTypeChange(){
+        const type=$('#item-type').value;
+        ['potion','food','antidote','escape','backpack','misc'].forEach(t=>{
+            const el=$(`#item-${t}-fields`);
+            if(el)el.style.display=t===type?'block':'none';
+        });
+    },
+    // Recipe ingredients management
+    recipeIngredients:[],
+    addIngredient(){
+        const sel=$('#recipe-ingredient-select');
+        const id=sel.value;
+        if(!id)return;
+        const it=Data.findItem(id);
+        if(!it)return;
+        this.recipeIngredients.push(id);
+        this.renderIngredientsList();
+    },
+    removeIngredient(index){
+        this.recipeIngredients.splice(index,1);
+        this.renderIngredientsList();
+    },
+    renderIngredientsList(){
+        const list=$('#recipe-ingredients-list');
+        list.innerHTML=this.recipeIngredients.map((id,i)=>{
+            const it=Data.findItem(id);
+            return`<span style="background:var(--bg-lighter);padding:.15rem .4rem;border-radius:4px;font-size:.65rem;display:inline-flex;align-items:center;gap:.2rem">${it?it.icon:'?'} ${it?it.name:id} <button onclick="Editor.removeIngredient(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;padding:0;font-size:.7rem">×</button></span>`;
+        }).join('');
     }
 };
 
