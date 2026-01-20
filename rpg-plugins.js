@@ -136,6 +136,43 @@ Plugins.registerItem({
     }
 });
 
+Plugins.registerItem({
+    id: 'hammer_fire',
+    name: 'Martillo de Fuego',
+    icon: '🔥🔨',
+    damage: '1d10',         // Daño base del arma
+    weight: 5,
+    value: 250,
+    rarity: 'epic',
+    desc: 'Hace daño extra de fuego y puede quemar al enemigo.',
+    
+    onDealDamage: function(attacker, target, damage) {
+        // Daño extra de fuego: +2 fijo
+        var fireDamage = 2;
+        var totalDamage = damage + fireDamage;
+        
+        // Aplicar efecto de quemadura si el target tiene hp
+        if (target && target.hp) {
+            if (!target.effects) target.effects = [];
+            target.effects.push({
+                id: 'burn',
+                name: 'Quemadura',
+                duration: 3, // dura 3 turnos
+                damagePerTurn: 1
+            });
+            if (typeof Combat !== 'undefined') {
+                Combat.log('<span class="log-damage">🔥 Quemadura aplicada!</span>');
+            }
+        }
+        
+        if (typeof Combat !== 'undefined') {
+            Combat.log('<span class="log-damage">🔥 +2 daño de fuego</span>');
+        }
+        
+        return totalDamage;
+    }
+});
+
 /**
  * Escudo de Espinas
  * Refleja 25% del daño recibido al atacante
