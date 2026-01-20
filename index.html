@@ -442,6 +442,10 @@
             <div class="auth-form" id="loginForm">
                 <input type="email" class="auth-input" id="authEmail" placeholder="Correo electrónico">
                 <input type="password" class="auth-input" id="authPass" placeholder="Contraseña">
+                <label style="display:flex;align-items:center;gap:.5rem;margin:.5rem 0;font-size:.8rem;color:var(--text-dim);cursor:pointer">
+                    <input type="checkbox" id="rememberMe" style="width:16px;height:16px;cursor:pointer">
+                    Recordar sesión
+                </label>
                 <button class="auth-btn" onclick="Auth.login()">🔓 Iniciar Sesión</button>
                 <p style="text-align:center;margin-top:.8rem">
                     <span class="auth-link" onclick="Auth.showRegister()">Crear cuenta nueva</span>
@@ -575,6 +579,19 @@
                 <div class="rules-card"><h4>⚖️ Peso del Equipo</h4>
                     <div class="rules-highlight">Peso total = arma + armadura<br>Velocidad = Base − Peso (mín. 1)</div>
                     <p>Equipos pesados dan más protección pero actúas más lento</p>
+                </div>
+                <div class="rules-card"><h4>🍖 Sistema de Comida</h4>
+                    <div class="rules-highlight">Máximo: 20 puntos de alimentación</div>
+                    <p>🍞 Cada comida restaura puntos según su valor</p>
+                    <p>⚠️ Con hambre baja: penalizaciones en combate</p>
+                    <p>🍗 Ejemplos: Pan (3), Carne (5), Estofado (8)</p>
+                </div>
+                <div class="rules-card"><h4>💙 Sistema de Maná</h4>
+                    <div class="rules-highlight">Solo para razas mágicas (magos/hechiceros)</div>
+                    <p>✨ Máximo: 20 puntos de maná</p>
+                    <p>🧪 Pociones de maná restauran puntos</p>
+                    <p>🔮 Magos solo pueden usar armas mágicas (bastones, hechizos)</p>
+                    <p>⚔️ Guerreros usan armas físicas (espadas, dagas)</p>
                 </div>
             </div>
         </div>
@@ -913,8 +930,13 @@ const Auth={
     showLogin(){$('#registerForm').classList.add('hidden');$('#loginForm').classList.remove('hidden')},
     async login(){
         const email=$('#authEmail').value.trim(),pass=$('#authPass').value;
+        const remember=$('#rememberMe').checked;
         if(!email||!pass){toast('Completa todos los campos','error');return}
         try{
+            // Configurar persistencia según preferencia
+            const persistence=remember?firebase.auth.Auth.Persistence.LOCAL:firebase.auth.Auth.Persistence.SESSION;
+            await firebase.auth().setPersistence(persistence);
+            localStorage.setItem('rpg_remember',remember?'1':'0');
             const r=await firebase.auth().signInWithEmailAndPassword(email,pass);
             this.user=r.user;this.onAuth();
         }catch(e){toast(e.message,'error')}
@@ -942,6 +964,7 @@ const Auth={
         this.user=null;
         G.p=null;G.combat=false;G.enemies=[];G.traveling=null;
         localStorage.removeItem('rpg_save');
+        localStorage.removeItem('rpg_remember');
         try{firebase.auth().signOut()}catch(e){}
         closeAllModals();
         $('#authScreen').classList.remove('hidden');
@@ -957,6 +980,7 @@ const Auth={
         $('#regEmail').value='';
         $('#regPass').value='';
         $('#heroName').value='';
+        $('#rememberMe').checked=false;
         // Show login form
         $('#loginForm').classList.remove('hidden');
         $('#registerForm').classList.add('hidden');
@@ -974,7 +998,9 @@ const FB={db:null,ok:false,init(){
             if(this.ok)this.load();
         });
         firebase.auth().onAuthStateChanged(u=>{
-            if(u){
+            const shouldRemember=localStorage.getItem('rpg_remember')==='1';
+            if(u&&shouldRemember){
+                // Solo auto-login si el usuario marcó "Recordar sesión"
                 u.getIdToken(true).then(()=>{Auth.user=u;Auth.onAuth()}).catch(e=>{
                     Auth.user=null;
                     firebase.auth().signOut().then(()=>{
@@ -982,9 +1008,15 @@ const FB={db:null,ok:false,init(){
                         $('#authScreen').style.display='flex';
                     });
                 });
-            }else if(!Auth.user){
-                $('#authScreen').classList.remove('hidden');
-                $('#authScreen').style.display='flex';
+            }else{
+                // No recordar: cerrar sesión existente y mostrar login
+                if(u&&!shouldRemember){
+                    firebase.auth().signOut();
+                }
+                if(!Auth.user){
+                    $('#authScreen').classList.remove('hidden');
+                    $('#authScreen').style.display='flex';
+                }
             }
         });
     }catch(e){console.error('Firebase init:',e)}
@@ -1286,8 +1318,30 @@ const Combat={
         this.newTurn();
     },
     calcTurnOrder(){const combatants=[];combatants.push({type:'player',entity:G.p,speed:Game.speed(),init:d20()});if(G.p.pet&&G.p.pet.hp>0)combatants.push({type:'pet',entity:G.p.pet,speed:G.p.pet.speed||12,init:d20()});G.enemies.filter(e=>e.hp>0).forEach(e=>{combatants.push({type:'enemy',entity:e,speed:e.speed||10,init:d20()})});combatants.sort((a,b)=>{if(b.speed!==a.speed)return b.speed-a.speed;return b.init-a.init});return combatants},
-    newTurn(){G.turn++;G.p.defending=false;G.turnOrder=this.calcTurnOrder();G.currentActor=0;this.log(`<div class="log-turn">─ Turno ${G.turn} ─</div>`);this.updateUI();this.nextActor()},
-    async nextActor(){const aliveEnemies=G.enemies.filter(e=>e.hp>0);if(aliveEnemies.length===0){this.victory();return}if(G.p.hp<=0){this.defeat();return}while(G.currentActor<G.turnOrder.length){const actor=G.turnOrder[G.currentActor];if((actor.type==='player'&&G.p.hp>0)||(actor.type==='pet'&&G.p.pet?.hp>0)||(actor.type==='enemy'&&actor.entity.hp>0))break;G.currentActor++}if(G.currentActor>=G.turnOrder.length){this.processAllEffects();await delay(300);this.newTurn();return}const actor=G.turnOrder[G.currentActor];this.highlightActor(actor);
+    newTurn(){G.turn++;G.p.defending=false;G.turnOrder=this.calcTurnOrder();G.currentActor=0;this.log(`<div class="log-turn">─ Turno ${G.turn} ─</div>`);this.updateUI();this.processNextActor()},
+    processNextActor(){
+        // Verificar condiciones de fin de combate
+        const aliveEnemies=G.enemies.filter(e=>e.hp>0);
+        if(aliveEnemies.length===0){this.victory();return}
+        if(G.p.hp<=0){this.defeat();return}
+        
+        // Buscar siguiente actor vivo
+        while(G.currentActor<G.turnOrder.length){
+            const actor=G.turnOrder[G.currentActor];
+            if((actor.type==='player'&&G.p.hp>0)||(actor.type==='pet'&&G.p.pet?.hp>0)||(actor.type==='enemy'&&actor.entity.hp>0))break;
+            G.currentActor++;
+        }
+        
+        // Si se acabaron los actores, nuevo turno
+        if(G.currentActor>=G.turnOrder.length){
+            this.processAllEffects();
+            setTimeout(()=>this.newTurn(),300);
+            return;
+        }
+        
+        const actor=G.turnOrder[G.currentActor];
+        this.highlightActor(actor);
+        
         // Plugin hooks: inicio de turno
         if(typeof Plugins!=='undefined'){
             const entity=actor.type==='player'?G.p:actor.type==='pet'?G.p.pet:actor.entity;
@@ -1296,7 +1350,20 @@ const Combat={
             if(actor.type==='player')Plugins.processEquippedEffects(G.p,'onTurnStart');
             this.updateUI();Game.updateUI();
         }
-        if(actor.type==='player')this.showPlayerActions();else if(actor.type==='pet')await this.petAction();else await this.enemyAction(actor.entity)},
+        
+        // Ejecutar acción según tipo de actor
+        if(actor.type==='player'){
+            this.showPlayerActions();
+        }else if(actor.type==='pet'){
+            this.executePetAction();
+        }else{
+            this.executeEnemyAction(actor.entity);
+        }
+    },
+    advanceToNextActor(){
+        G.currentActor++;
+        this.processNextActor();
+    },
     highlightActor(actor){$$('.combatant').forEach(c=>c.classList.remove('active'));const el=actor.type==='player'?$(`.combatant.player`):actor.type==='pet'?$(`.combatant.pet`):$(`[data-uid="${actor.entity.uid}"]`);if(el)el.classList.add('active')},
     showPlayerActions(){
         const ca=$('#combatActions');ca.innerHTML='';
@@ -1400,12 +1467,14 @@ const Combat={
             if(typeof Plugins!=='undefined')Plugins.trigger('onAttack',p,target,0,false);
         }
         
-        this.updateUI();G.currentActor++;await delay(350);this.nextActor();
+        this.updateUI();
+        await delay(350);
+        this.advanceToNextActor();
     },
-    playerDefend(){G.p.defending=true;this.log(`<span class="log-player">${G.p.name}</span> defiende <span class="log-heal">+4 Eva</span>`);G.currentActor++;this.updateUI();this.nextActor()},
-    async playerFlee(){const r=d20();await showDice(r,20,r>=12);this.log(`Huida: D20=${r} vs 12`);if(r>=12){this.log('<span class="log-heal">¡Escape!</span>');this.escape()}else{this.log('<span class="log-miss">¡No escapas!</span>');G.currentActor++;await delay(300);this.nextActor()}},
-    async petAction(){const pet=G.p.pet;const aliveEnemies=G.enemies.filter(e=>e.hp>0);if(aliveEnemies.length===0)return;const target=pick(aliveEnemies);const dmgRoll=rollDetailed(pet.damage);const baseDmg=dmgRoll.total;const armor=target.armor||0;const finalDmg=Math.max(0,baseDmg-armor);this.log(`<span class="log-pet">${pet.icon} ${pet.name}</span> → <span class="log-enemy">${target.name}</span>`);this.log(`├ Daño: ${dmgRoll.dice}=[${dmgRoll.rolls}] = ${baseDmg}`);if(finalDmg>0){this.log(`<div class="log-calc">⚔️ ${baseDmg} − ${armor} = ${finalDmg}</div>`);target.hp-=finalDmg;this.log(`└ <span class="log-damage">${target.name} -${finalDmg} (${Math.max(0,target.hp)}/${target.maxHp})</span>`);if(target.hp<=0)this.log(`<span class="log-damage">💀 ${target.name} derrotado!</span>`)}else{this.log(`<div class="log-calc blocked">🛡️ ${baseDmg} − ${armor} = 0 BLOQUEADO</div>`)}this.updateUI();G.currentActor++;await delay(350);this.nextActor()},
-    async enemyAction(enemy){
+    playerDefend(){G.p.defending=true;this.log(`<span class="log-player">${G.p.name}</span> defiende <span class="log-heal">+4 Eva</span>`);this.updateUI();setTimeout(()=>this.advanceToNextActor(),200)},
+    async playerFlee(){const r=d20();await showDice(r,20,r>=12);this.log(`Huida: D20=${r} vs 12`);if(r>=12){this.log('<span class="log-heal">¡Escape!</span>');this.escape()}else{this.log('<span class="log-miss">¡No escapas!</span>');await delay(300);this.advanceToNextActor()}},
+    async executePetAction(){const pet=G.p.pet;const aliveEnemies=G.enemies.filter(e=>e.hp>0);if(aliveEnemies.length===0){this.advanceToNextActor();return}const target=pick(aliveEnemies);const dmgRoll=rollDetailed(pet.damage);const baseDmg=dmgRoll.total;const armor=target.armor||0;const finalDmg=Math.max(0,baseDmg-armor);this.log(`<span class="log-pet">${pet.icon} ${pet.name}</span> → <span class="log-enemy">${target.name}</span>`);this.log(`├ Daño: ${dmgRoll.dice}=[${dmgRoll.rolls}] = ${baseDmg}`);if(finalDmg>0){this.log(`├ ⚔️ ${baseDmg} − ${armor} = ${finalDmg}`);target.hp-=finalDmg;this.log(`└ <span class="log-damage">${target.name} -${finalDmg} (${Math.max(0,target.hp)}/${target.maxHp})</span>`);if(target.hp<=0)this.log(`<span class="log-damage">💀 ${target.name} derrotado!</span>`)}else{this.log(`└ <span class="log-miss">🛡️ Bloqueado</span>`)}this.updateUI();await delay(350);this.advanceToNextActor()},
+    async executeEnemyAction(enemy){
         const p=G.p;
         // Mostrar mensaje de preparación
         this.log(`<span class="log-enemy">⚠️ ${enemy.name} (Dif:${enemy.difficulty}) ataca a ${p.name}...</span>`);
@@ -1456,9 +1525,10 @@ const Combat={
                 this.log(`└ <span class="log-heal">🛡️ ${p.name} bloquea todo (armadura ≥ daño)</span>`);
             }
         }
-        this.updateUI();Game.updateUI();G.currentActor++;
+        this.updateUI();Game.updateUI();
         if(p.hp<=0){this.defeat();return}
-        await delay(400);this.nextActor();
+        await delay(400);
+        this.advanceToNextActor();
     },
     applyEff(t,type){const effs={bleed:{dmg:1,turns:3},poison:{dmg:2,turns:2},fire:{dmg:'1d4',turns:2}};const ef=effs[type];if(!ef)return;if(!t.effects)t.effects=[];const ex=t.effects.find(e=>e.type===type);if(ex)ex.turns=ef.turns;else t.effects.push({type,dmg:ef.dmg,turns:ef.turns});this.log(`<span style="color:var(--orange)">⚡ ${type.toUpperCase()} → ${t.name}</span>`)},
     processAllEffects(){this.processEff(G.p);if(G.p.pet)this.processEff(G.p.pet);G.enemies.forEach(e=>this.processEff(e));this.updateUI();Game.updateUI()},
@@ -1496,11 +1566,16 @@ const Combat={
         this.duringTravel=false;
         G.traveling=null;
         G.enemies=[];
-        Story.add('<div style="text-align:center;padding:1rem;background:rgba(139,0,0,.3);border-radius:8px;margin:.5rem 0"><div style="font-size:2rem">💀</div><strong style="color:var(--red-bright);font-size:1.2rem">¡Has muerto!</strong><div style="color:var(--text-dim);margin-top:.3rem">Tu aventura termina aquí...</div></div>','combat');
+        Story.add(`<div style="text-align:center;padding:1.5rem;background:linear-gradient(135deg,rgba(139,0,0,.4),rgba(80,0,0,.6));border:2px solid var(--red);border-radius:12px;margin:.5rem 0">
+            <div style="font-size:3rem;margin-bottom:.5rem">💀</div>
+            <strong style="color:var(--red-bright);font-size:1.5rem;display:block">¡HAS MUERTO!</strong>
+            <div style="color:var(--text-dim);margin-top:.5rem;font-size:.9rem">Tu aventura termina aquí...</div>
+        </div>`,'combat');
         Game.deleteSave();
         // Mostrar botón prominente de reinicio
-        const resetHtml=`<div style="text-align:center;padding:1rem">
-            <button class="btn btn-primary" style="font-size:1.1rem;padding:.8rem 2rem;animation:pulse 1.5s infinite" onclick="Game.fullReset()">🔄 Nueva Aventura</button>
+        const resetHtml=`<div style="text-align:center;padding:1.5rem;background:var(--bg-panel);border-radius:8px;margin-top:.5rem">
+            <p style="color:var(--text-dim);margin-bottom:1rem;font-size:.9rem">Tu progreso ha sido eliminado.</p>
+            <button class="btn btn-primary" style="font-size:1.2rem;padding:1rem 2.5rem;animation:pulse 1.5s infinite;box-shadow:0 0 20px rgba(212,164,55,.3)" onclick="Game.fullReset()">🔄 Nueva Aventura</button>
         </div>`;
         $('#actionsContainer').innerHTML=resetHtml;
         $('#actionsPanel').classList.remove('hidden');
@@ -1617,7 +1692,7 @@ const Inv={
         
         G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);
         Game.updateUI();Game.autoSave();
-        if(G.combat){Combat.updateUI();G.currentActor++;Combat.nextActor()}
+        if(G.combat){Combat.updateUI();Combat.advanceToNextActor()}
     }
 };
 
