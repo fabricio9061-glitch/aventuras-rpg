@@ -538,28 +538,42 @@
                 <div class="rules-card"><h4>⚔️ Cálculo de Daño</h4>
                     <div class="rules-highlight"><strong>Fórmula:</strong><br>Daño Final = Daño Base − Armadura<br>(mínimo 0 si armadura ≥ daño)</div>
                     <p><strong>Ejemplo:</strong> Daño 7 − Armadura 2 = 5 final</p>
-                    <p><strong>Bloqueo:</strong> Daño 3 − Armadura 3 = 0</p>
                 </div>
-                <div class="rules-card"><h4>⚡ Velocidad e Iniciativa</h4>
-                    <div class="rules-highlight">Mayor velocidad = actúa primero<br>Empate: D20 de iniciativa</div>
-                    <p>Cada turno incluye TODAS las acciones ordenadas por velocidad.</p>
+                <div class="rules-card"><h4>⚡ Sistema de Turnos</h4>
+                    <div class="rules-highlight">1. Se calcula iniciativa (Velocidad + D20)<br>2. Actúan en orden de mayor a menor<br>3. Cuando todos actúan → nuevo turno</div>
+                    <p>La velocidad se reduce por el peso del equipo (1 peso = -1 velocidad)</p>
                 </div>
                 <div class="rules-card"><h4>🎲 Tiradas de Ataque</h4>
-                    <div class="rules-highlight">D20 + Precisión ≥ Dificultad<br>Crítico (20): Daño ×2<br>Pifia (1): Fallo automático</div>
+                    <div class="rules-highlight">D20 + Precisión ≥ Dificultad enemigo<br>🎯 Crítico (20): Daño ×2<br>💀 Pifia (1): Fallo automático</div>
+                    <p>Defender: +4 a evasión hasta tu próximo turno</p>
+                </div>
+                <div class="rules-card"><h4>🔥 Efectos de Estado</h4>
+                    <div class="rules-highlight">Se aplican al final de cada turno</div>
+                    <p>🩸 <strong>Sangrado:</strong> 1 daño/turno (3 turnos)</p>
+                    <p>☠️ <strong>Veneno:</strong> 2 daño/turno (2 turnos)</p>
+                    <p>🔥 <strong>Fuego:</strong> 1d4 daño/turno (2 turnos)</p>
+                    <p>Algunos armas aplican efectos automáticamente</p>
                 </div>
                 <div class="rules-card"><h4>🗺️ Sistema de Viaje</h4>
                     <div class="rules-highlight">Las regiones están conectadas por rutas</div>
-                    <p>• Debes completar encuentros para desbloquear rutas</p>
-                    <p>• Viajar toma tiempo (pasos)</p>
-                    <p>• Más lejos del pueblo = más difícil volver</p>
-                </div>
-                <div class="rules-card"><h4>👹 Grupos de Enemigos</h4>
-                    <p>Criaturas pueden aparecer en grupo:</p>
-                    <ul><li>Lobos, ratas: manadas (2-6)</li><li>Goblins, esqueletos: patrullas</li><li>Trolls, osos: solitarios</li></ul>
+                    <p>⚠️ <strong>Peligro:</strong> Basado en tipos de enemigos de la zona</p>
+                    <p>🔒 Completa encuentros para desbloquear nuevas rutas</p>
+                    <p>👣 Viajar consume pasos y puede generar encuentros</p>
                 </div>
                 <div class="rules-card"><h4>💰 Economía</h4>
-                    <div class="rules-highlight">99 MP = 1 MO</div>
-                    <p>Vender items: 50% del valor</p>
+                    <div class="rules-highlight">99 Monedas de Plata = 1 Moneda de Oro</div>
+                    <p>🏪 Items comprados: vender al 60%</p>
+                    <p>🎁 Items de loot: vender al 50%</p>
+                </div>
+                <div class="rules-card"><h4>👹 Grupos de Enemigos</h4>
+                    <p>Algunas criaturas aparecen en grupos:</p>
+                    <p>🐺 Manadas (lobos, ratas): 2-4</p>
+                    <p>💀 Patrullas (goblins): 2-3</p>
+                    <p>🐻 Solitarios (trolls, osos): 1</p>
+                </div>
+                <div class="rules-card"><h4>⚖️ Peso del Equipo</h4>
+                    <div class="rules-highlight">Peso total = arma + armadura<br>Velocidad = Base − Peso (mín. 1)</div>
+                    <p>Equipos pesados dan más protección pero actúas más lento</p>
                 </div>
             </div>
         </div>
@@ -955,6 +969,20 @@ const Regions={
             const isUnlocked=dest.reqEncounters===0||progress.encounters>=dest.reqEncounters;
             const steps=Math.abs(dest.distance-current.distance)+1;
             
+            // Calcular nivel de peligro basado en enemigos de la zona
+            let dangerLevel='';
+            if(dest.type==='danger'){
+                const enemies=Data.getEnemiesForRegion(dest.id);
+                const avgDanger=enemies.length>0?Math.round(enemies.reduce((s,e)=>{
+                    const baseDmg=e.damage?parseInt(e.damage.split('d')[1]||4):4;
+                    return s+(e.health||10)+baseDmg;
+                },0)/enemies.length):10;
+                if(avgDanger<=12)dangerLevel='<span style="color:#4a4">⚠️ Bajo</span>';
+                else if(avgDanger<=18)dangerLevel='<span style="color:#fa4">⚠️ Medio</span>';
+                else if(avgDanger<=25)dangerLevel='<span style="color:#f64">⚠️ Alto</span>';
+                else dangerLevel='<span style="color:#f22">☠️ Extremo</span>';
+            }
+            
             h+=`<div class="travel-route ${isUnlocked?'':'locked'}" onclick="${isUnlocked?`Regions.startTravel('${dest.id}')`:''}">
                 <div class="travel-route-icon">${dest.icon}</div>
                 <div class="travel-route-info">
@@ -962,7 +990,7 @@ const Regions={
                     <div class="travel-route-desc">${dest.desc}</div>
                     ${!isUnlocked?`<div class="travel-route-req">🔒 Necesitas ${dest.reqEncounters} encuentros (tienes ${progress.encounters})</div>`:''}
                     <div class="travel-route-steps">🚶 ${steps} ${steps===1?'paso':'pasos'} de viaje</div>
-                    ${dest.type==='danger'?`<div style="font-size:.55rem;color:var(--red-bright)">⚠️ Zona peligrosa</div>`:''}
+                    ${dest.type==='danger'?`<div style="font-size:.6rem">Peligro: ${dangerLevel}</div>`:`<div style="font-size:.55rem;color:var(--green-bright)">🏠 Zona segura</div>`}
                 </div>
                 <div class="travel-route-arrow">${isUnlocked?'→':'🔒'}</div>
             </div>`;
@@ -1046,6 +1074,7 @@ const Regions={
         Story.add(`<strong>📍 Has llegado a ${dest.icon} ${dest.name}</strong>`,'region');
         Story.add(dest.desc,'narrative');
         Game.updateUI();
+        Game.autoSave();
         
         if(dest.type==='safe'){
             const npcs=Data.getNpcsForRegion(dest.id);
@@ -1105,7 +1134,8 @@ const Game={
         $('#actionsPanel').classList.add('hidden');
         this.showCreate();
     },
-    save(){localStorage.setItem('rpg_save',JSON.stringify({p:G.p,region:G.region,regionProgress:G.regionProgress}));toast('Guardado','success')},
+    save(silent=true){localStorage.setItem('rpg_save',JSON.stringify({p:G.p,region:G.region,regionProgress:G.regionProgress}));if(!silent)toast('Guardado','success')},
+    autoSave(){if(G.p&&!G.combat)this.save(true)},
     load(){const s=localStorage.getItem('rpg_save');if(!s)return false;try{const d=JSON.parse(s);if(!d||!d.p||!d.p.name||!d.p.race){console.log('Invalid save');return false}G.p=d.p;G.region=d.region?Data.getRegion(d.region.id):Data.getRegion('pueblo');G.regionProgress=d.regionProgress||{};G.combat=false;G.traveling=null;Story.add('Partida cargada.','system');this.updateUI();this.exploreActions();return true}catch(e){console.error('Load error:',e);return false}},
     updateUI(){
         const p=G.p;if(!p)return;
@@ -1144,7 +1174,7 @@ const Game={
             if(npcs.length>0)actions.push({text:'🏘️ NPCs',fn:()=>Town.visit(G.region)});
             if((Data.recipes||[]).length>0)actions.push({text:'🔨 Crafteo',fn:()=>Craft.open()});
         }
-        actions.push({text:'🎒 Inventario',fn:()=>Inv.open()},{text:'💾 Guardar',fn:()=>this.save()},{text:'🔄 Nueva',fn:()=>this.newGame(),cls:'btn-danger'});
+        actions.push({text:'🎒 Inventario',fn:()=>Inv.open()},{text:'🔄 Nueva',fn:()=>this.newGame(),cls:'btn-danger'});
         this.setActions(actions);
     }
 };
@@ -1161,9 +1191,9 @@ const Explore={
     async flee(enemies){const r=d20();await showDice(r,20,r>=14);Story.add(`Huida: D20=${r} vs 14`,'system');if(r>=14){Story.add('¡Escapas!','narrative');Game.exploreActions()}else{Story.add('¡No escapas!','combat');Combat.start(enemies)}},
     async trap(){const trap=pick(Data.traps);Story.add('Sientes peligro...','narrative');setTimeout(async()=>{Story.add(`<strong>¡Trampa!</strong> ${trap.name}`,'trap');const det=d20();await showDice(det,20,det>=trap.detectDiff);Story.add(`Percepción: D20=${det} vs ${trap.detectDiff}`,'system');if(det>=trap.detectDiff){Story.add('¡La detectas!','system');Game.setActions([{text:'🏃 Esquivar',fn:async()=>{const r=d20();await showDice(r,20,r>=trap.dodgeDiff);if(r>=trap.dodgeDiff){Story.add('¡Esquivado!','loot');Game.exploreActions()}else this.trapDmg(trap,true)},cls:'btn-primary'},{text:'🔧 Desactivar',fn:async()=>{const r=d20();await showDice(r,20,r>=15);if(r>=15){const mp=dX(15)+5;G.p.silver+=mp;Story.add(`¡Éxito! +${mp} MP`,'loot')}else if(r>=10)Story.add('No funciona.','system');else{Story.add('¡La activas!','trap');this.trapDmg(trap,false);return}Game.updateUI();Game.exploreActions()}}])}else{Story.add('No la detectas...','trap');this.trapDmg(trap,false)}},800)},
     trapDmg(trap,reduced){let dmg=roll(trap.damage);if(reduced)dmg=Math.ceil(dmg*0.5);const arm=Math.floor(Game.armor()/2);const final=Math.max(0,dmg-arm);Story.add(`${trap.name}: ${dmg} − ${arm} arm = <strong>${final} daño</strong>${final===0?' (bloqueado)':''}`,'system');if(final>0)G.p.hp-=final;if(trap.effect)Combat.applyEff(G.p,trap.effect);Game.updateUI();if(G.p.hp<=0){Story.add('<strong style="color:var(--red-bright)">💀 Has muerto...</strong>','combat');Story.add('Tu aventura termina aquí.','system');Game.deleteSave();Game.setActions([{text:'🔄 Nueva Partida',fn:()=>{G.p=null;Story.clear();Game.showCreate()},cls:'btn-primary'}])}else Game.exploreActions()},
-    treasure(){Story.add('¡Algo brilla!','narrative');setTimeout(()=>{const mp=dX(30)+10;G.p.silver+=mp;while(G.p.silver>=99){G.p.silver-=99;G.p.gold++}Story.add(`+${mp} MP`,'loot');if(Math.random()<0.3&&G.p.inv.length<G.p.maxSlots){const it={...pick(Data.items),uid:genId('i')};G.p.inv.push(it);Story.add(`También: ${it.icon} ${it.name}`,'loot')}Game.updateUI();Game.exploreActions()},800)},
-    pet(){if(G.p.pet){this.safe();return}const pool=Data.getPetsForRegion(G.region.id);if(pool.length===0){this.treasure();return}const pet=pick(pool);Story.add(`${pet.icon} Un ${pet.name} aparece.`,'narrative');const meat=G.p.inv.some(i=>i.type==='food');Game.setActions([{text:'🥩 Domesticar',fn:async()=>{const idx=G.p.inv.findIndex(i=>i.type==='food');if(idx>=0)G.p.inv.splice(idx,1);const r=dX(pet.difficulty),th=Math.ceil(pet.difficulty*0.6);await showDice(r,pet.difficulty,r>=th);if(r>=th){G.p.pet={...pet,hp:pet.health,maxHp:pet.health};Story.add(`<strong style="color:var(--green-bright)">¡${pet.name} es tu compañero!</strong>`,'loot');toast('¡Compañero!','success')}else Story.add(`El ${pet.name} se aleja.`,'narrative');Game.updateUI();Game.exploreActions()},disabled:!meat,cls:meat?'btn-primary':''},{text:'⚔️ Cazar',fn:()=>Combat.start([{...pet,uid:genId('e'),hp:pet.health,maxHp:pet.health,difficulty:10,armor:0,loot:[5,15],drops:['i4'],effects:[]}])},{text:'🚶 Dejar',fn:()=>{Story.add('Te alejas.','narrative');Game.exploreActions()}}])},
-    safe(){Story.add('Lugar tranquilo.','narrative');const h=Math.floor(G.p.maxHp*0.3);G.p.hp=Math.min(G.p.maxHp,G.p.hp+h);G.p.effects=[];Story.add(`<span style="color:var(--green-bright)">+${h} HP</span>. Curado.`,'system');Game.updateUI();Game.exploreActions()}
+    treasure(){Story.add('¡Algo brilla!','narrative');setTimeout(()=>{const mp=dX(30)+10;G.p.silver+=mp;while(G.p.silver>=99){G.p.silver-=99;G.p.gold++}Story.add(`+${mp} MP`,'loot');if(Math.random()<0.3&&G.p.inv.length<G.p.maxSlots){const it={...pick(Data.items),uid:genId('i')};G.p.inv.push(it);Story.add(`También: ${it.icon} ${it.name}`,'loot')}Game.updateUI();Game.autoSave();Game.exploreActions()},800)},
+    pet(){if(G.p.pet){this.safe();return}const pool=Data.getPetsForRegion(G.region.id);if(pool.length===0){this.treasure();return}const pet=pick(pool);Story.add(`${pet.icon} Un ${pet.name} aparece.`,'narrative');const meat=G.p.inv.some(i=>i.type==='food');Game.setActions([{text:'🥩 Domesticar',fn:async()=>{const idx=G.p.inv.findIndex(i=>i.type==='food');if(idx>=0)G.p.inv.splice(idx,1);const r=dX(pet.difficulty),th=Math.ceil(pet.difficulty*0.6);await showDice(r,pet.difficulty,r>=th);if(r>=th){G.p.pet={...pet,hp:pet.health,maxHp:pet.health};Story.add(`<strong style="color:var(--green-bright)">¡${pet.name} es tu compañero!</strong>`,'loot');toast('¡Compañero!','success');Game.autoSave()}else Story.add(`El ${pet.name} se aleja.`,'narrative');Game.updateUI();Game.exploreActions()},disabled:!meat,cls:meat?'btn-primary':''},{text:'⚔️ Cazar',fn:()=>Combat.start([{...pet,uid:genId('e'),hp:pet.health,maxHp:pet.health,difficulty:10,armor:0,loot:[5,15],drops:['i4'],effects:[]}])},{text:'🚶 Dejar',fn:()=>{Story.add('Te alejas.','narrative');Game.exploreActions()}}])},
+    safe(){Story.add('Lugar tranquilo.','narrative');const h=Math.floor(G.p.maxHp*0.3);G.p.hp=Math.min(G.p.maxHp,G.p.hp+h);G.p.effects=[];Story.add(`<span style="color:var(--green-bright)">+${h} HP</span>. Curado.`,'system');Game.updateUI();Game.autoSave();Game.exploreActions()}
 };
 
 const Combat={
@@ -1191,7 +1221,51 @@ const Combat={
         }
         if(actor.type==='player')this.showPlayerActions();else if(actor.type==='pet')await this.petAction();else await this.enemyAction(actor.entity)},
     highlightActor(actor){$$('.combatant').forEach(c=>c.classList.remove('active'));const el=actor.type==='player'?$(`.combatant.player`):actor.type==='pet'?$(`.combatant.pet`):$(`[data-uid="${actor.entity.uid}"]`);if(el)el.classList.add('active')},
-    showPlayerActions(){const ca=$('#combatActions');ca.innerHTML='';const aliveEnemies=G.enemies.filter(e=>e.hp>0);if(aliveEnemies.length>1){ca.innerHTML=`<div style="width:100%;text-align:center;font-size:.65rem;color:var(--text-dim);margin-bottom:.2rem">Objetivo:</div>`;const targetDiv=document.createElement('div');targetDiv.className='target-select';aliveEnemies.forEach(e=>{const btn=document.createElement('button');btn.className='target-btn';btn.innerHTML=`${e.icon} ${e.name}`;btn.onclick=()=>this.playerAttack(e);targetDiv.appendChild(btn)});ca.appendChild(targetDiv)}else{const atk=document.createElement('button');atk.className='btn btn-primary';atk.textContent='⚔️ Atacar';atk.onclick=()=>this.playerAttack(aliveEnemies[0]);ca.appendChild(atk)}[{text:'🛡️ Defender',fn:()=>this.playerDefend()},{text:'🎒 Item',fn:()=>Inv.open()},{text:'💨 Huir',fn:()=>this.playerFlee(),cls:'btn-danger'}].forEach(a=>{const b=document.createElement('button');b.className=`btn ${a.cls||''}`;b.textContent=a.text;b.onclick=a.fn;ca.appendChild(b)})},
+    showPlayerActions(){
+        const ca=$('#combatActions');ca.innerHTML='';
+        const aliveEnemies=G.enemies.filter(e=>e.hp>0);
+        
+        // Botón Atacar siempre visible
+        const atkBtn=document.createElement('button');
+        atkBtn.className='btn btn-primary';
+        atkBtn.textContent='⚔️ Atacar';
+        if(aliveEnemies.length===1){
+            atkBtn.onclick=()=>this.playerAttack(aliveEnemies[0]);
+        }else{
+            atkBtn.onclick=()=>this.showTargetSelect(aliveEnemies);
+        }
+        ca.appendChild(atkBtn);
+        
+        // Otros botones
+        [{text:'🛡️ Defender',fn:()=>this.playerDefend()},{text:'🎒 Item',fn:()=>Inv.open()},{text:'💨 Huir',fn:()=>this.playerFlee(),cls:'btn-danger'}].forEach(a=>{
+            const b=document.createElement('button');
+            b.className=`btn ${a.cls||''}`;
+            b.textContent=a.text;
+            b.onclick=a.fn;
+            ca.appendChild(b);
+        });
+    },
+    showTargetSelect(enemies){
+        const ca=$('#combatActions');
+        ca.innerHTML=`<div style="text-align:center;margin-bottom:.5rem;color:var(--gold)">🎯 Selecciona objetivo:</div>`;
+        const grid=document.createElement('div');
+        grid.style.cssText='display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center';
+        enemies.forEach(e=>{
+            const btn=document.createElement('button');
+            btn.className='btn';
+            btn.style.cssText='display:flex;flex-direction:column;align-items:center;padding:.5rem .8rem;min-width:80px';
+            btn.innerHTML=`<span style="font-size:1.5rem">${e.icon}</span><span style="font-size:.7rem">${e.name}</span><span style="font-size:.6rem;color:var(--red)">${e.hp}/${e.maxHp}</span>`;
+            btn.onclick=()=>this.playerAttack(e);
+            grid.appendChild(btn);
+        });
+        ca.appendChild(grid);
+        const backBtn=document.createElement('button');
+        backBtn.className='btn btn-danger';
+        backBtn.style.marginTop='.5rem';
+        backBtn.textContent='← Volver';
+        backBtn.onclick=()=>this.showPlayerActions();
+        ca.appendChild(backBtn);
+    },
     async playerAttack(target){const p=G.p;const atkRoll=d20();const prec=p.race.bonus.precision||0;const total=atkRoll+prec;const isCrit=atkRoll===20;const isPifia=atkRoll===1;await showDice(atkRoll,20,isCrit);if(isPifia){this.log(`<span class="log-miss">D20=1 ¡PIFIA!</span>`);if(typeof Plugins!=='undefined')Plugins.trigger('onAttack',p,target,0,false)}else if(total>=target.difficulty||isCrit){const dmgRoll=rollDetailed(p.weapon?.damage||'1d2');const bonus=p.race.bonus.damage||0;let baseDmg=dmgRoll.total+bonus;
         // Plugin: modificar daño por efectos (ej: furia)
         const fury=(p.effects||[]).find(e=>e.type==='fury');if(fury){const furyBonus=Math.floor(baseDmg*0.5);baseDmg+=furyBonus;this.log(`🔥+${furyBonus}`)}
@@ -1204,18 +1278,47 @@ const Combat={
     playerDefend(){G.p.defending=true;this.log(`<span class="log-player">${G.p.name}</span> defiende <span class="log-heal">+4 Eva</span>`);G.currentActor++;this.updateUI();this.nextActor()},
     async playerFlee(){const r=d20();await showDice(r,20,r>=12);this.log(`Huida: D20=${r} vs 12`);if(r>=12){this.log('<span class="log-heal">¡Escape!</span>');this.escape()}else{this.log('<span class="log-miss">¡No escapas!</span>');G.currentActor++;await delay(300);this.nextActor()}},
     async petAction(){const pet=G.p.pet;const aliveEnemies=G.enemies.filter(e=>e.hp>0);if(aliveEnemies.length===0)return;const target=pick(aliveEnemies);const dmgRoll=rollDetailed(pet.damage);const baseDmg=dmgRoll.total;const armor=target.armor||0;const finalDmg=Math.max(0,baseDmg-armor);this.log(`<span class="log-pet">${pet.icon} ${pet.name}</span> → <span class="log-enemy">${target.name}</span>`);this.log(`├ Daño: ${dmgRoll.dice}=[${dmgRoll.rolls}] = ${baseDmg}`);if(finalDmg>0){this.log(`<div class="log-calc">⚔️ ${baseDmg} − ${armor} = ${finalDmg}</div>`);target.hp-=finalDmg;this.log(`└ <span class="log-damage">${target.name} -${finalDmg} (${Math.max(0,target.hp)}/${target.maxHp})</span>`);if(target.hp<=0)this.log(`<span class="log-damage">💀 ${target.name} derrotado!</span>`)}else{this.log(`<div class="log-calc blocked">🛡️ ${baseDmg} − ${armor} = 0 BLOQUEADO</div>`)}this.updateUI();G.currentActor++;await delay(350);this.nextActor()},
-    async enemyAction(enemy){const p=G.p;const evaBonus=(p.race.bonus.evasion||0)+(p.defending?4:0);const dodgeRoll=d20();const dodgeTotal=dodgeRoll+evaBonus;if(dodgeTotal>=12){this.log(`<span class="log-heal">${enemy.name}→ ¡Esquivado!</span>`)}else{const dmgRoll=rollDetailed(enemy.damage);let baseDmg=dmgRoll.total;const isCrit=Math.random()<0.1;if(isCrit){baseDmg=Math.ceil(baseDmg*1.25)}const playerArmor=Game.armor();let finalDmg=Math.max(0,baseDmg-playerArmor);
-        // Plugin: hooks de daño recibido (escudo de espinas, etc)
-        if(typeof Plugins!=='undefined'&&finalDmg>0){
-            const special=Plugins.getSpecialItem(p.armor?.id);
-            if(special&&special.onTakeDamage)special.onTakeDamage(p,enemy,finalDmg);
-            // Efectos de escudo mágico
-            (p.effects||[]).filter(e=>e.type==='shield').forEach(eff=>{
-                const custom=Plugins.customEffects[eff.type];
-                if(custom&&custom.onTakeDamage)finalDmg=custom.onTakeDamage(p,eff,finalDmg);
-            });
+    async enemyAction(enemy){
+        const p=G.p;
+        // Mostrar mensaje de preparación
+        this.log(`<span class="log-enemy">⚠️ ${enemy.name} prepara su ataque...</span>`);
+        this.updateUI();
+        await delay(600);
+        
+        const evaBonus=(p.race.bonus.evasion||0)+(p.defending?4:0);
+        const dodgeRoll=d20();
+        const dodgeTotal=dodgeRoll+evaBonus;
+        
+        if(dodgeTotal>=12){
+            this.log(`<span class="log-heal">🛡️ ¡${p.name} esquiva!</span>`);
+        }else{
+            const dmgRoll=rollDetailed(enemy.damage);
+            let baseDmg=dmgRoll.total;
+            const isCrit=Math.random()<0.1;
+            if(isCrit){baseDmg=Math.ceil(baseDmg*1.25)}
+            const playerArmor=Game.armor();
+            let finalDmg=Math.max(0,baseDmg-playerArmor);
+            // Plugin: hooks de daño recibido
+            if(typeof Plugins!=='undefined'&&finalDmg>0){
+                const special=Plugins.getSpecialItem(p.armor?.id);
+                if(special&&special.onTakeDamage)special.onTakeDamage(p,enemy,finalDmg);
+                (p.effects||[]).filter(e=>e.type==='shield').forEach(eff=>{
+                    const custom=Plugins.customEffects[eff.type];
+                    if(custom&&custom.onTakeDamage)finalDmg=custom.onTakeDamage(p,eff,finalDmg);
+                });
+            }
+            if(finalDmg>0){
+                this.log(`<span class="log-damage">💥 ${enemy.name} hace ${finalDmg} daño${isCrit?' ¡CRIT!':''}</span>`);
+                p.hp-=finalDmg;
+                if(enemy.effect)this.applyEff(p,enemy.effect);
+            }else{
+                this.log(`<span class="log-heal">🛡️ ${p.name} bloquea todo el daño</span>`);
+            }
         }
-        if(finalDmg>0){this.log(`<span class="log-enemy">${enemy.name}</span>→${p.name}: <span class="log-damage">${finalDmg}</span>${isCrit?' ¡Crit!':''}`);p.hp-=finalDmg;if(enemy.effect)this.applyEff(p,enemy.effect)}else{this.log(`<span class="log-heal">${p.name} bloquea</span>`)}}this.updateUI();Game.updateUI();G.currentActor++;if(p.hp<=0){this.defeat();return}await delay(350);this.nextActor()},
+        this.updateUI();Game.updateUI();G.currentActor++;
+        if(p.hp<=0){this.defeat();return}
+        await delay(400);this.nextActor();
+    },
     applyEff(t,type){const effs={bleed:{dmg:1,turns:3},poison:{dmg:2,turns:2},fire:{dmg:'1d4',turns:2}};const ef=effs[type];if(!ef)return;if(!t.effects)t.effects=[];const ex=t.effects.find(e=>e.type===type);if(ex)ex.turns=ef.turns;else t.effects.push({type,dmg:ef.dmg,turns:ef.turns});this.log(`<span style="color:var(--orange)">⚡ ${type.toUpperCase()} → ${t.name}</span>`)},
     processAllEffects(){this.processEff(G.p);if(G.p.pet)this.processEff(G.p.pet);G.enemies.forEach(e=>this.processEff(e));this.updateUI();Game.updateUI()},
     processEff(t){if(!t.effects?.length||t.hp<=0)return;let total=0;t.effects.forEach(ef=>{const d=typeof ef.dmg==='string'?roll(ef.dmg):ef.dmg;total+=d;ef.turns--});t.effects=t.effects.filter(e=>e.turns>0);if(total>0){t.hp=Math.max(0,t.hp-total);this.log(`<span style="color:var(--orange)">🔥 ${t.name} -${total} efectos (HP:${t.hp})</span>`)}},
@@ -1235,6 +1338,7 @@ const Combat={
         Story.add(`📊 Encuentros en ${G.region.name}: ${G.regionProgress[G.region.id].encounters}`,'system');
         G.enemies=[];
         Game.updateUI();
+        Game.autoSave();
         
         // If traveling, continue journey
         if(this.duringTravel){
@@ -1269,9 +1373,9 @@ const Inv={
     open(){if(!G.p)return;this.render();openModal('inventoryModal')},
     render(){if(!G.p)return;$('#inventoryInfo').textContent=`${G.p.inv.length}/${G.p.maxSlots}`;const g=$('#inventoryGrid');g.innerHTML='';G.p.inv.forEach(it=>{const s=document.createElement('div');s.className=`inv-slot rarity-${it.rarity||'common'}`;s.innerHTML=`<div class="inv-slot-icon">${sprite(it)}</div><div class="inv-slot-name">${it.name}</div>`;s.onclick=()=>this.detail(it,'inv');g.appendChild(s)});for(let i=G.p.inv.length;i<G.p.maxSlots;i++){const s=document.createElement('div');s.className='inv-slot empty';s.innerHTML='<div class="inv-slot-name" style="color:var(--text-dim)">vacío</div>';g.appendChild(s)}},
     detail(it,ctx){G.item=it;$('#detailIcon').innerHTML=sprite(it);$('#detailName').textContent=it.name;$('#detailType').textContent=it.damage?'Arma':it.defense!==undefined?'Armadura':it.type||'Item';$('#detailDesc').textContent=it.desc||'Sin descripción.';let st='';if(it.damage)st+=`<div class="item-stat-box"><div class="item-stat-label">Daño</div><div class="item-stat-value">${it.damage}</div></div>`;if(it.defense!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Defensa</div><div class="item-stat-value">${it.defense}</div></div>`;if(it.weight!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Peso</div><div class="item-stat-value">${it.weight}</div></div>`;if(it.effect&&(it.type==='potion'||it.type==='food'))st+=`<div class="item-stat-box"><div class="item-stat-label">Cura</div><div class="item-stat-value">${it.effect}</div></div>`;if(it.value)st+=`<div class="item-stat-box"><div class="item-stat-label">Valor</div><div class="item-stat-value">${it.value}MP</div></div>`;$('#detailStats').innerHTML=st;const canEq=!G.combat&&G.region.type==='safe';let acts='';if(ctx.startsWith('eq-')){if(canEq)acts=`<button class="btn btn-danger" onclick="Inv.unequip('${ctx.split('-')[1]}')">❌ Quitar</button>`;else acts='<span style="color:var(--text-dim)">Solo zona segura</span>'}else{if(it.damage&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('weapon')">⚔️ Equipar</button>`;if(it.defense!==undefined&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('armor')">🛡️ Equipar</button>`;if(it.type==='potion'||it.type==='food')acts+=`<button class="btn btn-primary" onclick="Inv.use()">✨ Usar</button>`;if(it.type==='antidote')acts+=`<button class="btn btn-primary" onclick="Inv.use()">💊 Usar</button>`;if(it.type==='escape'&&G.combat)acts+=`<button class="btn btn-primary" onclick="Inv.use()">💨 Usar</button>`;if(it.type==='backpack')acts+=`<button class="btn btn-primary" onclick="Inv.use()">🎒 Usar</button>`}acts+=`<button class="btn" onclick="closeModal('itemDetailModal')">Cerrar</button>`;$('#detailActions').innerHTML=acts;openModal('itemDetailModal')},
-    equip(slot){const it=G.item;if(!it?.uid)return;closeModal('itemDetailModal');if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon=it}else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor=it}G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);toast('Equipado','success');Game.updateUI();this.render()},
-    unequip(slot){if(G.p.inv.length>=G.p.maxSlots){toast('Inventario lleno','error');return}closeModal('itemDetailModal');if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon={name:'Puños',damage:'1d2',icon:'✊'}}else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor={name:'Sin armadura',defense:0,icon:'👤'}}toast('Desequipado','info');Game.updateUI()},
-    use(){const it=G.item;if(!it?.uid)return;closeModal('itemDetailModal');closeModal('inventoryModal');if(it.type==='potion'||it.type==='food'){const h=roll(it.effect||'1d4');const a=Math.min(h,G.p.maxHp-G.p.hp);G.p.hp+=a;Story.add(`${it.icon} ${it.name}: <span style="color:var(--green-bright)">+${a} HP</span>`,'system');if(G.combat)Combat.log(`<span class="log-heal">${G.p.name} usa ${it.name}: +${a} HP</span>`)}else if(it.type==='antidote'){G.p.effects=G.p.effects.filter(e=>e.type!=='poison');Story.add('Veneno curado.','system')}else if(it.type==='escape'&&G.combat){G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);Story.add('¡Bomba de humo!','narrative');Combat.escape();return}else if(it.type==='backpack'){const s=parseInt(it.effect)||5;G.p.maxSlots+=s;Story.add(`+${s} espacios.`,'system')}G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);Game.updateUI();if(G.combat){Combat.updateUI();G.currentActor++;Combat.nextActor()}}
+    equip(slot){const it=G.item;if(!it?.uid)return;closeModal('itemDetailModal');if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon=it}else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor=it}G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);toast('Equipado','success');Game.updateUI();Game.autoSave();this.render()},
+    unequip(slot){if(G.p.inv.length>=G.p.maxSlots){toast('Inventario lleno','error');return}closeModal('itemDetailModal');if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon={name:'Puños',damage:'1d2',icon:'✊'}}else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor={name:'Sin armadura',defense:0,icon:'👤'}}toast('Desequipado','info');Game.updateUI();Game.autoSave()},
+    use(){const it=G.item;if(!it?.uid)return;closeModal('itemDetailModal');closeModal('inventoryModal');if(it.type==='potion'||it.type==='food'){const h=roll(it.effect||'1d4');const a=Math.min(h,G.p.maxHp-G.p.hp);G.p.hp+=a;Story.add(`${it.icon} ${it.name}: <span style="color:var(--green-bright)">+${a} HP</span>`,'system');if(G.combat)Combat.log(`<span class="log-heal">${G.p.name} usa ${it.name}: +${a} HP</span>`)}else if(it.type==='antidote'){G.p.effects=G.p.effects.filter(e=>e.type!=='poison');Story.add('Veneno curado.','system')}else if(it.type==='escape'&&G.combat){G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);Story.add('¡Bomba de humo!','narrative');Combat.escape();return}else if(it.type==='backpack'){const s=parseInt(it.effect)||5;G.p.maxSlots+=s;Story.add(`+${s} espacios.`,'system')}G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);Game.updateUI();Game.autoSave();if(G.combat){Combat.updateUI();G.currentActor++;Combat.nextActor()}}
 };
 
 const Town={
@@ -1310,6 +1414,7 @@ const Town={
                 G.p.hp=G.p.maxHp;
                 G.p.effects=[];
                 Story.add('Curación completa. (-10 MP)','system');
+                Game.autoSave();
             }else{
                 Story.add('"No tienes suficiente dinero."','dialogue');
             }
@@ -1320,6 +1425,7 @@ const Town={
                 const h=Math.floor(G.p.maxHp*0.5);
                 G.p.hp=Math.min(G.p.maxHp,G.p.hp+h);
                 Story.add(`Descansas. +${h} HP (-5 MP)`,'system');
+                Game.autoSave();
             }else{
                 Story.add('"No tienes dinero para una habitación."','dialogue');
             }
@@ -1377,8 +1483,8 @@ const Town={
         $('#shopContent').innerHTML=h;
         openModal('shopModal');
     },
-    buy(iid){const it=Data.findItem(iid);if(!it||G.p.silver<it.value||G.p.inv.length>=G.p.maxSlots)return;G.p.silver-=it.value;G.p.inv.push({...it,uid:genId('i'),bought:true});toast(`Comprado: ${it.name}`,'success');Game.updateUI();if(this.npc)this.shop(this.npc)},
-    sell(uid,price){const it=G.p.inv.find(i=>i.uid===uid);if(!it)return;G.p.inv=G.p.inv.filter(i=>i.uid!==uid);G.p.silver+=price;while(G.p.silver>=99){G.p.silver-=99;G.p.gold++}toast('Vendido','success');Game.updateUI();if(this.npc)this.shop(this.npc)}
+    buy(iid){const it=Data.findItem(iid);if(!it||G.p.silver<it.value||G.p.inv.length>=G.p.maxSlots)return;G.p.silver-=it.value;G.p.inv.push({...it,uid:genId('i'),bought:true});toast(`Comprado: ${it.name}`,'success');Game.updateUI();Game.autoSave();if(this.npc)this.shop(this.npc)},
+    sell(uid,price){const it=G.p.inv.find(i=>i.uid===uid);if(!it)return;G.p.inv=G.p.inv.filter(i=>i.uid!==uid);G.p.silver+=price;while(G.p.silver>=99){G.p.silver-=99;G.p.gold++}toast('Vendido','success');Game.updateUI();Game.autoSave();if(this.npc)this.shop(this.npc)}
 };
 
 const Craft={
@@ -1438,6 +1544,7 @@ const Craft={
         Story.add(`🔨 Crafteado: ${result.icon} <strong>${result.name}</strong>`,'loot');
         toast(`¡${result.name} creado!`,'success');
         Game.updateUI();
+        Game.autoSave();
         this.open();
     }
 };
