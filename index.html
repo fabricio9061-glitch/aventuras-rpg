@@ -608,6 +608,7 @@
                 <button class="editor-tab" data-editor="enemies">👹 Enemigos</button>
                 <button class="editor-tab" data-editor="pets">🐺 Mascotas</button>
                 <button class="editor-tab" data-editor="npcs">🧔 NPCs</button>
+                <button class="editor-tab" data-editor="spells">✨ Hechizos</button>
                 <button class="editor-tab" data-editor="recipes">🔨 Recetas</button>
             </div>
             
@@ -640,9 +641,10 @@
                     <div class="form-group"><label>+Velocidad</label><input type="number" id="race-speed"></div>
                     <div class="form-group"><label>+Precisión</label><input type="number" id="race-precision"></div>
                     <div class="form-group"><label>+Daño</label><input type="number" id="race-damage"></div>
-                    <div class="form-group"><label>✨ Usa Maná</label><select id="race-usesMana">
-                        <option value="false">No (guerrero/físico)</option>
-                        <option value="true">Sí (mago/hechicero)</option>
+                    <div class="form-group"><label>⚔️ Tipo Combate</label><select id="race-combatType">
+                        <option value="warrior">⚔️ Guerrero (solo armas físicas)</option>
+                        <option value="mage">✨ Mago (solo magia/bastones)</option>
+                        <option value="hybrid">🔮 Híbrido (magia + armas)</option>
                     </select></div>
                 </div>
                 <div class="form-group"><label>Descripción</label><textarea id="race-desc"></textarea></div>
@@ -665,6 +667,7 @@
                         <option value="false">⚔️ Física (espada, daga, arco)</option>
                         <option value="true">✨ Mágica (bastón, pergamino, hechizo)</option>
                     </select></div>
+                    <div class="form-group"><label>+Maná</label><input type="number" id="weapon-manaBonus" placeholder="0"></div>
                     <div class="form-group"><label>Efecto</label><select id="weapon-effect"><option value="">Ninguno</option><option value="bleed">Sangrado</option><option value="poison">Veneno</option><option value="fire">Fuego</option></select></div>
                 </div>
                 <div class="form-group"><label>Descripción</label><textarea id="weapon-desc"></textarea></div>
@@ -683,6 +686,8 @@
                     <div class="form-group"><label>Sprite</label><input type="text" id="armor-sprite"></div>
                     <div class="form-group"><label>Rareza</label><select id="armor-rarity"><option value="common">Común</option><option value="rare">Raro</option><option value="epic">Épico</option><option value="legendary">Legendario</option></select></div>
                     <div class="form-group"><label>Valor MP</label><input type="number" id="armor-value"></div>
+                    <div class="form-group"><label>✨ Mágica</label><select id="armor-magic"><option value="false">No</option><option value="true">Sí</option></select></div>
+                    <div class="form-group"><label>+Maná</label><input type="number" id="armor-manaBonus" placeholder="0"></div>
                 </div>
                 <div class="form-group"><label>Descripción</label><textarea id="armor-desc"></textarea></div>
                 <div class="form-actions"><button class="btn" onclick="Editor.clear('armor')">🆕</button><button class="btn btn-primary" onclick="Editor.saveArmor()">💾</button></div>
@@ -698,6 +703,7 @@
                         <option value="potion">🧪 Poción</option>
                         <option value="food">🍞 Comida</option>
                         <option value="antidote">💊 Antídoto</option>
+                        <option value="scroll">📜 Pergamino (enseña hechizo)</option>
                         <option value="escape">💨 Escape</option>
                         <option value="backpack">🎒 Mochila</option>
                         <option value="misc">📦 Otro/Crafteo</option>
@@ -721,6 +727,11 @@
                     <div id="item-food-fields" style="display:none">
                         <div class="form-grid">
                             <div class="form-group"><label>🍖 Alimenta (1-20)</label><input type="number" id="item-food-value" min="1" max="20" placeholder="1-20"></div>
+                        </div>
+                    </div>
+                    <div id="item-scroll-fields" style="display:none">
+                        <div class="form-grid">
+                            <div class="form-group"><label>📜 Enseña Hechizo</label><select id="item-scroll-spell"></select></div>
                         </div>
                     </div>
                     <div id="item-antidote-fields" style="display:none">
@@ -788,7 +799,15 @@
                 </div>
                 <div class="form-group"><label>Narrativa</label><textarea id="enemy-desc"></textarea></div>
                 <div class="form-group"><label>Regiones</label><div class="multi-select" id="enemy-regions"></div></div>
-                <div class="form-group"><label>Drops</label><div class="multi-select" id="enemy-drops"></div></div>
+                <div class="form-group">
+                    <label>Drops (ítem + % probabilidad)</label>
+                    <div style="display:flex;gap:.3rem;margin-bottom:.3rem">
+                        <select id="enemy-drop-select" style="flex:1"></select>
+                        <input type="number" id="enemy-drop-chance" placeholder="%" min="1" max="100" value="20" style="width:60px">
+                        <button class="btn btn-sm" onclick="Editor.addDrop()">+</button>
+                    </div>
+                    <div id="enemy-drops-list" style="display:flex;flex-wrap:wrap;gap:.3rem;min-height:30px;padding:.3rem;background:var(--bg-dark);border-radius:4px"></div>
+                </div>
                 <div class="form-actions"><button class="btn" onclick="Editor.clear('enemy')">🆕</button><button class="btn btn-primary" onclick="Editor.saveEnemy()">💾</button></div>
                 <div class="items-list" id="enemies-list"></div>
             </div>
@@ -825,6 +844,21 @@
                 <div class="form-group"><label>Vende</label><div class="multi-select" id="npc-sells"></div></div>
                 <div class="form-actions"><button class="btn" onclick="Editor.clear('npc')">🆕</button><button class="btn btn-primary" onclick="Editor.saveNpc()">💾</button></div>
                 <div class="items-list" id="npcs-list"></div>
+            </div>
+
+            <div class="editor-section" id="editor-spells">
+                <h3>✨ Hechizos</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>ID</label><input type="text" id="spell-id"></div>
+                    <div class="form-group"><label>Nombre</label><input type="text" id="spell-name"></div>
+                    <div class="form-group"><label>Daño</label><input type="text" id="spell-damage" placeholder="2d5"></div>
+                    <div class="form-group"><label>Costo Maná</label><input type="number" id="spell-cost" placeholder="2"></div>
+                    <div class="form-group"><label>Emoji</label><input type="text" id="spell-icon" maxlength="2" placeholder="⚡"></div>
+                    <div class="form-group"><label>Efecto</label><select id="spell-effect"><option value="">Ninguno</option><option value="fire">🔥 Fuego</option><option value="poison">☠️ Veneno</option><option value="bleed">🩸 Sangrado</option></select></div>
+                </div>
+                <div class="form-group"><label>Descripción</label><textarea id="spell-desc"></textarea></div>
+                <div class="form-actions"><button class="btn" onclick="Editor.clear('spell')">🆕</button><button class="btn btn-primary" onclick="Editor.saveSpell()">💾</button></div>
+                <div class="items-list" id="spells-list"></div>
             </div>
 
             <div class="editor-section" id="editor-recipes">
@@ -885,8 +919,22 @@ const Data={
         {id:'mar',name:'Alta Mar',icon:'🌊',type:'danger',desc:'Aguas profundas.',distance:3,reqEncounters:8,connections:['pantano'],narratives:['Olas mecen.','Algo bajo el agua.']},
         {id:'desierto',name:'Desierto',icon:'🏜️',type:'danger',desc:'Dunas ardientes.',distance:3,reqEncounters:10,connections:['montana'],narratives:['Calor sofocante.','Arena movediza.']}
     ],
-    races:[{id:'human',name:'Humano',icon:'🧑',bonus:{health:2,speed:10}},{id:'elf',name:'Elfo',icon:'🧝',bonus:{precision:2,speed:14}},{id:'dwarf',name:'Enano',icon:'🧔',bonus:{armor:2,speed:8}},{id:'orc',name:'Orco',icon:'👹',bonus:{damage:2,speed:10}},{id:'halfling',name:'Mediano',icon:'🧒',bonus:{speed:16,precision:1}}],
-    weapons:[{id:'w1',name:'Daga',damage:'1d4',icon:'🗡️',value:10,rarity:'common',weight:1},{id:'w2',name:'Espada',damage:'1d6',icon:'⚔️',value:20,rarity:'common',weight:2},{id:'w3',name:'Hacha',damage:'1d6',icon:'🪓',value:20,rarity:'common',weight:3},{id:'w4',name:'Bastón',damage:'1d4',icon:'🪄',value:10,rarity:'common',weight:1},{id:'w5',name:'Espada Larga',damage:'1d8',icon:'⚔️',value:50,rarity:'rare',weight:4}],
+    races:[
+        {id:'human',name:'Humano',icon:'🧑',bonus:{health:2,speed:10},combatType:'warrior'},
+        {id:'elf',name:'Elfo',icon:'🧝',bonus:{precision:2,speed:14},combatType:'hybrid'},
+        {id:'dwarf',name:'Enano',icon:'🧔',bonus:{armor:2,speed:8},combatType:'warrior'},
+        {id:'orc',name:'Orco',icon:'👹',bonus:{damage:2,speed:10},combatType:'warrior'},
+        {id:'halfling',name:'Mediano',icon:'🧒',bonus:{speed:16,precision:1},combatType:'mage'},
+        {id:'wizard',name:'Mago',icon:'🧙',bonus:{speed:10},combatType:'mage'}
+    ],
+    weapons:[
+        {id:'w1',name:'Daga',damage:'1d4',icon:'🗡️',value:10,rarity:'common',weight:1,magic:false},
+        {id:'w2',name:'Espada',damage:'1d6',icon:'⚔️',value:20,rarity:'common',weight:2,magic:false},
+        {id:'w3',name:'Hacha',damage:'1d6',icon:'🪓',value:20,rarity:'common',weight:3,magic:false},
+        {id:'w4',name:'Bastón',damage:'1d4',icon:'🪄',value:10,rarity:'common',weight:1,magic:true,manaBonus:10},
+        {id:'w5',name:'Espada Larga',damage:'1d8',icon:'⚔️',value:50,rarity:'rare',weight:4,magic:false},
+        {id:'w6',name:'Bastón Arcano',damage:'1d6',icon:'🔮',value:40,rarity:'rare',weight:1,magic:true,manaBonus:20}
+    ],
     armors:[{id:'a1',name:'Cuero',defense:1,icon:'🦺',value:15,rarity:'common',weight:1},{id:'a2',name:'Cuero reforzado',defense:2,icon:'🦺',value:30,rarity:'common',weight:2},{id:'a3',name:'Cota malla',defense:3,icon:'⛓️',value:75,rarity:'rare',weight:4},{id:'a4',name:'Túnica',defense:0,icon:'👕',value:5,rarity:'common',weight:0},{id:'a5',name:'Placas',defense:5,icon:'🛡️',value:150,rarity:'epic',weight:6}],
     items:[{id:'i1',name:'Poción menor',type:'potion',effect:'1d8',icon:'🧪',value:10,rarity:'common'},{id:'i2',name:'Antídoto',type:'antidote',icon:'💊',value:15,rarity:'common'},{id:'i3',name:'Bomba humo',type:'escape',icon:'💨',value:25,rarity:'common'},{id:'i4',name:'Carne',type:'food',effect:'1d4',icon:'🥩',value:5,rarity:'common'},{id:'i5',name:'Poción mayor',type:'potion',effect:'2d8',icon:'🧪',value:35,rarity:'rare'}],
     enemies:[
@@ -907,17 +955,26 @@ const Data={
         {id:'r2',name:'Espada Mejorada',result:'w5',ingredients:['w2','i1'],icon:'⚔️',desc:'Mejora una espada con poción.'},
         {id:'r3',name:'Armadura Reforzada',result:'a2',ingredients:['a1','i4'],icon:'🦺',desc:'Refuerza cuero con materiales.'}
     ],
+    spells:[
+        {id:'sp1',name:'Chispa',damage:'2d5',cost:2,icon:'⚡',effect:null,desc:'Descarga eléctrica básica.'},
+        {id:'sp2',name:'Bola de Fuego',damage:'2d8',cost:5,icon:'🔥',effect:'fire',desc:'Esfera de fuego ardiente.'},
+        {id:'sp3',name:'Rayo de Hielo',damage:'1d10',cost:4,icon:'❄️',effect:null,desc:'Frío penetrante.'},
+        {id:'sp4',name:'Veneno',damage:'1d6',cost:3,icon:'☠️',effect:'poison',desc:'Nube tóxica.'}
+    ],
     pets:[{id:'p1',name:'Lobo',health:20,damage:'1d6',speed:14,difficulty:24,icon:'🐺',regions:['bosque','montana']},{id:'p2',name:'Oso',health:35,damage:'1d8',speed:10,difficulty:30,icon:'🐻',regions:['bosque','montana']},{id:'p3',name:'Águila',health:15,damage:'1d4',speed:18,difficulty:24,icon:'🦅',regions:['montana']}],
     npcs:[{id:'n1',name:'Grimbold',role:'blacksmith',icon:'🧔',region:'pueblo',dialogue:'¡Mis armas son las mejores!',sells:['w1','w2','w3','w5']},{id:'n2',name:'Elara',role:'alchemist',icon:'🧙‍♀️',region:'pueblo',dialogue:'Pociones de calidad.',sells:['i1','i2','i5']},{id:'n3',name:'Tobias',role:'innkeeper',icon:'🧑‍🍳',region:'pueblo',dialogue:'¡Siéntate, amigo!',sells:['i4']},{id:'n4',name:'Clara',role:'healer',icon:'👩‍⚕️',region:'pueblo',dialogue:'Puedo curarte por 10 MP.',sells:[]}],
     traps:[{name:'Púas',damage:'1d6',effect:'bleed',detectDiff:10,dodgeDiff:12},{name:'Dardo',damage:'1d4',effect:'poison',detectDiff:12,dodgeDiff:10},{name:'Foso',damage:'2d6',detectDiff:8,dodgeDiff:14}],
     find(t,id){return this[t]?.find(x=>x.id===id)},
     findItem(id){return this.find('weapons',id)||this.find('armors',id)||this.find('items',id)},
+    findSpell(id){return this.find('spells',id)},
     getRegion(id){return this.regions.find(r=>r.id===id)||this.regions[0]},
     getEnemiesForRegion(rid){return this.enemies.filter(e=>(e.regions||[]).includes(rid))},
     getPetsForRegion(rid){return this.pets.filter(p=>!p.regions||p.regions.length===0||(p.regions||[]).includes(rid))},
     getNpcsForRegion(rid){return this.npcs.filter(n=>n.region===rid)},
     getConnectedRegions(rid){const r=this.getRegion(rid);return(r.connections||[]).map(c=>this.getRegion(c)).filter(x=>x)},
-    save(){const d={regions:this.regions,races:this.races,weapons:this.weapons,armors:this.armors,items:this.items,enemies:this.enemies,pets:this.pets,npcs:this.npcs,recipes:this.recipes};localStorage.setItem('rpg_data',JSON.stringify(d));if(FB.db&&FB.ok)FB.db.ref('gameData').set(d)},
+    getMagicWeapons(){return this.weapons.filter(w=>w.magic)},
+    getPhysicalWeapons(){return this.weapons.filter(w=>!w.magic)},
+    save(){const d={regions:this.regions,races:this.races,weapons:this.weapons,armors:this.armors,items:this.items,enemies:this.enemies,pets:this.pets,npcs:this.npcs,recipes:this.recipes,spells:this.spells};localStorage.setItem('rpg_data',JSON.stringify(d));if(FB.db&&FB.ok)FB.db.ref('gameData').set(d)},
     load(){const s=localStorage.getItem('rpg_data');if(s)try{const d=JSON.parse(s);Object.keys(d).forEach(k=>{if(this[k])this[k]=d[k]})}catch(e){}}
 };
 
@@ -1209,10 +1266,52 @@ const Game={
         const race=this.selectedRace||pick(Data.races);
         $('#charCreate').classList.add('hidden');
         $('#charCreate').style.display='none';
-        const weapon={...Data.weapons[0],uid:genId('i')};
+        
+        // Determinar arma inicial según tipo de combate
+        let weapon;
+        const combatType=race.combatType||'warrior';
+        if(combatType==='mage'){
+            // Magos empiezan con bastón
+            const staff=Data.weapons.find(w=>w.magic)||Data.weapons[0];
+            weapon={...staff,uid:genId('i')};
+        }else if(combatType==='hybrid'){
+            // Híbridos reciben arma aleatoria
+            const allWeapons=Data.weapons.filter(w=>w.rarity==='common');
+            weapon={...pick(allWeapons),uid:genId('i')};
+        }else{
+            // Guerreros empiezan con daga
+            weapon={...Data.weapons[0],uid:genId('i')};
+        }
+        
         const armor={...Data.armors[0],uid:genId('i')};
         const baseSpeed=race.bonus.speed||10;
-        G.p={name,race,maxHp:20+(race.bonus.health||0),hp:20+(race.bonus.health||0),maxMana:race.usesMana?20:0,mana:race.usesMana?20:0,maxFood:20,food:20,speed:baseSpeed,weapon,armor,inv:[{...Data.items[0],uid:genId('i')}],maxSlots:10,gold:0,silver:25,effects:[],pet:null,defending:false};
+        
+        // Calcular maná: 100 base para magos/híbridos + bonus de arma
+        const usesMana=combatType==='mage'||combatType==='hybrid';
+        const baseMana=usesMana?100:0;
+        const weaponManaBonus=weapon.manaBonus||0;
+        const maxMana=baseMana+weaponManaBonus;
+        
+        // Hechizos iniciales (solo para magos/híbridos)
+        const spells=usesMana?[{...Data.spells[0]}]:[];
+        
+        G.p={
+            name,race,
+            maxHp:20+(race.bonus.health||0),
+            hp:20+(race.bonus.health||0),
+            maxMana:maxMana,
+            mana:maxMana,
+            maxFood:20,
+            food:20,
+            speed:baseSpeed,
+            weapon,armor,
+            inv:[{...Data.items[0],uid:genId('i')}],
+            maxSlots:10,
+            gold:0,silver:25,
+            effects:[],pet:null,defending:false,
+            spells:spells,
+            maxSpells:3
+        };
         G.combat=false;G.enemies=[];G.turn=0;
         G.region=Data.getRegion('pueblo');
         G.regionProgress={pueblo:{encounters:0}};
@@ -1220,6 +1319,7 @@ const Game={
         Story.clear();
         Story.add(`<strong style="color:var(--gold);font-size:1.1rem">⚔️ Aventuras de Acero y Runas ⚔️</strong>`);
         Story.add(`Eres <strong>${G.p.name}</strong>, ${race.name} ${race.icon}`,'narrative');
+        if(usesMana)Story.add(`✨ Conoces el hechizo: ${spells[0].icon} ${spells[0].name}`,'system');
         Story.add(`💀 MODO HARDCORE: Si mueres, pierdes todo.`,'system');
         this.updateUI();this.exploreActions();
     },
@@ -1275,6 +1375,13 @@ const Game={
     setActions(acts){const c=$('#actionsContainer');c.innerHTML='';acts.forEach(a=>{const b=document.createElement('button');b.className=`btn ${a.cls||''}`;b.textContent=a.text;b.disabled=a.disabled||false;b.onclick=a.fn;c.appendChild(b)})},
     exploreActions(){
         if(!G.p||!G.region){console.log('No player or region');return}
+        // Verificar muerte por hambre
+        if(G.p.food<=0){
+            Story.add(`<div style="text-align:center;padding:1rem;background:rgba(139,69,0,.4);border:2px solid #8B4513;border-radius:8px"><div style="font-size:2rem">💀🍖</div><strong style="color:#CD853F">¡Has muerto de hambre!</strong></div>`,'combat');
+            Game.deleteSave();
+            this.setActions([{text:'🔄 Nueva Aventura',fn:()=>this.fullReset(),cls:'btn-primary'}]);
+            return;
+        }
         const actions=[{text:'🗺️ Viajar',fn:()=>Regions.openSelector()}];
         if(G.region.type==='danger'){
             actions.unshift({text:'⚔️ Explorar',fn:()=>Explore.start(),cls:'btn-primary'});
@@ -1283,13 +1390,40 @@ const Game={
             if(npcs.length>0)actions.push({text:'🏘️ NPCs',fn:()=>Town.visit(G.region)});
             if((Data.recipes||[]).length>0)actions.push({text:'🔨 Crafteo',fn:()=>Craft.open()});
         }
+        // Agregar libro de hechizos si es mago
+        const combatType=G.p.race?.combatType||'warrior';
+        if(combatType==='mage'||combatType==='hybrid'){
+            actions.push({text:'📖 Hechizos',fn:()=>Spellbook.open()});
+        }
         actions.push({text:'🎒 Inventario',fn:()=>Inv.open()},{text:'🔄 Nueva',fn:()=>this.newGame(),cls:'btn-danger'});
         this.setActions(actions);
     }
 };
 
 const Explore={
-    start(){if(G.region.type==='safe'){toast('Zona segura','info');return}Story.add(pick(G.region.narratives)||'Exploras...','narrative');Game.setActions([{text:'...',disabled:true}]);setTimeout(()=>{const r=dX(100);if(r<=55)this.enemy();else if(r<=75)this.trap();else if(r<=88)this.treasure();else if(r<=96)this.pet();else this.safe()},800)},
+    start(){
+        if(G.region.type==='safe'){toast('Zona segura','info');return}
+        // Consumir comida al explorar
+        G.p.food=Math.max(0,G.p.food-1);
+        if(G.p.food<=3&&G.p.food>0)Story.add(`<span style="color:#CD853F">⚠️ Tienes hambre (${G.p.food}/20)</span>`,'system');
+        Game.updateUI();
+        
+        Story.add(pick(G.region.narratives)||'Exploras...','narrative');
+        Game.setActions([{text:'...',disabled:true}]);
+        setTimeout(()=>{
+            // Verificar hambre
+            if(G.p.food<=0){
+                Game.exploreActions();
+                return;
+            }
+            const r=dX(100);
+            if(r<=55)this.enemy();
+            else if(r<=75)this.trap();
+            else if(r<=88)this.treasure();
+            else if(r<=96)this.pet();
+            else this.safe()
+        },800);
+    },
     enemy(){const pool=Data.getEnemiesForRegion(G.region.id);if(pool.length===0){Story.add('Nada aquí...','system');Game.exploreActions();return}const template=pick(pool);let count=1;if(template.canGroup&&Math.random()*100<(template.groupChance||0)){const min=template.groupMin||2,max=template.groupMax||4;count=Math.floor(Math.random()*(max-min+1))+min}const enemies=[];for(let i=0;i<count;i++){
         const weapon=template.weaponId?Data.find('weapons',template.weaponId):null;
         const armor=template.armorId?Data.find('armors',template.armorId):null;
@@ -1368,6 +1502,8 @@ const Combat={
     showPlayerActions(){
         const ca=$('#combatActions');ca.innerHTML='';
         const aliveEnemies=G.enemies.filter(e=>e.hp>0);
+        const hasMana=G.p.maxMana>0;
+        const hasSpells=(G.p.spells||[]).length>0;
         
         // Botón Atacar siempre visible
         const atkBtn=document.createElement('button');
@@ -1376,9 +1512,19 @@ const Combat={
         if(aliveEnemies.length===1){
             atkBtn.onclick=()=>this.playerAttack(aliveEnemies[0]);
         }else{
-            atkBtn.onclick=()=>this.showTargetSelect(aliveEnemies);
+            atkBtn.onclick=()=>this.showTargetSelect(aliveEnemies,'attack');
         }
         ca.appendChild(atkBtn);
+        
+        // Botones de hechizos si tiene maná
+        if(hasMana&&hasSpells){
+            const spellBtn=document.createElement('button');
+            spellBtn.className='btn';
+            spellBtn.style.background='linear-gradient(135deg,#4169E1,#1E90FF)';
+            spellBtn.textContent='✨ Hechizos';
+            spellBtn.onclick=()=>this.showSpellSelect(aliveEnemies);
+            ca.appendChild(spellBtn);
+        }
         
         // Otros botones
         [{text:'🛡️ Defender',fn:()=>this.playerDefend()},{text:'🎒 Item',fn:()=>Inv.open()},{text:'💨 Huir',fn:()=>this.playerFlee(),cls:'btn-danger'}].forEach(a=>{
@@ -1389,17 +1535,24 @@ const Combat={
             ca.appendChild(b);
         });
     },
-    showTargetSelect(enemies){
+    showSpellSelect(enemies){
         const ca=$('#combatActions');
-        ca.innerHTML=`<div style="text-align:center;margin-bottom:.5rem;color:var(--gold)">🎯 Selecciona objetivo:</div>`;
+        ca.innerHTML=`<div style="text-align:center;margin-bottom:.5rem;color:var(--cyan)">✨ Selecciona hechizo (💙${G.p.mana}/${G.p.maxMana}):</div>`;
         const grid=document.createElement('div');
         grid.style.cssText='display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center';
-        enemies.forEach(e=>{
+        (G.p.spells||[]).forEach(sp=>{
+            const canCast=G.p.mana>=sp.cost;
             const btn=document.createElement('button');
             btn.className='btn';
-            btn.style.cssText='display:flex;flex-direction:column;align-items:center;padding:.5rem .8rem;min-width:80px';
-            btn.innerHTML=`<span style="font-size:1.5rem">${e.icon}</span><span style="font-size:.7rem">${e.name}</span><span style="font-size:.6rem;color:var(--red)">${e.hp}/${e.maxHp}</span>`;
-            btn.onclick=()=>this.playerAttack(e);
+            btn.disabled=!canCast;
+            btn.style.cssText=`display:flex;flex-direction:column;align-items:center;padding:.5rem .8rem;min-width:90px;${canCast?'background:linear-gradient(135deg,#4169E1,#1E90FF)':'opacity:.5'}`;
+            btn.innerHTML=`<span style="font-size:1.3rem">${sp.icon}</span><span style="font-size:.7rem">${sp.name}</span><span style="font-size:.6rem;color:var(--cyan)">💙${sp.cost} ⚔️${sp.damage}</span>`;
+            if(canCast){
+                btn.onclick=()=>{
+                    if(enemies.length===1)this.castSpell(sp,enemies[0]);
+                    else this.showTargetSelect(enemies,'spell',sp);
+                };
+            }
             grid.appendChild(btn);
         });
         ca.appendChild(grid);
@@ -1409,6 +1562,59 @@ const Combat={
         backBtn.textContent='← Volver';
         backBtn.onclick=()=>this.showPlayerActions();
         ca.appendChild(backBtn);
+    },
+    showTargetSelect(enemies,action,spell=null){
+        const ca=$('#combatActions');
+        ca.innerHTML=`<div style="text-align:center;margin-bottom:.5rem;color:var(--gold)">🎯 Selecciona objetivo:</div>`;
+        const grid=document.createElement('div');
+        grid.style.cssText='display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center';
+        enemies.forEach(e=>{
+            const btn=document.createElement('button');
+            btn.className='btn';
+            btn.style.cssText='display:flex;flex-direction:column;align-items:center;padding:.5rem .8rem;min-width:80px';
+            btn.innerHTML=`<span style="font-size:1.5rem">${e.icon}</span><span style="font-size:.7rem">${e.name}</span><span style="font-size:.6rem;color:var(--red)">${e.hp}/${e.maxHp}</span>`;
+            btn.onclick=()=>{
+                if(action==='spell'&&spell)this.castSpell(spell,e);
+                else this.playerAttack(e);
+            };
+            grid.appendChild(btn);
+        });
+        ca.appendChild(grid);
+        const backBtn=document.createElement('button');
+        backBtn.className='btn btn-danger';
+        backBtn.style.marginTop='.5rem';
+        backBtn.textContent='← Volver';
+        backBtn.onclick=()=>this.showPlayerActions();
+        ca.appendChild(backBtn);
+    },
+    async castSpell(spell,target){
+        const p=G.p;
+        if(p.mana<spell.cost){this.log(`<span class="log-miss">Sin maná suficiente</span>`);return}
+        
+        p.mana-=spell.cost;
+        await showDice(15,20,true);
+        
+        const dmgRoll=rollDetailed(spell.damage);
+        const baseDmg=dmgRoll.total;
+        const armor=target.armor||0;
+        const finalDmg=Math.max(0,baseDmg-armor);
+        
+        this.log(`<span class="log-player">${p.name}</span> lanza <span style="color:var(--cyan)">${spell.icon} ${spell.name}</span>`);
+        this.log(`├ 💙 Maná: -${spell.cost} (${p.mana}/${p.maxMana})`);
+        this.log(`├ ⚔️ Daño: ${baseDmg} − ${armor} (armadura) = ${finalDmg}`);
+        
+        if(finalDmg>0){
+            target.hp-=finalDmg;
+            this.log(`└ <span class="log-damage">💥 ${target.name} recibe ${finalDmg} daño (${Math.max(0,target.hp)}/${target.maxHp})</span>`);
+            if(spell.effect)this.applyEff(target,spell.effect);
+            if(target.hp<=0)this.log(`<span class="log-damage">💀 ${target.name} derrotado!</span>`);
+        }else{
+            this.log(`└ <span class="log-miss">🛡️ ${target.name} bloquea todo</span>`);
+        }
+        
+        this.updateUI();
+        await delay(350);
+        this.advanceToNextActor();
     },
     async playerAttack(target){
         const p=G.p;
@@ -1543,7 +1749,19 @@ const Combat={
         G.regionProgress[G.region.id].encounters++;
         
         let totalLoot=0;
-        G.enemies.forEach(e=>{if(e.loot){const mp=dX(e.loot[1]-e.loot[0])+e.loot[0];totalLoot+=mp}if(e.drops)e.drops.forEach(did=>{if(Math.random()<0.3&&G.p.inv.length<G.p.maxSlots){const it=Data.findItem(did);if(it){G.p.inv.push({...it,uid:genId('i')});Story.add(`Encuentras: ${it.icon} ${it.name}`,'loot')}}})});
+        G.enemies.forEach(e=>{
+            if(e.loot){const mp=dX(e.loot[1]-e.loot[0])+e.loot[0];totalLoot+=mp}
+            // Nuevo sistema de drops con probabilidad
+            if(e.drops&&e.drops.length>0){
+                e.drops.forEach(drop=>{
+                    const dropData=typeof drop==='string'?{itemId:drop,chance:30}:drop;
+                    if(Math.random()*100<dropData.chance&&G.p.inv.length<G.p.maxSlots){
+                        const it=Data.findItem(dropData.itemId);
+                        if(it){G.p.inv.push({...it,uid:genId('i')});Story.add(`Encuentras: ${it.icon} ${it.name}`,'loot')}
+                    }
+                });
+            }
+        });
         G.p.silver+=totalLoot;while(G.p.silver>=99){G.p.silver-=99;G.p.gold++}
         Story.add(`<strong style="color:var(--green-bright)">🎉 ¡Victoria!</strong> +${totalLoot} MP`,'loot');
         Story.add(`📊 Encuentros en ${G.region.name}: ${G.regionProgress[G.region.id].encounters}`,'system');
@@ -1591,12 +1809,16 @@ const Combat={
         const pDiv=document.createElement('div');
         pDiv.className=`combatant player ${G.p.hp<=0?'dead':''}`;
         const pHpPct=(G.p.hp/G.p.maxHp)*100;
+        const hasMana=G.p.maxMana>0;
+        const pManaPct=hasMana?(G.p.mana/G.p.maxMana)*100:0;
+        const manaBar=hasMana?`<div class="hp-container" style="margin-top:.15rem"><div class="hp-fill" style="width:${pManaPct}%;background:linear-gradient(to right,#4169E1,#1E90FF)"></div><div class="hp-text">💙${G.p.mana}/${G.p.maxMana}</div></div>`:'';
         pDiv.innerHTML=`
             <div class="combatant-order">⚡${Game.speed()}</div>
             <div class="combatant-sprite">${sprite({icon:G.p.race.icon,sprite:G.p.race.sprite})}</div>
             <div class="combatant-name">${G.p.name}</div>
             <div class="combatant-stats">⚔️${G.p.weapon?.damage||'1d2'} 🛡️${Game.armor()}</div>
             <div class="hp-container"><div class="hp-fill ${hpClass(pHpPct)}" style="width:${pHpPct}%"></div><div class="hp-text">${G.p.hp}/${G.p.maxHp}</div></div>
+            ${manaBar}
             <div class="effects-row">${(G.p.effects||[]).map(e=>`<span class="effect-tag eff-${e.type}">${e.type}${e.turns}</span>`).join('')}</div>`;
         grid.appendChild(pDiv);
         
@@ -1643,7 +1865,7 @@ const Combat={
 const Inv={
     open(){if(!G.p)return;this.render();openModal('inventoryModal')},
     render(){if(!G.p)return;$('#inventoryInfo').textContent=`${G.p.inv.length}/${G.p.maxSlots}`;const g=$('#inventoryGrid');g.innerHTML='';G.p.inv.forEach(it=>{const s=document.createElement('div');s.className=`inv-slot rarity-${it.rarity||'common'}`;s.innerHTML=`<div class="inv-slot-icon">${sprite(it)}</div><div class="inv-slot-name">${it.name}</div>`;s.onclick=()=>this.detail(it,'inv');g.appendChild(s)});for(let i=G.p.inv.length;i<G.p.maxSlots;i++){const s=document.createElement('div');s.className='inv-slot empty';s.innerHTML='<div class="inv-slot-name" style="color:var(--text-dim)">vacío</div>';g.appendChild(s)}},
-    detail(it,ctx){G.item=it;$('#detailIcon').innerHTML=sprite(it);$('#detailName').textContent=it.name;$('#detailType').textContent=it.damage?'Arma':it.defense!==undefined?'Armadura':it.type||'Item';$('#detailDesc').textContent=it.desc||'Sin descripción.';let st='';if(it.damage)st+=`<div class="item-stat-box"><div class="item-stat-label">Daño</div><div class="item-stat-value">${it.damage}</div></div>`;if(it.defense!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Defensa</div><div class="item-stat-value">${it.defense}</div></div>`;if(it.weight!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Peso</div><div class="item-stat-value">${it.weight}</div></div>`;if(it.effect&&(it.type==='potion'||it.type==='food'))st+=`<div class="item-stat-box"><div class="item-stat-label">Cura</div><div class="item-stat-value">${it.effect}</div></div>`;if(it.value)st+=`<div class="item-stat-box"><div class="item-stat-label">Valor</div><div class="item-stat-value">${it.value}MP</div></div>`;$('#detailStats').innerHTML=st;const canEq=!G.combat&&G.region.type==='safe';let acts='';if(ctx.startsWith('eq-')){if(canEq)acts=`<button class="btn btn-danger" onclick="Inv.unequip('${ctx.split('-')[1]}')">❌ Quitar</button>`;else acts='<span style="color:var(--text-dim)">Solo zona segura</span>'}else{if(it.damage&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('weapon')">⚔️ Equipar</button>`;if(it.defense!==undefined&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('armor')">🛡️ Equipar</button>`;if(it.type==='potion'||it.type==='food')acts+=`<button class="btn btn-primary" onclick="Inv.use()">✨ Usar</button>`;if(it.type==='antidote')acts+=`<button class="btn btn-primary" onclick="Inv.use()">💊 Usar</button>`;if(it.type==='escape'&&G.combat)acts+=`<button class="btn btn-primary" onclick="Inv.use()">💨 Usar</button>`;if(it.type==='backpack')acts+=`<button class="btn btn-primary" onclick="Inv.use()">🎒 Usar</button>`}acts+=`<button class="btn" onclick="closeModal('itemDetailModal')">Cerrar</button>`;$('#detailActions').innerHTML=acts;openModal('itemDetailModal')},
+    detail(it,ctx){G.item=it;$('#detailIcon').innerHTML=sprite(it);$('#detailName').textContent=it.name;$('#detailType').textContent=it.damage?'Arma':it.defense!==undefined?'Armadura':it.type||'Item';$('#detailDesc').textContent=it.desc||'Sin descripción.';let st='';if(it.damage)st+=`<div class="item-stat-box"><div class="item-stat-label">Daño</div><div class="item-stat-value">${it.damage}</div></div>`;if(it.defense!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Defensa</div><div class="item-stat-value">${it.defense}</div></div>`;if(it.weight!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Peso</div><div class="item-stat-value">${it.weight}</div></div>`;if(it.effect&&(it.type==='potion'||it.type==='food'))st+=`<div class="item-stat-box"><div class="item-stat-label">Cura</div><div class="item-stat-value">${it.effect}</div></div>`;if(it.manaBonus)st+=`<div class="item-stat-box"><div class="item-stat-label">+Maná</div><div class="item-stat-value">${it.manaBonus}</div></div>`;if(it.spellId){const sp=Data.findSpell(it.spellId);st+=`<div class="item-stat-box"><div class="item-stat-label">Enseña</div><div class="item-stat-value">${sp?sp.name:'?'}</div></div>`}if(it.value)st+=`<div class="item-stat-box"><div class="item-stat-label">Valor</div><div class="item-stat-value">${it.value}MP</div></div>`;$('#detailStats').innerHTML=st;const canEq=!G.combat&&G.region.type==='safe';let acts='';if(ctx.startsWith('eq-')){if(canEq)acts=`<button class="btn btn-danger" onclick="Inv.unequip('${ctx.split('-')[1]}')">❌ Quitar</button>`;else acts='<span style="color:var(--text-dim)">Solo zona segura</span>'}else{if(it.damage&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('weapon')">⚔️ Equipar</button>`;if(it.defense!==undefined&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('armor')">🛡️ Equipar</button>`;if(it.type==='potion'||it.type==='food')acts+=`<button class="btn btn-primary" onclick="Inv.use()">✨ Usar</button>`;if(it.type==='antidote')acts+=`<button class="btn btn-primary" onclick="Inv.use()">💊 Usar</button>`;if(it.type==='scroll')acts+=`<button class="btn btn-primary" onclick="Inv.use()">📜 Aprender</button>`;if(it.type==='escape'&&G.combat)acts+=`<button class="btn btn-primary" onclick="Inv.use()">💨 Usar</button>`;if(it.type==='backpack')acts+=`<button class="btn btn-primary" onclick="Inv.use()">🎒 Usar</button>`}acts+=`<button class="btn" onclick="closeModal('itemDetailModal')">Cerrar</button>`;$('#detailActions').innerHTML=acts;openModal('itemDetailModal')},
     equip(slot){const it=G.item;if(!it?.uid)return;closeModal('itemDetailModal');if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon=it}else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor=it}G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);toast('Equipado','success');Game.updateUI();Game.autoSave();this.render()},
     unequip(slot){if(G.p.inv.length>=G.p.maxSlots){toast('Inventario lleno','error');return}closeModal('itemDetailModal');if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon={name:'Puños',damage:'1d2',icon:'✊'}}else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor={name:'Sin armadura',defense:0,icon:'👤'}}toast('Desequipado','info');Game.updateUI();Game.autoSave()},
     use(){
@@ -1680,6 +1902,12 @@ const Inv={
                 G.p.effects=G.p.effects.filter(e=>e.type!==cures);
                 Story.add(`${cures} curado.`,'system');
             }
+        }else if(it.type==='scroll'){
+            // Pergamino enseña hechizo
+            const combatType=G.p.race?.combatType||'warrior';
+            if(combatType==='warrior'){toast('No puedes usar magia','error');return}
+            if(!it.spellId){toast('Pergamino inválido','error');return}
+            if(!Spellbook.learn(it.spellId))return;
         }else if(it.type==='escape'&&G.combat){
             G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);
             Story.add('¡Escape exitoso!','narrative');
@@ -1805,6 +2033,69 @@ const Town={
     sell(uid,price){const it=G.p.inv.find(i=>i.uid===uid);if(!it)return;G.p.inv=G.p.inv.filter(i=>i.uid!==uid);G.p.silver+=price;while(G.p.silver>=99){G.p.silver-=99;G.p.gold++}toast('Vendido','success');Game.updateUI();Game.autoSave();if(this.npc)this.shop(this.npc)}
 };
 
+const Spellbook={
+    open(){
+        if(!G.p)return;
+        const combatType=G.p.race?.combatType||'warrior';
+        if(combatType==='warrior'){toast('No usas magia','info');return}
+        
+        const modal=document.createElement('div');
+        modal.className='modal';
+        modal.id='spellbookModal';
+        modal.innerHTML=`<div class="modal-content" style="max-width:400px">
+            <div class="modal-header"><h3>📖 Libro de Hechizos</h3><button class="close-btn" onclick="closeModal('spellbookModal')">×</button></div>
+            <div class="modal-body">
+                <div style="text-align:center;margin-bottom:.5rem">
+                    <span style="color:var(--cyan)">💙 ${G.p.mana}/${G.p.maxMana} Maná</span>
+                    <span style="color:var(--text-dim);margin-left:.5rem">(${(G.p.spells||[]).length}/${G.p.maxSpells||3} hechizos)</span>
+                </div>
+                <div id="spellbookList" style="display:grid;gap:.5rem"></div>
+                <div style="margin-top:1rem;padding-top:.5rem;border-top:1px solid var(--border)">
+                    <div style="font-size:.8rem;color:var(--text-dim);text-align:center">
+                        Usa pergaminos para aprender nuevos hechizos
+                    </div>
+                </div>
+            </div>
+        </div>`;
+        document.body.appendChild(modal);
+        setTimeout(()=>modal.classList.add('active'),10);
+        this.render();
+    },
+    render(){
+        const list=$('#spellbookList');
+        if(!list)return;
+        list.innerHTML=(G.p.spells||[]).map((sp,i)=>`
+            <div style="background:var(--bg-dark);padding:.5rem;border-radius:6px;display:flex;align-items:center;gap:.5rem">
+                <span style="font-size:1.5rem">${sp.icon}</span>
+                <div style="flex:1">
+                    <div style="font-weight:bold">${sp.name}</div>
+                    <div style="font-size:.7rem;color:var(--text-dim)">⚔️${sp.damage} 💙${sp.cost}${sp.effect?` 🔥${sp.effect}`:''}</div>
+                    <div style="font-size:.65rem;color:var(--text-dim)">${sp.desc||''}</div>
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="Spellbook.forget(${i})">❌</button>
+            </div>
+        `).join('')||'<div style="text-align:center;color:var(--text-dim)">Sin hechizos</div>';
+    },
+    forget(index){
+        if(!confirm('¿Olvidar este hechizo?'))return;
+        G.p.spells.splice(index,1);
+        Game.autoSave();
+        this.render();
+        toast('Hechizo olvidado','info');
+    },
+    learn(spellId){
+        const spell=Data.findSpell(spellId);
+        if(!spell){toast('Hechizo no encontrado','error');return false}
+        if((G.p.spells||[]).length>=(G.p.maxSpells||3)){toast(`Máximo ${G.p.maxSpells||3} hechizos. Olvida uno primero.`,'error');return false}
+        if((G.p.spells||[]).some(s=>s.id===spellId)){toast('Ya conoces este hechizo','info');return false}
+        if(!G.p.spells)G.p.spells=[];
+        G.p.spells.push({...spell});
+        Game.autoSave();
+        toast(`¡Aprendiste ${spell.icon} ${spell.name}!`,'success');
+        return true;
+    }
+};
+
 const Craft={
     open(){
         if(G.region.type!=='safe'){toast('Solo en zona segura','error');return}
@@ -1868,15 +2159,19 @@ const Craft={
 };
 
 const Editor={
-    clear(t){const fields={region:['region-id','region-name','region-icon','region-desc','region-narratives','region-distance','region-reqEncounters','region-connections'],race:['race-id','race-name','race-icon','race-sprite','race-hp','race-armor','race-speed','race-precision','race-damage','race-desc'],weapon:['weapon-id','weapon-name','weapon-damage','weapon-weight','weapon-icon','weapon-sprite','weapon-value','weapon-desc'],armor:['armor-id','armor-name','armor-defense','armor-weight','armor-icon','armor-sprite','armor-value','armor-desc'],item:['item-id','item-name','item-icon','item-sprite','item-effect','item-value','item-desc','item-food-value','item-backpack-slots'],enemy:['enemy-id','enemy-name','enemy-health','enemy-damage','enemy-difficulty','enemy-armor','enemy-speed','enemy-icon','enemy-sprite','enemy-loot-min','enemy-loot-max','enemy-desc','enemy-groupMin','enemy-groupMax','enemy-groupChance','enemy-weaponId','enemy-armorId'],pet:['pet-id','pet-name','pet-health','pet-damage','pet-speed','pet-difficulty','pet-icon','pet-sprite','pet-desc'],npc:['npc-id','npc-name','npc-icon','npc-sprite','npc-dialogue'],recipe:['recipe-id','recipe-name','recipe-icon','recipe-result','recipe-desc']};(fields[t]||[]).forEach(id=>{const e=$(`#${id}`);if(e)e.value=''});$$('.multi-select input').forEach(c=>c.checked=false);if(t==='enemy'){$('#enemy-canGroup').value='false';$('#enemy-weaponId').value='';$('#enemy-armorId').value='';$('#enemy-usesMana').value='false'}if(t==='weapon'){$('#weapon-magic').value='false'}if(t==='race'){$('#race-usesMana').value='false'}if(t==='item'){$('#item-type').value='potion';$('#item-potion-type').value='health';$('#item-antidote-cures').value='poison';this.onItemTypeChange()}if(t==='recipe'){this.recipeIngredients=[];this.renderIngredientsList()}},
+    enemyDrops:[],
+    clear(t){const fields={region:['region-id','region-name','region-icon','region-desc','region-narratives','region-distance','region-reqEncounters','region-connections'],race:['race-id','race-name','race-icon','race-sprite','race-hp','race-armor','race-speed','race-precision','race-damage','race-desc'],weapon:['weapon-id','weapon-name','weapon-damage','weapon-weight','weapon-icon','weapon-sprite','weapon-value','weapon-desc','weapon-manaBonus'],armor:['armor-id','armor-name','armor-defense','armor-weight','armor-icon','armor-sprite','armor-value','armor-desc','armor-manaBonus'],item:['item-id','item-name','item-icon','item-sprite','item-effect','item-value','item-desc','item-food-value','item-backpack-slots'],enemy:['enemy-id','enemy-name','enemy-health','enemy-damage','enemy-difficulty','enemy-armor','enemy-speed','enemy-icon','enemy-sprite','enemy-loot-min','enemy-loot-max','enemy-desc','enemy-groupMin','enemy-groupMax','enemy-groupChance','enemy-weaponId','enemy-armorId'],pet:['pet-id','pet-name','pet-health','pet-damage','pet-speed','pet-difficulty','pet-icon','pet-sprite','pet-desc'],npc:['npc-id','npc-name','npc-icon','npc-sprite','npc-dialogue'],recipe:['recipe-id','recipe-name','recipe-icon','recipe-result','recipe-desc'],spell:['spell-id','spell-name','spell-damage','spell-cost','spell-icon','spell-desc']};(fields[t]||[]).forEach(id=>{const e=$(`#${id}`);if(e)e.value=''});$$('.multi-select input').forEach(c=>c.checked=false);if(t==='enemy'){$('#enemy-canGroup').value='false';$('#enemy-weaponId').value='';$('#enemy-armorId').value='';$('#enemy-usesMana').value='false';this.enemyDrops=[];this.renderDropsList()}if(t==='weapon'){$('#weapon-magic').value='false'}if(t==='armor'){$('#armor-magic').value='false'}if(t==='race'){$('#race-combatType').value='warrior'}if(t==='spell'){$('#spell-effect').value=''}if(t==='item'){$('#item-type').value='potion';$('#item-potion-type').value='health';$('#item-antidote-cures').value='poison';this.onItemTypeChange()}if(t==='recipe'){this.recipeIngredients=[];this.renderIngredientsList()}},
+    addDrop(){const itemId=$('#enemy-drop-select').value;const chance=parseInt($('#enemy-drop-chance').value)||20;if(!itemId)return;this.enemyDrops.push({itemId,chance});this.renderDropsList()},
+    removeDrop(index){this.enemyDrops.splice(index,1);this.renderDropsList()},
+    renderDropsList(){const list=$('#enemy-drops-list');if(!list)return;list.innerHTML=this.enemyDrops.map((d,i)=>{const it=Data.findItem(d.itemId);return`<span style="background:var(--bg-panel);padding:.2rem .4rem;border-radius:3px;display:flex;align-items:center;gap:.3rem">${it?.icon||'?'} ${it?.name||d.itemId} <span style="color:var(--gold)">${d.chance}%</span><span style="cursor:pointer;color:var(--red)" onclick="Editor.removeDrop(${i})">×</span></span>`}).join('')},
     saveRegion(){const narratives=$('#region-narratives').value.split('\n').filter(n=>n.trim());const connections=$('#region-connections').value.split(',').map(c=>c.trim()).filter(c=>c);const r={id:$('#region-id').value||genId('reg'),name:$('#region-name').value,icon:$('#region-icon').value||'🗺️',type:$('#region-type').value,desc:$('#region-desc').value||'',distance:parseInt($('#region-distance').value)||0,reqEncounters:parseInt($('#region-reqEncounters').value)||0,connections,narratives};if(!r.name){toast('Falta nombre','error');return}const i=Data.regions.findIndex(x=>x.id===r.id);if(i>=0)Data.regions[i]=r;else Data.regions.push(r);Data.save();this.renderRegions();this.updateSelects();this.clear('region');toast('Guardado','success')},
     editRegion(id){const r=Data.find('regions',id);if(!r)return;$('#region-id').value=r.id;$('#region-name').value=r.name;$('#region-icon').value=r.icon||'';$('#region-type').value=r.type||'danger';$('#region-desc').value=r.desc||'';$('#region-distance').value=r.distance||0;$('#region-reqEncounters').value=r.reqEncounters||0;$('#region-connections').value=(r.connections||[]).join(',');$('#region-narratives').value=(r.narratives||[]).join('\n')},
     deleteRegion(id){if(!confirm('¿Eliminar?'))return;Data.regions=Data.regions.filter(r=>r.id!==id);Data.save();this.renderRegions();this.updateSelects();toast('Eliminado','info')},
-    saveRace(){const r={id:$('#race-id').value||genId('race'),name:$('#race-name').value,icon:$('#race-icon').value||'👤',sprite:$('#race-sprite').value||'',usesMana:$('#race-usesMana').value==='true',bonus:{health:parseInt($('#race-hp').value)||0,armor:parseInt($('#race-armor').value)||0,speed:parseInt($('#race-speed').value)||10,precision:parseInt($('#race-precision').value)||0,damage:parseInt($('#race-damage').value)||0},desc:$('#race-desc').value||''};if(!r.name){toast('Falta nombre','error');return}const i=Data.races.findIndex(x=>x.id===r.id);if(i>=0)Data.races[i]=r;else Data.races.push(r);Data.save();this.renderRaces();this.clear('race');toast('Guardado','success')},
-    editRace(id){const r=Data.find('races',id);if(!r)return;$('#race-id').value=r.id;$('#race-name').value=r.name;$('#race-icon').value=r.icon||'';$('#race-sprite').value=r.sprite||'';$('#race-hp').value=r.bonus?.health||'';$('#race-armor').value=r.bonus?.armor||'';$('#race-speed').value=r.bonus?.speed||'';$('#race-precision').value=r.bonus?.precision||'';$('#race-damage').value=r.bonus?.damage||'';$('#race-desc').value=r.desc||''},
+    saveRace(){const r={id:$('#race-id').value||genId('race'),name:$('#race-name').value,icon:$('#race-icon').value||'👤',sprite:$('#race-sprite').value||'',combatType:$('#race-combatType').value||'warrior',bonus:{health:parseInt($('#race-hp').value)||0,armor:parseInt($('#race-armor').value)||0,speed:parseInt($('#race-speed').value)||10,precision:parseInt($('#race-precision').value)||0,damage:parseInt($('#race-damage').value)||0},desc:$('#race-desc').value||''};if(!r.name){toast('Falta nombre','error');return}const i=Data.races.findIndex(x=>x.id===r.id);if(i>=0)Data.races[i]=r;else Data.races.push(r);Data.save();this.renderRaces();this.clear('race');toast('Guardado','success')},
+    editRace(id){const r=Data.find('races',id);if(!r)return;$('#race-id').value=r.id;$('#race-name').value=r.name;$('#race-icon').value=r.icon||'';$('#race-sprite').value=r.sprite||'';$('#race-combatType').value=r.combatType||'warrior';$('#race-hp').value=r.bonus?.health||'';$('#race-armor').value=r.bonus?.armor||'';$('#race-speed').value=r.bonus?.speed||'';$('#race-precision').value=r.bonus?.precision||'';$('#race-damage').value=r.bonus?.damage||'';$('#race-desc').value=r.desc||''},
     deleteRace(id){if(!confirm('¿Eliminar?'))return;Data.races=Data.races.filter(r=>r.id!==id);Data.save();this.renderRaces();toast('Eliminado','info')},
-    saveWeapon(){const w={id:$('#weapon-id').value||genId('w'),name:$('#weapon-name').value,damage:$('#weapon-damage').value||'1d4',weight:parseInt($('#weapon-weight').value)||0,icon:$('#weapon-icon').value||'⚔️',sprite:$('#weapon-sprite').value||'',rarity:$('#weapon-rarity').value,value:parseInt($('#weapon-value').value)||10,magic:$('#weapon-magic').value==='true',effect:$('#weapon-effect').value||null,desc:$('#weapon-desc').value||''};if(!w.name){toast('Falta nombre','error');return}const i=Data.weapons.findIndex(x=>x.id===w.id);if(i>=0)Data.weapons[i]=w;else Data.weapons.push(w);Data.save();this.renderWeapons();this.updateSelects();this.clear('weapon');toast('Guardado','success')},
-    saveArmor(){const a={id:$('#armor-id').value||genId('a'),name:$('#armor-name').value,defense:parseInt($('#armor-defense').value)||0,weight:parseInt($('#armor-weight').value)||0,icon:$('#armor-icon').value||'🛡️',sprite:$('#armor-sprite').value||'',rarity:$('#armor-rarity').value,value:parseInt($('#armor-value').value)||10,desc:$('#armor-desc').value||''};if(!a.name){toast('Falta nombre','error');return}const i=Data.armors.findIndex(x=>x.id===a.id);if(i>=0)Data.armors[i]=a;else Data.armors.push(a);Data.save();this.renderArmors();this.updateSelects();this.clear('armor');toast('Guardado','success')},
+    saveWeapon(){const w={id:$('#weapon-id').value||genId('w'),name:$('#weapon-name').value,damage:$('#weapon-damage').value||'1d4',weight:parseInt($('#weapon-weight').value)||0,icon:$('#weapon-icon').value||'⚔️',sprite:$('#weapon-sprite').value||'',rarity:$('#weapon-rarity').value,value:parseInt($('#weapon-value').value)||10,magic:$('#weapon-magic').value==='true',manaBonus:parseInt($('#weapon-manaBonus').value)||0,effect:$('#weapon-effect').value||null,desc:$('#weapon-desc').value||''};if(!w.name){toast('Falta nombre','error');return}const i=Data.weapons.findIndex(x=>x.id===w.id);if(i>=0)Data.weapons[i]=w;else Data.weapons.push(w);Data.save();this.renderWeapons();this.updateSelects();this.clear('weapon');toast('Guardado','success')},
+    saveArmor(){const a={id:$('#armor-id').value||genId('a'),name:$('#armor-name').value,defense:parseInt($('#armor-defense').value)||0,weight:parseInt($('#armor-weight').value)||0,icon:$('#armor-icon').value||'🛡️',sprite:$('#armor-sprite').value||'',rarity:$('#armor-rarity').value,value:parseInt($('#armor-value').value)||10,magic:$('#armor-magic').value==='true',manaBonus:parseInt($('#armor-manaBonus').value)||0,desc:$('#armor-desc').value||''};if(!a.name){toast('Falta nombre','error');return}const i=Data.armors.findIndex(x=>x.id===a.id);if(i>=0)Data.armors[i]=a;else Data.armors.push(a);Data.save();this.renderArmors();this.updateSelects();this.clear('armor');toast('Guardado','success')},
     saveItem(){
         const type=$('#item-type').value;
         const it={
@@ -1897,6 +2192,8 @@ const Editor={
             it.foodValue=parseInt($('#item-food-value').value)||1;
         }else if(type==='antidote'){
             it.cures=$('#item-antidote-cures').value;
+        }else if(type==='scroll'){
+            it.spellId=$('#item-scroll-spell').value;
         }else if(type==='backpack'){
             it.slots=parseInt($('#item-backpack-slots').value)||5;
         }
@@ -1905,8 +2202,8 @@ const Editor={
         if(i>=0)Data.items[i]=it;else Data.items.push(it);
         Data.save();this.renderItems();this.updateSelects();this.clear('item');toast('Guardado','success')
     },
-    saveEnemy(){const regions=Array.from($$('#enemy-regions input:checked')).map(c=>c.value);const drops=Array.from($$('#enemy-drops input:checked')).map(c=>c.value);if(regions.length===0){toast('Selecciona región','error');return}const canGroup=$('#enemy-canGroup').value==='true';const e={id:$('#enemy-id').value||genId('e'),name:$('#enemy-name').value,health:parseInt($('#enemy-health').value)||20,damage:$('#enemy-damage').value||'1d6',difficulty:parseInt($('#enemy-difficulty').value)||10,armor:parseInt($('#enemy-armor').value)||0,speed:parseInt($('#enemy-speed').value)||10,icon:$('#enemy-icon').value||'👹',sprite:$('#enemy-sprite').value||'',effect:$('#enemy-effect').value||null,usesMana:$('#enemy-usesMana').value==='true',weaponId:$('#enemy-weaponId').value||null,armorId:$('#enemy-armorId').value||null,loot:[parseInt($('#enemy-loot-min').value)||5,parseInt($('#enemy-loot-max').value)||20],regions,drops,desc:$('#enemy-desc').value||'',canGroup,groupMin:parseInt($('#enemy-groupMin').value)||2,groupMax:parseInt($('#enemy-groupMax').value)||4,groupChance:parseInt($('#enemy-groupChance').value)||30};if(!e.name){toast('Falta nombre','error');return}const i=Data.enemies.findIndex(x=>x.id===e.id);if(i>=0)Data.enemies[i]=e;else Data.enemies.push(e);Data.save();this.renderEnemies();this.clear('enemy');toast('Guardado','success')},
-    editEnemy(id){const e=Data.find('enemies',id);if(!e)return;$('#enemy-id').value=e.id;$('#enemy-name').value=e.name;$('#enemy-health').value=e.health||'';$('#enemy-damage').value=e.damage||'';$('#enemy-difficulty').value=e.difficulty||'';$('#enemy-armor').value=e.armor||'';$('#enemy-speed').value=e.speed||'';$('#enemy-icon').value=e.icon||'';$('#enemy-sprite').value=e.sprite||'';$('#enemy-effect').value=e.effect||'';$('#enemy-weaponId').value=e.weaponId||'';$('#enemy-armorId').value=e.armorId||'';$('#enemy-loot-min').value=e.loot?.[0]||'';$('#enemy-loot-max').value=e.loot?.[1]||'';$('#enemy-desc').value=e.desc||'';$('#enemy-canGroup').value=e.canGroup?'true':'false';$('#enemy-groupMin').value=e.groupMin||'';$('#enemy-groupMax').value=e.groupMax||'';$('#enemy-groupChance').value=e.groupChance||'';setTimeout(()=>{$$('#enemy-regions input').forEach(c=>c.checked=(e.regions||[]).includes(c.value));$$('#enemy-drops input').forEach(c=>c.checked=(e.drops||[]).includes(c.value))},50)},
+    saveEnemy(){const regions=Array.from($$('#enemy-regions input:checked')).map(c=>c.value);if(regions.length===0){toast('Selecciona región','error');return}const canGroup=$('#enemy-canGroup').value==='true';const e={id:$('#enemy-id').value||genId('e'),name:$('#enemy-name').value,health:parseInt($('#enemy-health').value)||20,damage:$('#enemy-damage').value||'1d6',difficulty:parseInt($('#enemy-difficulty').value)||10,armor:parseInt($('#enemy-armor').value)||0,speed:parseInt($('#enemy-speed').value)||10,icon:$('#enemy-icon').value||'👹',sprite:$('#enemy-sprite').value||'',effect:$('#enemy-effect').value||null,usesMana:$('#enemy-usesMana').value==='true',weaponId:$('#enemy-weaponId').value||null,armorId:$('#enemy-armorId').value||null,loot:[parseInt($('#enemy-loot-min').value)||5,parseInt($('#enemy-loot-max').value)||20],regions,drops:this.enemyDrops||[],desc:$('#enemy-desc').value||'',canGroup,groupMin:parseInt($('#enemy-groupMin').value)||2,groupMax:parseInt($('#enemy-groupMax').value)||4,groupChance:parseInt($('#enemy-groupChance').value)||30};if(!e.name){toast('Falta nombre','error');return}const i=Data.enemies.findIndex(x=>x.id===e.id);if(i>=0)Data.enemies[i]=e;else Data.enemies.push(e);Data.save();this.renderEnemies();this.clear('enemy');toast('Guardado','success')},
+    editEnemy(id){const e=Data.find('enemies',id);if(!e)return;$('#enemy-id').value=e.id;$('#enemy-name').value=e.name;$('#enemy-health').value=e.health||'';$('#enemy-damage').value=e.damage||'';$('#enemy-difficulty').value=e.difficulty||'';$('#enemy-armor').value=e.armor||'';$('#enemy-speed').value=e.speed||'';$('#enemy-icon').value=e.icon||'';$('#enemy-sprite').value=e.sprite||'';$('#enemy-effect').value=e.effect||'';$('#enemy-weaponId').value=e.weaponId||'';$('#enemy-armorId').value=e.armorId||'';$('#enemy-loot-min').value=e.loot?.[0]||'';$('#enemy-loot-max').value=e.loot?.[1]||'';$('#enemy-desc').value=e.desc||'';$('#enemy-canGroup').value=e.canGroup?'true':'false';$('#enemy-groupMin').value=e.groupMin||'';$('#enemy-groupMax').value=e.groupMax||'';$('#enemy-groupChance').value=e.groupChance||'';this.enemyDrops=(e.drops||[]).map(d=>typeof d==='string'?{itemId:d,chance:20}:d);this.renderDropsList();setTimeout(()=>{$$('#enemy-regions input').forEach(c=>c.checked=(e.regions||[]).includes(c.value))},50)},
     savePet(){const regions=Array.from($$('#pet-regions input:checked')).map(c=>c.value);const p={id:$('#pet-id').value||genId('p'),name:$('#pet-name').value,health:parseInt($('#pet-health').value)||20,damage:$('#pet-damage').value||'1d4',speed:parseInt($('#pet-speed').value)||12,difficulty:parseInt($('#pet-difficulty').value)||24,icon:$('#pet-icon').value||'🐺',sprite:$('#pet-sprite').value||'',regions,desc:$('#pet-desc').value||''};if(!p.name){toast('Falta nombre','error');return}const i=Data.pets.findIndex(x=>x.id===p.id);if(i>=0)Data.pets[i]=p;else Data.pets.push(p);Data.save();this.renderPets();this.clear('pet');toast('Guardado','success')},
     editPet(id){const p=Data.find('pets',id);if(!p)return;$('#pet-id').value=p.id;$('#pet-name').value=p.name;$('#pet-health').value=p.health||'';$('#pet-damage').value=p.damage||'';$('#pet-speed').value=p.speed||'';$('#pet-difficulty').value=p.difficulty||'';$('#pet-icon').value=p.icon||'';$('#pet-sprite').value=p.sprite||'';$('#pet-desc').value=p.desc||'';setTimeout(()=>$$('#pet-regions input').forEach(c=>c.checked=(p.regions||[]).includes(c.value)),50)},
     saveNpc(){const sells=Array.from($$('#npc-sells input:checked')).map(c=>c.value);const n={id:$('#npc-id').value||genId('n'),name:$('#npc-name').value,role:$('#npc-role').value,icon:$('#npc-icon').value||'🧔',sprite:$('#npc-sprite').value||'',region:$('#npc-region').value,dialogue:$('#npc-dialogue').value||'',sells};if(!n.name){toast('Falta nombre','error');return}const i=Data.npcs.findIndex(x=>x.id===n.id);if(i>=0)Data.npcs[i]=n;else Data.npcs.push(n);Data.save();this.renderNpcs();this.clear('npc');toast('Guardado','success')},
@@ -1924,7 +2221,7 @@ const Editor={
     deleteRecipe(id){if(!confirm('¿Eliminar?'))return;Data.recipes=Data.recipes.filter(r=>r.id!==id);Data.save();this.renderRecipes();toast('Eliminado','info')},
     edit(t,p,id){const it=Data.find(t,id);if(!it)return;Object.keys(it).forEach(k=>{const e=$(`#${p}-${k}`);if(e)e.value=it[k]||''})},
     del(t,id){if(!confirm('¿Eliminar?'))return;Data[t]=Data[t].filter(x=>x.id!==id);Data.save();this.renderAll();toast('Eliminado','info')},
-    renderAll(){this.renderRegions();this.renderRaces();this.renderWeapons();this.renderArmors();this.renderItems();this.renderEnemies();this.renderPets();this.renderNpcs();this.renderRecipes();this.updateSelects()},
+    renderAll(){this.renderRegions();this.renderRaces();this.renderWeapons();this.renderArmors();this.renderItems();this.renderEnemies();this.renderPets();this.renderNpcs();this.renderRecipes();this.renderSpells();this.updateSelects()},
     renderRegions(){$('#regions-list').innerHTML=Data.regions.map(r=>`<div class="item-card" onclick="Editor.editRegion('${r.id}')"><span class="item-card-icon">${r.icon}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats"><span class="item-id">${r.id}</span> ${r.type==='safe'?'🏠':'⚠️'} Dist:${r.distance||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRegion('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRegion('${r.id}')">🗑️</button></div></div>`).join('')},
     renderRaces(){$('#races-list').innerHTML=Data.races.map(r=>`<div class="item-card" onclick="Editor.editRace('${r.id}')"><span class="item-card-icon">${sprite(r)}</span><div class="item-card-info"><div class="item-card-name">${r.name}${r.usesMana?' 💙':''}</div><div class="item-card-stats"><span class="item-id">${r.id}</span> ⚡${r.bonus?.speed||10}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRace('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRace('${r.id}')">🗑️</button></div></div>`).join('')},
     renderWeapons(){$('#weapons-list').innerHTML=Data.weapons.map(w=>`<div class="item-card${w.fromPlugin?' plugin-item':''}" onclick="Editor.edit('weapons','weapon','${w.id}')"><span class="item-card-icon">${sprite(w)}${w.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${w.name}${w.magic?' ✨':''}</div><div class="item-card-stats"><span class="item-id">${w.id}</span> ${w.damage} ⚖️${w.weight||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('weapons','weapon','${w.id}')">✏️</button>${w.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('weapons','${w.id}')">🗑️</button>`}</div></div>`).join('')},
@@ -1934,6 +2231,11 @@ const Editor={
     renderPets(){$('#pets-list').innerHTML=Data.pets.map(p=>`<div class="item-card" onclick="Editor.editPet('${p.id}')"><span class="item-card-icon">${sprite(p)}</span><div class="item-card-info"><div class="item-card-name">${p.name}</div><div class="item-card-stats"><span class="item-id">${p.id}</span> ⚡${p.speed||12}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editPet('${p.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('pets','${p.id}')">🗑️</button></div></div>`).join('')},
     renderNpcs(){const roles={merchant:'Comerciante',blacksmith:'Herrero',alchemist:'Alquimista',innkeeper:'Tabernero',healer:'Curandero',guard:'Guardia',villager:'Aldeano'};$('#npcs-list').innerHTML=Data.npcs.map(n=>`<div class="item-card" onclick="Editor.editNpc('${n.id}')"><span class="item-card-icon">${sprite(n)}</span><div class="item-card-info"><div class="item-card-name">${n.name}</div><div class="item-card-stats">${roles[n.role]||n.role}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editNpc('${n.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('npcs','${n.id}')">🗑️</button></div></div>`).join('')},
     renderRecipes(){$('#recipes-list').innerHTML=(Data.recipes||[]).map(r=>{const result=Data.findItem(r.result);const ingNames=(r.ingredients||[]).map(i=>{const it=Data.findItem(i);return it?it.icon:'?'}).join('+');return`<div class="item-card" onclick="Editor.editRecipe('${r.id}')"><span class="item-card-icon">${r.icon||'🔨'}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats"><span class="item-id">${r.id}</span> ${ingNames}→${result?result.icon:''}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRecipe('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRecipe('${r.id}')">🗑️</button></div></div>`}).join('')},
+    // Spells management
+    saveSpell(){const s={id:$('#spell-id').value||genId('sp'),name:$('#spell-name').value,damage:$('#spell-damage').value||'1d6',cost:parseInt($('#spell-cost').value)||2,icon:$('#spell-icon').value||'✨',effect:$('#spell-effect').value||null,desc:$('#spell-desc').value||''};if(!s.name){toast('Falta nombre','error');return}const i=(Data.spells||[]).findIndex(x=>x.id===s.id);if(i>=0)Data.spells[i]=s;else{if(!Data.spells)Data.spells=[];Data.spells.push(s)}Data.save();this.renderSpells();this.updateSelects();this.clear('spell');toast('Guardado','success')},
+    editSpell(id){const s=Data.findSpell(id);if(!s)return;$('#spell-id').value=s.id;$('#spell-name').value=s.name;$('#spell-damage').value=s.damage||'';$('#spell-cost').value=s.cost||'';$('#spell-icon').value=s.icon||'';$('#spell-effect').value=s.effect||'';$('#spell-desc').value=s.desc||''},
+    deleteSpell(id){if(!confirm('¿Eliminar?'))return;Data.spells=(Data.spells||[]).filter(s=>s.id!==id);Data.save();this.renderSpells();this.updateSelects();toast('Eliminado','info')},
+    renderSpells(){const list=$('#spells-list');if(!list)return;list.innerHTML=(Data.spells||[]).map(s=>`<div class="item-card" onclick="Editor.editSpell('${s.id}')"><span class="item-card-icon">${s.icon||'✨'}</span><div class="item-card-info"><div class="item-card-name">${s.name}</div><div class="item-card-stats"><span class="item-id">${s.id}</span> ${s.damage} 💙${s.cost}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editSpell('${s.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteSpell('${s.id}')">🗑️</button></div></div>`).join('')},
     updateSelects(){
         const dangerRegions=Data.regions.filter(r=>r.type==='danger');
         const regHtml=dangerRegions.map(r=>`<label><input type="checkbox" value="${r.id}"> ${r.icon} ${r.name}</label>`).join('');
@@ -1942,18 +2244,23 @@ const Editor={
         $('#npc-region').innerHTML=safeRegions.map(r=>`<option value="${r.id}">${r.icon} ${r.name}</option>`).join('');
         const allItems=[...Data.weapons,...Data.armors,...Data.items];
         const itemsHtml=allItems.map(it=>`<label><input type="checkbox" value="${it.id}"> ${it.icon||'📦'} ${it.name}</label>`).join('');
-        $('#enemy-drops').innerHTML=itemsHtml;$('#npc-sells').innerHTML=itemsHtml;
+        $('#npc-sells').innerHTML=itemsHtml;
+        // Enemy drop select (new system with probability)
+        $('#enemy-drop-select').innerHTML=allItems.map(it=>`<option value="${it.id}">${it.icon||'📦'} ${it.name}</option>`).join('');
         // Enemy weapon/armor selects
         $('#enemy-weaponId').innerHTML='<option value="">Sin arma (usa daño base)</option>'+Data.weapons.map(w=>`<option value="${w.id}">${w.icon} ${w.name} (${w.damage})${w.magic?' ✨':''}</option>`).join('');
         $('#enemy-armorId').innerHTML='<option value="">Sin armadura (usa armadura base)</option>'+Data.armors.map(a=>`<option value="${a.id}">${a.icon} ${a.name} (Def:${a.defense})</option>`).join('');
         // Recipe selects
         $('#recipe-result').innerHTML=allItems.map(it=>`<option value="${it.id}">${it.icon||'📦'} ${it.name}</option>`).join('');
         $('#recipe-ingredient-select').innerHTML=allItems.map(it=>`<option value="${it.id}">${it.icon||'📦'} ${it.name}</option>`).join('');
+        // Spell select for scrolls
+        const spellSel=$('#item-scroll-spell');
+        if(spellSel)spellSel.innerHTML=(Data.spells||[]).map(s=>`<option value="${s.id}">${s.icon} ${s.name} (${s.cost} maná)</option>`).join('');
     },
     // Item type change handler
     onItemTypeChange(){
         const type=$('#item-type').value;
-        ['potion','food','antidote','escape','backpack','misc'].forEach(t=>{
+        ['potion','food','antidote','scroll','escape','backpack','misc'].forEach(t=>{
             const el=$(`#item-${t}-fields`);
             if(el)el.style.display=t===type?'block':'none';
         });
