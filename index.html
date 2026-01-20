@@ -120,7 +120,7 @@
         .combatant.pet{border-color:var(--cyan);order:-1}
         .combatant.dead{opacity:.4;filter:grayscale(1)}
         .combatant.active{box-shadow:0 0 12px var(--gold-bright);border-color:var(--gold-bright)}
-        .combatant-order{position:absolute;top:-8px;right:-8px;background:var(--gold);color:var(--bg-dark);width:20px;height:20px;border-radius:50%;font-size:.6rem;font-weight:bold;display:flex;align-items:center;justify-content:center}
+        .combatant-order{position:absolute;top:-5px;right:-5px;background:var(--gold);color:var(--bg-dark);min-width:28px;height:18px;border-radius:9px;font-size:.55rem;font-weight:bold;display:flex;align-items:center;justify-content:center;padding:0 4px}
         .combatant-sprite{font-size:2rem;margin-bottom:.2rem}
         .combatant-sprite img{width:48px;height:48px;object-fit:contain}
         .combatant-name{font-family:'Cinzel',serif;font-size:.7rem;margin-bottom:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -137,6 +137,7 @@
         .combat-log .log-turn{text-align:center;color:var(--gold);font-weight:bold;padding:.3rem;margin:.2rem 0}
         .combat-log .log-order{display:none}
         .combat-log .log-calc{display:inline;font-size:.6rem;opacity:.8}
+        .combat-log .log-line{font-family:'Consolas',monospace;font-size:.6rem;padding-left:.3rem;border-left:2px solid var(--border);margin-left:.3rem}
         .combat-actions{padding:.5rem;background:var(--bg-panel);border-top:1px solid var(--border);position:sticky;top:0;z-index:10}
         .log-entry{padding:.12rem 0;border-bottom:1px dashed rgba(255,255,255,.05)}
         .log-entry:last-child{border-bottom:none}
@@ -360,7 +361,7 @@
             .combat-header{padding:.3rem .5rem}
             .combat-grid{padding:.4rem;gap:.3rem}
             .combatant{min-width:70px;max-width:85px;padding:.3rem;border-radius:4px}
-            .combatant-order{width:16px;height:16px;font-size:.5rem;top:-5px;right:-5px}
+            .combatant-order{min-width:24px;height:14px;font-size:.45rem;top:-3px;right:-3px;padding:0 3px}
             .combatant-sprite{font-size:1.5rem;margin-bottom:.1rem}
             .combatant-sprite img{width:32px;height:32px}
             .combatant-name{font-size:.55rem}
@@ -540,8 +541,12 @@
                     <div class="rules-highlight">1. Se calcula iniciativa (Velocidad + D20)<br>2. Actúan en orden de mayor a menor<br>3. Cuando todos actúan → nuevo turno</div>
                     <p>La velocidad se reduce por el peso del equipo (1 peso = -1 velocidad)</p>
                 </div>
-                <div class="rules-card"><h4>🎲 Tiradas de Ataque</h4>
+                <div class="rules-card"><h4>🎲 Tu Ataque</h4>
                     <div class="rules-highlight">D20 + Precisión ≥ Dificultad enemigo<br>🎯 Crítico (20): Daño ×2<br>💀 Pifia (1): Fallo automático</div>
+                    <p>Dificultad del enemigo aparece como 🎯 en combate</p>
+                </div>
+                <div class="rules-card"><h4>🛡️ Ataque Enemigo</h4>
+                    <div class="rules-highlight">D20 + Evasión ≥ 12 → Esquivas<br>Si no esquivas: Daño − tu Armadura</div>
                     <p>Defender: +4 a evasión hasta tu próximo turno</p>
                 </div>
                 <div class="rules-card"><h4>🔥 Efectos de Estado</h4>
@@ -549,7 +554,6 @@
                     <p>🩸 <strong>Sangrado:</strong> 1 daño/turno (3 turnos)</p>
                     <p>☠️ <strong>Veneno:</strong> 2 daño/turno (2 turnos)</p>
                     <p>🔥 <strong>Fuego:</strong> 1d4 daño/turno (2 turnos)</p>
-                    <p>Algunos armas aplican efectos automáticamente</p>
                 </div>
                 <div class="rules-card"><h4>🗺️ Sistema de Viaje</h4>
                     <div class="rules-highlight">Las regiones están conectadas por rutas</div>
@@ -1339,38 +1343,99 @@ const Combat={
         backBtn.onclick=()=>this.showPlayerActions();
         ca.appendChild(backBtn);
     },
-    async playerAttack(target){const p=G.p;const atkRoll=d20();const prec=p.race.bonus.precision||0;const total=atkRoll+prec;const isCrit=atkRoll===20;const isPifia=atkRoll===1;await showDice(atkRoll,20,isCrit);if(isPifia){this.log(`<span class="log-miss">D20=1 ¡PIFIA!</span>`);if(typeof Plugins!=='undefined')Plugins.trigger('onAttack',p,target,0,false)}else if(total>=target.difficulty||isCrit){const dmgRoll=rollDetailed(p.weapon?.damage||'1d2');const bonus=p.race.bonus.damage||0;let baseDmg=dmgRoll.total+bonus;
-        // Plugin: modificar daño por efectos (ej: furia)
-        const fury=(p.effects||[]).find(e=>e.type==='fury');if(fury){const furyBonus=Math.floor(baseDmg*0.5);baseDmg+=furyBonus;this.log(`🔥+${furyBonus}`)}
-        if(isCrit){baseDmg*=2;this.log(`<span class="log-crit">¡CRIT x2!</span>`)}const armor=target.armor||0;let finalDmg=Math.max(0,baseDmg-armor);
-        // Plugin hook: modificar daño final
-        if(typeof Plugins!=='undefined')finalDmg=Plugins.trigger('onAttack',p,target,finalDmg,true)||finalDmg;
-        if(finalDmg>0){this.log(`<span class="log-player">${p.name}</span>→${target.name}: <span class="log-damage">${finalDmg}</span> (${baseDmg}-${armor})`);target.hp-=finalDmg;
-        // Plugin: efectos al causar daño (vampirismo, etc)
-        if(typeof Plugins!=='undefined'){const special=Plugins.getSpecialItem(p.weapon?.id);if(special&&special.onDealDamage)special.onDealDamage(p,target,finalDmg)}}else{this.log(`<span class="log-miss">${target.name} bloquea</span>`)}if(p.weapon?.effect&&finalDmg>0)this.applyEff(target,p.weapon.effect);if(target.hp<=0)this.log(`<span class="log-damage">💀${target.name}</span>`)}else{this.log(`<span class="log-miss">D20=${atkRoll} Falla</span>`);if(typeof Plugins!=='undefined')Plugins.trigger('onAttack',p,target,0,false)}this.updateUI();G.currentActor++;await delay(350);this.nextActor()},
+    async playerAttack(target){
+        const p=G.p;
+        const atkRoll=d20();
+        const prec=p.race.bonus.precision||0;
+        const total=atkRoll+prec;
+        const isCrit=atkRoll===20;
+        const isPifia=atkRoll===1;
+        
+        await showDice(atkRoll,20,isCrit);
+        
+        // Mostrar tirada clara
+        this.log(`<span class="log-player">${p.name}</span> ataca a <span class="log-enemy">${target.name}</span>`);
+        this.log(`├ 🎲 D20=${atkRoll}${prec?` +${prec}`:''} = ${total} vs ${target.difficulty} (dificultad)`);
+        
+        if(isPifia){
+            this.log(`└ <span class="log-miss">💀 ¡PIFIA! (1 natural = fallo automático)</span>`);
+            if(typeof Plugins!=='undefined')Plugins.trigger('onAttack',p,target,0,false);
+        }else if(total>=target.difficulty||isCrit){
+            const dmgRoll=rollDetailed(p.weapon?.damage||'1d2');
+            const bonus=p.race.bonus.damage||0;
+            let baseDmg=dmgRoll.total+bonus;
+            
+            // Plugin: modificar daño por efectos (ej: furia)
+            const fury=(p.effects||[]).find(e=>e.type==='fury');
+            if(fury){const furyBonus=Math.floor(baseDmg*0.5);baseDmg+=furyBonus;this.log(`├ 🔥 Furia: +${furyBonus}`)}
+            
+            if(isCrit){
+                this.log(`├ <span class="log-crit">🎯 ¡CRÍTICO! (20 natural = daño x2)</span>`);
+                baseDmg*=2;
+            }
+            
+            const armor=target.armor||0;
+            let finalDmg=Math.max(0,baseDmg-armor);
+            
+            // Plugin hook: modificar daño final
+            if(typeof Plugins!=='undefined')finalDmg=Plugins.trigger('onAttack',p,target,finalDmg,true)||finalDmg;
+            
+            this.log(`├ ⚔️ Daño: ${baseDmg} − ${armor} (armadura) = ${finalDmg}`);
+            
+            if(finalDmg>0){
+                target.hp-=finalDmg;
+                this.log(`└ <span class="log-damage">💥 ${target.name} recibe ${finalDmg} daño (${Math.max(0,target.hp)}/${target.maxHp})</span>`);
+                // Plugin: efectos al causar daño (vampirismo, etc)
+                if(typeof Plugins!=='undefined'){
+                    const special=Plugins.getSpecialItem(p.weapon?.id);
+                    if(special&&special.onDealDamage)special.onDealDamage(p,target,finalDmg);
+                }
+                if(p.weapon?.effect)this.applyEff(target,p.weapon.effect);
+                if(target.hp<=0)this.log(`<span class="log-damage">💀 ${target.name} derrotado!</span>`);
+            }else{
+                this.log(`└ <span class="log-miss">🛡️ ${target.name} bloquea todo (armadura ≥ daño)</span>`);
+            }
+        }else{
+            this.log(`└ <span class="log-miss">❌ ¡Falla! (${total} < ${target.difficulty})</span>`);
+            if(typeof Plugins!=='undefined')Plugins.trigger('onAttack',p,target,0,false);
+        }
+        
+        this.updateUI();G.currentActor++;await delay(350);this.nextActor();
+    },
     playerDefend(){G.p.defending=true;this.log(`<span class="log-player">${G.p.name}</span> defiende <span class="log-heal">+4 Eva</span>`);G.currentActor++;this.updateUI();this.nextActor()},
     async playerFlee(){const r=d20();await showDice(r,20,r>=12);this.log(`Huida: D20=${r} vs 12`);if(r>=12){this.log('<span class="log-heal">¡Escape!</span>');this.escape()}else{this.log('<span class="log-miss">¡No escapas!</span>');G.currentActor++;await delay(300);this.nextActor()}},
     async petAction(){const pet=G.p.pet;const aliveEnemies=G.enemies.filter(e=>e.hp>0);if(aliveEnemies.length===0)return;const target=pick(aliveEnemies);const dmgRoll=rollDetailed(pet.damage);const baseDmg=dmgRoll.total;const armor=target.armor||0;const finalDmg=Math.max(0,baseDmg-armor);this.log(`<span class="log-pet">${pet.icon} ${pet.name}</span> → <span class="log-enemy">${target.name}</span>`);this.log(`├ Daño: ${dmgRoll.dice}=[${dmgRoll.rolls}] = ${baseDmg}`);if(finalDmg>0){this.log(`<div class="log-calc">⚔️ ${baseDmg} − ${armor} = ${finalDmg}</div>`);target.hp-=finalDmg;this.log(`└ <span class="log-damage">${target.name} -${finalDmg} (${Math.max(0,target.hp)}/${target.maxHp})</span>`);if(target.hp<=0)this.log(`<span class="log-damage">💀 ${target.name} derrotado!</span>`)}else{this.log(`<div class="log-calc blocked">🛡️ ${baseDmg} − ${armor} = 0 BLOQUEADO</div>`)}this.updateUI();G.currentActor++;await delay(350);this.nextActor()},
     async enemyAction(enemy){
         const p=G.p;
         // Mostrar mensaje de preparación
-        this.log(`<span class="log-enemy">⚠️ ${enemy.name} prepara su ataque...</span>`);
+        this.log(`<span class="log-enemy">⚠️ ${enemy.name} (Dif:${enemy.difficulty}) ataca a ${p.name}...</span>`);
         this.updateUI();
         await delay(600);
         
+        // Tirada de evasión del jugador
         const evaBonus=(p.race.bonus.evasion||0)+(p.defending?4:0);
         const dodgeRoll=d20();
         const dodgeTotal=dodgeRoll+evaBonus;
         
+        this.log(`├ 🎲 Evasión: D20=${dodgeRoll}${evaBonus?` +${evaBonus}`:''} = ${dodgeTotal} vs 12`);
+        
         if(dodgeTotal>=12){
-            this.log(`<span class="log-heal">🛡️ ¡${p.name} esquiva!</span>`);
+            this.log(`└ <span class="log-heal">✨ ¡${p.name} esquiva el ataque!</span>`);
         }else{
+            this.log(`├ <span class="log-miss">❌ No esquiva (${dodgeTotal} < 12)</span>`);
+            
             const dmgRoll=rollDetailed(enemy.damage);
             let baseDmg=dmgRoll.total;
             const isCrit=Math.random()<0.1;
-            if(isCrit){baseDmg=Math.ceil(baseDmg*1.25)}
+            
+            if(isCrit){
+                this.log(`├ <span class="log-crit">🎯 ¡Golpe crítico!</span>`);
+                baseDmg=Math.ceil(baseDmg*1.5);
+            }
+            
             const playerArmor=Game.armor();
             let finalDmg=Math.max(0,baseDmg-playerArmor);
+            
             // Plugin: hooks de daño recibido
             if(typeof Plugins!=='undefined'&&finalDmg>0){
                 const special=Plugins.getSpecialItem(p.armor?.id);
@@ -1380,12 +1445,15 @@ const Combat={
                     if(custom&&custom.onTakeDamage)finalDmg=custom.onTakeDamage(p,eff,finalDmg);
                 });
             }
+            
+            this.log(`├ ⚔️ Daño: ${baseDmg} − ${playerArmor} (armadura) = ${finalDmg}`);
+            
             if(finalDmg>0){
-                this.log(`<span class="log-damage">💥 ${enemy.name} hace ${finalDmg} daño${isCrit?' ¡CRIT!':''}</span>`);
                 p.hp-=finalDmg;
+                this.log(`└ <span class="log-damage">💥 ${p.name} recibe ${finalDmg} daño (${Math.max(0,p.hp)}/${p.maxHp})</span>`);
                 if(enemy.effect)this.applyEff(p,enemy.effect);
             }else{
-                this.log(`<span class="log-heal">🛡️ ${p.name} bloquea todo el daño</span>`);
+                this.log(`└ <span class="log-heal">🛡️ ${p.name} bloquea todo (armadura ≥ daño)</span>`);
             }
         }
         this.updateUI();Game.updateUI();G.currentActor++;
@@ -1439,7 +1507,62 @@ const Combat={
     },
     escape(){$('#combatArena').classList.add('hidden');G.combat=false;G.enemies=[];Story.add('Escapas.','system');Game.updateUI();if(this.duringTravel){this.duringTravel=false;G.traveling=null;Story.add('Vuelves al punto de partida.','travel')}Game.exploreActions()},
     log(t){$('#combatLog').innerHTML+=`<div class="log-entry">${t}</div>`;$('#combatLog').scrollTop=999999},
-    updateUI(){if(!G.p)return;const grid=$('#combatGrid');grid.innerHTML='';const pDiv=document.createElement('div');pDiv.className=`combatant player ${G.p.hp<=0?'dead':''}`;const pHpPct=(G.p.hp/G.p.maxHp)*100;pDiv.innerHTML=`<div class="combatant-order">⚡${Game.speed()}</div><div class="combatant-sprite">${sprite({icon:G.p.race.icon,sprite:G.p.race.sprite})}</div><div class="combatant-name">${G.p.name}</div><div class="combatant-stats">⚔️${G.p.weapon?.damage||'1d2'} 🛡️${Game.armor()}</div><div class="hp-container"><div class="hp-fill ${hpClass(pHpPct)}" style="width:${pHpPct}%"></div><div class="hp-text">${G.p.hp}/${G.p.maxHp}</div></div><div class="effects-row">${(G.p.effects||[]).map(e=>`<span class="effect-tag eff-${e.type}">${e.type}${e.turns}</span>`).join('')}</div>`;grid.appendChild(pDiv);if(G.p.pet&&G.p.pet.hp>0){const petDiv=document.createElement('div');petDiv.className='combatant pet';const petHpPct=(G.p.pet.hp/G.p.pet.maxHp)*100;petDiv.innerHTML=`<div class="combatant-order">⚡${G.p.pet.speed||12}</div><div class="combatant-sprite">${G.p.pet.icon}</div><div class="combatant-name">${G.p.pet.name}</div><div class="combatant-stats">⚔️${G.p.pet.damage}</div><div class="hp-container"><div class="hp-fill" style="width:${petHpPct}%"></div><div class="hp-text">${G.p.pet.hp}/${G.p.pet.maxHp}</div></div>`;grid.appendChild(petDiv)}const vs=document.createElement('div');vs.className='combat-vs';vs.textContent='⚔';grid.appendChild(vs);G.enemies.forEach(e=>{const eDiv=document.createElement('div');eDiv.className=`combatant enemy ${e.hp<=0?'dead':''}`;eDiv.dataset.uid=e.uid;const eHpPct=(e.hp/e.maxHp)*100;const weaponInfo=e.weapon?`${e.weapon.icon}${e.damage}`:e.damage;eDiv.innerHTML=`<div class="combatant-order">⚡${e.speed||10}</div><div class="combatant-sprite">${sprite(e)}</div><div class="combatant-name">${e.name}</div><div class="combatant-stats">⚔️${weaponInfo} 🛡️${e.armor||0}</div><div class="hp-container"><div class="hp-fill ${hpClass(eHpPct)}" style="width:${eHpPct}%"></div><div class="hp-text">${Math.max(0,e.hp)}/${e.maxHp}</div></div><div class="effects-row">${(e.effects||[]).map(ef=>`<span class="effect-tag eff-${ef.type}">${ef.type}${ef.turns}</span>`).join('')}</div>`;grid.appendChild(eDiv)});$('#turnCounter').textContent=G.turn}
+    updateUI(){
+        if(!G.p)return;
+        const grid=$('#combatGrid');
+        grid.innerHTML='';
+        
+        // Jugador
+        const pDiv=document.createElement('div');
+        pDiv.className=`combatant player ${G.p.hp<=0?'dead':''}`;
+        const pHpPct=(G.p.hp/G.p.maxHp)*100;
+        pDiv.innerHTML=`
+            <div class="combatant-order">⚡${Game.speed()}</div>
+            <div class="combatant-sprite">${sprite({icon:G.p.race.icon,sprite:G.p.race.sprite})}</div>
+            <div class="combatant-name">${G.p.name}</div>
+            <div class="combatant-stats">⚔️${G.p.weapon?.damage||'1d2'} 🛡️${Game.armor()}</div>
+            <div class="hp-container"><div class="hp-fill ${hpClass(pHpPct)}" style="width:${pHpPct}%"></div><div class="hp-text">${G.p.hp}/${G.p.maxHp}</div></div>
+            <div class="effects-row">${(G.p.effects||[]).map(e=>`<span class="effect-tag eff-${e.type}">${e.type}${e.turns}</span>`).join('')}</div>`;
+        grid.appendChild(pDiv);
+        
+        // Mascota
+        if(G.p.pet&&G.p.pet.hp>0){
+            const petDiv=document.createElement('div');
+            petDiv.className='combatant pet';
+            const petHpPct=(G.p.pet.hp/G.p.pet.maxHp)*100;
+            petDiv.innerHTML=`
+                <div class="combatant-order">⚡${G.p.pet.speed||12}</div>
+                <div class="combatant-sprite">${G.p.pet.icon}</div>
+                <div class="combatant-name">${G.p.pet.name}</div>
+                <div class="combatant-stats">⚔️${G.p.pet.damage}</div>
+                <div class="hp-container"><div class="hp-fill" style="width:${petHpPct}%"></div><div class="hp-text">${G.p.pet.hp}/${G.p.pet.maxHp}</div></div>`;
+            grid.appendChild(petDiv);
+        }
+        
+        const vs=document.createElement('div');
+        vs.className='combat-vs';
+        vs.textContent='⚔';
+        grid.appendChild(vs);
+        
+        // Enemigos
+        G.enemies.forEach(e=>{
+            const eDiv=document.createElement('div');
+            eDiv.className=`combatant enemy ${e.hp<=0?'dead':''}`;
+            eDiv.dataset.uid=e.uid;
+            const eHpPct=(e.hp/e.maxHp)*100;
+            const weaponInfo=e.weapon?`${e.weapon.icon}${e.damage}`:e.damage;
+            eDiv.innerHTML=`
+                <div class="combatant-order">⚡${e.speed||10}</div>
+                <div class="combatant-sprite">${sprite(e)}</div>
+                <div class="combatant-name">${e.name}</div>
+                <div class="combatant-stats">⚔️${weaponInfo} 🛡️${e.armor||0} 🎯${e.difficulty||10}</div>
+                <div class="hp-container"><div class="hp-fill ${hpClass(eHpPct)}" style="width:${eHpPct}%"></div><div class="hp-text">${Math.max(0,e.hp)}/${e.maxHp}</div></div>
+                <div class="effects-row">${(e.effects||[]).map(ef=>`<span class="effect-tag eff-${ef.type}">${ef.type}${ef.turns}</span>`).join('')}</div>`;
+            grid.appendChild(eDiv);
+        });
+        
+        $('#turnCounter').textContent=G.turn;
+    }
 };
 
 const Inv={
