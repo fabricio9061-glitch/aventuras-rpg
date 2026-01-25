@@ -2371,8 +2371,8 @@ document.addEventListener('DOMContentLoaded',()=>{
 <!-- Sistema de Plugins -->
 <script src="rpg-plugins.js"></script>
 <script>
-// Función global para cargar items de plugins
-function loadPluginItems(){
+// Función de respaldo (solo se usa si rpg-plugins.js no cargó correctamente)
+var _fallbackLoadPluginItems = function(){
     if(typeof Plugins==='undefined' || !Plugins.specialItems) return;
     
     var keys = Object.keys(Plugins.specialItems);
@@ -2420,7 +2420,7 @@ function loadPluginItems(){
     });
     
     if(added > 0){
-        console.log('🔌 Plugins: +' + added + ' items agregados');
+        console.log('🔌 Plugins fallback: +' + added + ' items agregados');
         if(typeof Editor !== 'undefined'){
             Editor.renderWeapons();
             Editor.renderArmors();
@@ -2428,6 +2428,11 @@ function loadPluginItems(){
             Editor.updateSelects();
         }
     }
+};
+
+// Solo usar fallback si no existe loadPluginItems del plugin
+if(typeof loadPluginItems !== 'function'){
+    var loadPluginItems = _fallbackLoadPluginItems;
 }
 
 // Hook de velocidad
