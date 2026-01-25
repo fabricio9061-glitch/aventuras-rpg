@@ -97,11 +97,15 @@ Plugins.registerEffect({
 // INYECCIÓN DE DATOS AL JUEGO
 // ═══════════════════════════════════════════════════════════════════
 
-function injectPluginData() {
+// Función global para inyectar datos del plugin (llamada por Firebase después de cargar)
+function loadPluginItems() {
     if (typeof Data === 'undefined') {
-        setTimeout(injectPluginData, 100);
+        setTimeout(loadPluginItems, 100);
         return;
     }
+    
+    // Los items del plugin se inyectan cada vez porque Firebase puede haber sobrescrito Data
+    console.log('🔌 Inyectando items del plugin...');
     
     // ═══════════════════════════════════════════════════════════════
     // 55+ ITEMS DE DROP / MATERIALES
@@ -399,6 +403,9 @@ function injectPluginData() {
     setTimeout(tryUpdateEditor, 100);
 }
 
+// Alias para compatibilidad
+var injectPluginData = loadPluginItems;
+
 // ═══════════════════════════════════════════════════════════════════
 // ITEMS ESPECIALES CON EFECTOS ACTIVOS
 // ═══════════════════════════════════════════════════════════════════
@@ -542,10 +549,10 @@ Plugins.register({
 // Inyectar datos cuando el DOM esté listo
 if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function() {
-        injectPluginData();
+        loadPluginItems();
     });
 } else {
-    injectPluginData();
+    loadPluginItems();
 }
 
 // Log de inicialización
