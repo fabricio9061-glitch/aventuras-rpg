@@ -153,7 +153,7 @@
         
         .effects-row{display:flex;flex-wrap:wrap;justify-content:center;gap:.1rem;margin-top:.15rem;min-height:12px}
         .effect-tag{font-size:.45rem;padding:.05rem .15rem;border-radius:3px}
-        .eff-bleed{background:rgba(139,0,0,.6);border:1px solid var(--red)}.eff-poison{background:rgba(0,100,0,.6);border:1px solid var(--green-bright)}.eff-fire{background:rgba(255,100,0,.5);border:1px solid orange}
+        .eff-bleed{background:rgba(139,0,0,.6);border:1px solid var(--red)}.eff-poison{background:rgba(0,100,0,.6);border:1px solid var(--green-bright)}.eff-fire{background:rgba(255,100,0,.5);border:1px solid orange}.eff-fury{background:rgba(255,50,50,.6);border:1px solid #ff4444}.eff-shield{background:rgba(100,149,237,.5);border:1px solid #6495ED}.eff-regen{background:rgba(50,205,50,.5);border:1px solid #32CD32}
         
         .chronicles-panel{display:flex;flex-direction:column;height:100%}
         .chronicles-content{flex:1;overflow-y:auto;padding:.5rem;display:flex;flex-direction:column;gap:.4rem}
@@ -623,7 +623,7 @@
                     <div class="form-group"><label>Encuentros para desbloquear</label><input type="number" id="region-reqEncounters" min="0" placeholder="0"></div>
                 </div>
                 <div class="form-group"><label>Descripción</label><input type="text" id="region-desc"></div>
-                <div class="form-group"><label>Conecta con (IDs separados por coma)</label><input type="text" id="region-connections" placeholder="pueblo,bosque"></div>
+                <div class="form-group"><label>🔗 Conecta con (selecciona regiones)</label><div class="multi-select" id="region-connections"></div></div>
                 <div class="form-group"><label>Narrativas (una por línea)</label><textarea id="region-narratives" rows="2"></textarea></div>
                 <div class="form-actions"><button class="btn" onclick="Editor.clear('region')">🆕</button><button class="btn btn-primary" onclick="Editor.saveRegion()">💾</button></div>
                 <div class="items-list" id="regions-list"></div>
@@ -900,6 +900,7 @@ const roll=d=>{if(typeof d==='number')return d;const m=String(d).match(/(\d+)?d(
 const rollDetailed=d=>{if(typeof d==='number')return{total:d,rolls:[d],dice:d};const m=String(d).match(/(\d+)?d(\d+)([+-]\d+)?/i);if(!m)return{total:parseInt(d)||0,rolls:[],dice:d};const count=parseInt(m[1])||1,sides=parseInt(m[2]),mod=parseInt(m[3])||0;const rolls=[];for(let i=0;i<count;i++)rolls.push(Math.floor(Math.random()*sides)+1);return{total:rolls.reduce((a,b)=>a+b,0)+mod,rolls,dice:d,mod}};
 const d20=()=>Math.floor(Math.random()*20)+1,dX=x=>Math.floor(Math.random()*x)+1,pick=a=>a.length?a[Math.floor(Math.random()*a.length)]:null;
 const hpClass=p=>p>60?'':p>30?'medium':p>15?'low':'critical';
+const effectName=type=>{const names={bleed:'Sangrado',poison:'Veneno',fire:'Fuego',fury:'Furia',shield:'Escudo',regen:'Regenera'};return names[type]||type};
 const sprite=i=>i?.sprite?`<img src="${i.sprite}">`:(i?.icon||'📦');
 const genId=p=>`${p}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
 const toast=(m,t='info')=>{const e=document.createElement('div');e.className=`toast ${t}`;e.textContent=m;$('#toastContainer').appendChild(e);setTimeout(()=>e.remove(),3000)};
@@ -1520,7 +1521,7 @@ const Combat={
         if(hasMana&&hasSpells){
             const spellBtn=document.createElement('button');
             spellBtn.className='btn';
-            spellBtn.style.background='linear-gradient(135deg,#4169E1,#1E90FF)';
+            spellBtn.style.background='linear-gradient(135deg,#8B5CF6,#A855F7)';
             spellBtn.textContent='✨ Hechizos';
             spellBtn.onclick=()=>this.showSpellSelect(aliveEnemies);
             ca.appendChild(spellBtn);
@@ -1545,7 +1546,7 @@ const Combat={
             const btn=document.createElement('button');
             btn.className='btn';
             btn.disabled=!canCast;
-            btn.style.cssText=`display:flex;flex-direction:column;align-items:center;padding:.5rem .8rem;min-width:90px;${canCast?'background:linear-gradient(135deg,#4169E1,#1E90FF)':'opacity:.5'}`;
+            btn.style.cssText=`display:flex;flex-direction:column;align-items:center;padding:.5rem .8rem;min-width:90px;${canCast?'background:linear-gradient(135deg,#8B5CF6,#A855F7)':'opacity:.5'}`;
             btn.innerHTML=`<span style="font-size:1.3rem">${sp.icon}</span><span style="font-size:.7rem">${sp.name}</span><span style="font-size:.6rem;color:var(--cyan)">💙${sp.cost} ⚔️${sp.damage}</span>`;
             if(canCast){
                 btn.onclick=()=>{
@@ -1594,14 +1595,15 @@ const Combat={
         p.mana-=spell.cost;
         await showDice(15,20,true);
         
+        // Daño SOLO del hechizo (no incluye arma)
         const dmgRoll=rollDetailed(spell.damage);
-        const baseDmg=dmgRoll.total;
+        const magicDmg=dmgRoll.total;
         const armor=target.armor||0;
-        const finalDmg=Math.max(0,baseDmg-armor);
+        const finalDmg=Math.max(0,magicDmg-armor);
         
-        this.log(`<span class="log-player">${p.name}</span> lanza <span style="color:var(--cyan)">${spell.icon} ${spell.name}</span>`);
+        this.log(`<span class="log-player">${p.name}</span> lanza <span style="color:#9966ff">${spell.icon} ${spell.name}</span>`);
         this.log(`├ 💙 Maná: -${spell.cost} (${p.mana}/${p.maxMana})`);
-        this.log(`├ ⚔️ Daño: ${baseDmg} − ${armor} (armadura) = ${finalDmg}`);
+        this.log(`├ ✨ Daño mágico: ${spell.damage} = ${magicDmg} − ${armor} (armadura) = ${finalDmg}`);
         
         if(finalDmg>0){
             target.hp-=finalDmg;
@@ -1636,37 +1638,53 @@ const Combat={
         }else if(total>=target.difficulty||isCrit){
             const dmgRoll=rollDetailed(p.weapon?.damage||'1d2');
             const bonus=p.race.bonus.damage||0;
-            let baseDmg=dmgRoll.total+bonus;
+            let rawDmg=dmgRoll.total+bonus;
             
             // Plugin: modificar daño por efectos (ej: furia)
             const fury=(p.effects||[]).find(e=>e.type==='fury');
-            if(fury){const furyBonus=Math.floor(baseDmg*0.5);baseDmg+=furyBonus;this.log(`├ 🔥 Furia: +${furyBonus}`)}
-            
-            if(isCrit){
-                this.log(`├ <span class="log-crit">🎯 ¡CRÍTICO! (20 natural = daño x2)</span>`);
-                baseDmg*=2;
-            }
+            if(fury){const furyBonus=Math.floor(rawDmg*0.5);rawDmg+=furyBonus;this.log(`├ 🔥 Furia: +${furyBonus}`)}
             
             const armor=target.armor||0;
-            let finalDmg=Math.max(0,baseDmg-armor);
             
-            // Plugin hook: modificar daño final
-            if(typeof Plugins!=='undefined')finalDmg=Plugins.trigger('onAttack',p,target,finalDmg,true)||finalDmg;
-            
-            this.log(`├ ⚔️ Daño: ${baseDmg} − ${armor} (armadura) = ${finalDmg}`);
-            
-            if(finalDmg>0){
-                target.hp-=finalDmg;
-                this.log(`└ <span class="log-damage">💥 ${target.name} recibe ${finalDmg} daño (${Math.max(0,target.hp)}/${target.maxHp})</span>`);
-                // Plugin: efectos al causar daño (vampirismo, etc)
-                if(typeof Plugins!=='undefined'){
-                    const special=Plugins.getSpecialItem(p.weapon?.id);
-                    if(special&&special.onDealDamage)special.onDealDamage(p,target,finalDmg);
+            if(isCrit){
+                // Crítico: daño x2 ANTES de restar armadura
+                const critDmg=rawDmg*2;
+                const finalDmg=Math.max(0,critDmg-armor);
+                this.log(`├ <span class="log-crit">🎯 ¡CRÍTICO! (20 natural)</span>`);
+                this.log(`├ ⚔️ Daño: ${rawDmg} ×2 = ${critDmg} − ${armor} (armadura) = ${finalDmg}`);
+                
+                if(finalDmg>0){
+                    target.hp-=finalDmg;
+                    this.log(`└ <span class="log-damage">💥 ${target.name} recibe ${finalDmg} daño (${Math.max(0,target.hp)}/${target.maxHp})</span>`);
+                    if(typeof Plugins!=='undefined'){
+                        const special=Plugins.getSpecialItem(p.weapon?.id);
+                        if(special&&special.onDealDamage)special.onDealDamage(p,target,finalDmg);
+                    }
+                    if(p.weapon?.effect)this.applyEff(target,p.weapon.effect);
+                    if(target.hp<=0)this.log(`<span class="log-damage">💀 ${target.name} derrotado!</span>`);
+                }else{
+                    this.log(`└ <span class="log-miss">🛡️ ${target.name} bloquea todo (armadura ≥ daño)</span>`);
                 }
-                if(p.weapon?.effect)this.applyEff(target,p.weapon.effect);
-                if(target.hp<=0)this.log(`<span class="log-damage">💀 ${target.name} derrotado!</span>`);
+                if(typeof Plugins!=='undefined')Plugins.trigger('onAttack',p,target,finalDmg,true);
             }else{
-                this.log(`└ <span class="log-miss">🛡️ ${target.name} bloquea todo (armadura ≥ daño)</span>`);
+                // Golpe normal
+                let finalDmg=Math.max(0,rawDmg-armor);
+                if(typeof Plugins!=='undefined')finalDmg=Plugins.trigger('onAttack',p,target,finalDmg,true)||finalDmg;
+                
+                this.log(`├ ⚔️ Daño: ${rawDmg} − ${armor} (armadura) = ${finalDmg}`);
+                
+                if(finalDmg>0){
+                    target.hp-=finalDmg;
+                    this.log(`└ <span class="log-damage">💥 ${target.name} recibe ${finalDmg} daño (${Math.max(0,target.hp)}/${target.maxHp})</span>`);
+                    if(typeof Plugins!=='undefined'){
+                        const special=Plugins.getSpecialItem(p.weapon?.id);
+                        if(special&&special.onDealDamage)special.onDealDamage(p,target,finalDmg);
+                    }
+                    if(p.weapon?.effect)this.applyEff(target,p.weapon.effect);
+                    if(target.hp<=0)this.log(`<span class="log-damage">💀 ${target.name} derrotado!</span>`);
+                }else{
+                    this.log(`└ <span class="log-miss">🛡️ ${target.name} bloquea todo (armadura ≥ daño)</span>`);
+                }
             }
         }else{
             this.log(`└ <span class="log-miss">❌ ¡Falla! (${total} < ${target.difficulty})</span>`);
@@ -1736,7 +1754,7 @@ const Combat={
         await delay(400);
         this.advanceToNextActor();
     },
-    applyEff(t,type){const effs={bleed:{dmg:1,turns:3},poison:{dmg:2,turns:2},fire:{dmg:'1d4',turns:2}};const ef=effs[type];if(!ef)return;if(!t.effects)t.effects=[];const ex=t.effects.find(e=>e.type===type);if(ex)ex.turns=ef.turns;else t.effects.push({type,dmg:ef.dmg,turns:ef.turns});this.log(`<span style="color:var(--orange)">⚡ ${type.toUpperCase()} → ${t.name}</span>`)},
+    applyEff(t,type){const effs={bleed:{dmg:1,turns:3},poison:{dmg:2,turns:2},fire:{dmg:'1d4',turns:2}};const ef=effs[type];if(!ef)return;if(!t.effects)t.effects=[];const ex=t.effects.find(e=>e.type===type);if(ex)ex.turns=ef.turns;else t.effects.push({type,dmg:ef.dmg,turns:ef.turns});this.log(`<span style="color:var(--orange)">⚡ ${effectName(type)} → ${t.name}</span>`)},
     processAllEffects(){this.processEff(G.p);if(G.p.pet)this.processEff(G.p.pet);G.enemies.forEach(e=>this.processEff(e));this.updateUI();Game.updateUI()},
     processEff(t){if(!t.effects?.length||t.hp<=0)return;let total=0;t.effects.forEach(ef=>{const d=typeof ef.dmg==='string'?roll(ef.dmg):ef.dmg;total+=d;ef.turns--});t.effects=t.effects.filter(e=>e.turns>0);if(total>0){t.hp=Math.max(0,t.hp-total);this.log(`<span style="color:var(--orange)">🔥 ${t.name} -${total} efectos (HP:${t.hp})</span>`)}},
     victory(){
@@ -1811,7 +1829,7 @@ const Combat={
         const pHpPct=(G.p.hp/G.p.maxHp)*100;
         const hasMana=G.p.maxMana>0;
         const pManaPct=hasMana?(G.p.mana/G.p.maxMana)*100:0;
-        const manaBar=hasMana?`<div class="hp-container" style="margin-top:.15rem"><div class="hp-fill" style="width:${pManaPct}%;background:linear-gradient(to right,#4169E1,#1E90FF)"></div><div class="hp-text">💙${G.p.mana}/${G.p.maxMana}</div></div>`:'';
+        const manaBar=hasMana?`<div class="hp-container" style="margin-top:.15rem"><div class="hp-fill" style="width:${pManaPct}%;background:linear-gradient(to right,#8B5CF6,#A855F7)"></div><div class="hp-text">💙${G.p.mana}/${G.p.maxMana}</div></div>`:'';
         pDiv.innerHTML=`
             <div class="combatant-order">⚡${Game.speed()}</div>
             <div class="combatant-sprite">${sprite({icon:G.p.race.icon,sprite:G.p.race.sprite})}</div>
@@ -1819,7 +1837,7 @@ const Combat={
             <div class="combatant-stats">⚔️${G.p.weapon?.damage||'1d2'} 🛡️${Game.armor()}</div>
             <div class="hp-container"><div class="hp-fill ${hpClass(pHpPct)}" style="width:${pHpPct}%"></div><div class="hp-text">${G.p.hp}/${G.p.maxHp}</div></div>
             ${manaBar}
-            <div class="effects-row">${(G.p.effects||[]).map(e=>`<span class="effect-tag eff-${e.type}">${e.type}${e.turns}</span>`).join('')}</div>`;
+            <div class="effects-row">${(G.p.effects||[]).map(e=>`<span class="effect-tag eff-${e.type}">${effectName(e.type)} ${e.turns}</span>`).join('')}</div>`;
         grid.appendChild(pDiv);
         
         // Mascota
@@ -1854,7 +1872,7 @@ const Combat={
                 <div class="combatant-name">${e.name}</div>
                 <div class="combatant-stats">⚔️${weaponInfo} 🛡️${e.armor||0} 🎯${e.difficulty||10}</div>
                 <div class="hp-container"><div class="hp-fill ${hpClass(eHpPct)}" style="width:${eHpPct}%"></div><div class="hp-text">${Math.max(0,e.hp)}/${e.maxHp}</div></div>
-                <div class="effects-row">${(e.effects||[]).map(ef=>`<span class="effect-tag eff-${ef.type}">${ef.type}${ef.turns}</span>`).join('')}</div>`;
+                <div class="effects-row">${(e.effects||[]).map(ef=>`<span class="effect-tag eff-${ef.type}">${effectName(ef.type)} ${ef.turns}</span>`).join('')}</div>`;
             grid.appendChild(eDiv);
         });
         
@@ -2160,12 +2178,12 @@ const Craft={
 
 const Editor={
     enemyDrops:[],
-    clear(t){const fields={region:['region-id','region-name','region-icon','region-desc','region-narratives','region-distance','region-reqEncounters','region-connections'],race:['race-id','race-name','race-icon','race-sprite','race-hp','race-armor','race-speed','race-precision','race-damage','race-desc'],weapon:['weapon-id','weapon-name','weapon-damage','weapon-weight','weapon-icon','weapon-sprite','weapon-value','weapon-desc','weapon-manaBonus'],armor:['armor-id','armor-name','armor-defense','armor-weight','armor-icon','armor-sprite','armor-value','armor-desc','armor-manaBonus'],item:['item-id','item-name','item-icon','item-sprite','item-effect','item-value','item-desc','item-food-value','item-backpack-slots'],enemy:['enemy-id','enemy-name','enemy-health','enemy-damage','enemy-difficulty','enemy-armor','enemy-speed','enemy-icon','enemy-sprite','enemy-loot-min','enemy-loot-max','enemy-desc','enemy-groupMin','enemy-groupMax','enemy-groupChance','enemy-weaponId','enemy-armorId'],pet:['pet-id','pet-name','pet-health','pet-damage','pet-speed','pet-difficulty','pet-icon','pet-sprite','pet-desc'],npc:['npc-id','npc-name','npc-icon','npc-sprite','npc-dialogue'],recipe:['recipe-id','recipe-name','recipe-icon','recipe-result','recipe-desc'],spell:['spell-id','spell-name','spell-damage','spell-cost','spell-icon','spell-desc']};(fields[t]||[]).forEach(id=>{const e=$(`#${id}`);if(e)e.value=''});$$('.multi-select input').forEach(c=>c.checked=false);if(t==='enemy'){$('#enemy-canGroup').value='false';$('#enemy-weaponId').value='';$('#enemy-armorId').value='';$('#enemy-usesMana').value='false';this.enemyDrops=[];this.renderDropsList()}if(t==='weapon'){$('#weapon-magic').value='false'}if(t==='armor'){$('#armor-magic').value='false'}if(t==='race'){$('#race-combatType').value='warrior'}if(t==='spell'){$('#spell-effect').value=''}if(t==='item'){$('#item-type').value='potion';$('#item-potion-type').value='health';$('#item-antidote-cures').value='poison';this.onItemTypeChange()}if(t==='recipe'){this.recipeIngredients=[];this.renderIngredientsList()}},
+    clear(t){const fields={region:['region-id','region-name','region-icon','region-desc','region-narratives','region-distance','region-reqEncounters'],race:['race-id','race-name','race-icon','race-sprite','race-hp','race-armor','race-speed','race-precision','race-damage','race-desc'],weapon:['weapon-id','weapon-name','weapon-damage','weapon-weight','weapon-icon','weapon-sprite','weapon-value','weapon-desc','weapon-manaBonus'],armor:['armor-id','armor-name','armor-defense','armor-weight','armor-icon','armor-sprite','armor-value','armor-desc','armor-manaBonus'],item:['item-id','item-name','item-icon','item-sprite','item-effect','item-value','item-desc','item-food-value','item-backpack-slots'],enemy:['enemy-id','enemy-name','enemy-health','enemy-damage','enemy-difficulty','enemy-armor','enemy-speed','enemy-icon','enemy-sprite','enemy-loot-min','enemy-loot-max','enemy-desc','enemy-groupMin','enemy-groupMax','enemy-groupChance','enemy-weaponId','enemy-armorId'],pet:['pet-id','pet-name','pet-health','pet-damage','pet-speed','pet-difficulty','pet-icon','pet-sprite','pet-desc'],npc:['npc-id','npc-name','npc-icon','npc-sprite','npc-dialogue'],recipe:['recipe-id','recipe-name','recipe-icon','recipe-result','recipe-desc'],spell:['spell-id','spell-name','spell-damage','spell-cost','spell-icon','spell-desc']};(fields[t]||[]).forEach(id=>{const e=$(`#${id}`);if(e)e.value=''});$$('.multi-select input').forEach(c=>c.checked=false);if(t==='enemy'){$('#enemy-canGroup').value='false';$('#enemy-weaponId').value='';$('#enemy-armorId').value='';$('#enemy-usesMana').value='false';this.enemyDrops=[];this.renderDropsList()}if(t==='weapon'){$('#weapon-magic').value='false'}if(t==='armor'){$('#armor-magic').value='false'}if(t==='race'){$('#race-combatType').value='warrior'}if(t==='spell'){$('#spell-effect').value=''}if(t==='item'){$('#item-type').value='potion';$('#item-potion-type').value='health';$('#item-antidote-cures').value='poison';this.onItemTypeChange()}if(t==='recipe'){this.recipeIngredients=[];this.renderIngredientsList()}},
     addDrop(){const itemId=$('#enemy-drop-select').value;const chance=parseInt($('#enemy-drop-chance').value)||20;if(!itemId)return;this.enemyDrops.push({itemId,chance});this.renderDropsList()},
     removeDrop(index){this.enemyDrops.splice(index,1);this.renderDropsList()},
     renderDropsList(){const list=$('#enemy-drops-list');if(!list)return;list.innerHTML=this.enemyDrops.map((d,i)=>{const it=Data.findItem(d.itemId);return`<span style="background:var(--bg-panel);padding:.2rem .4rem;border-radius:3px;display:flex;align-items:center;gap:.3rem">${it?.icon||'?'} ${it?.name||d.itemId} <span style="color:var(--gold)">${d.chance}%</span><span style="cursor:pointer;color:var(--red)" onclick="Editor.removeDrop(${i})">×</span></span>`}).join('')},
-    saveRegion(){const narratives=$('#region-narratives').value.split('\n').filter(n=>n.trim());const connections=$('#region-connections').value.split(',').map(c=>c.trim()).filter(c=>c);const r={id:$('#region-id').value||genId('reg'),name:$('#region-name').value,icon:$('#region-icon').value||'🗺️',type:$('#region-type').value,desc:$('#region-desc').value||'',distance:parseInt($('#region-distance').value)||0,reqEncounters:parseInt($('#region-reqEncounters').value)||0,connections,narratives};if(!r.name){toast('Falta nombre','error');return}const i=Data.regions.findIndex(x=>x.id===r.id);if(i>=0)Data.regions[i]=r;else Data.regions.push(r);Data.save();this.renderRegions();this.updateSelects();this.clear('region');toast('Guardado','success')},
-    editRegion(id){const r=Data.find('regions',id);if(!r)return;$('#region-id').value=r.id;$('#region-name').value=r.name;$('#region-icon').value=r.icon||'';$('#region-type').value=r.type||'danger';$('#region-desc').value=r.desc||'';$('#region-distance').value=r.distance||0;$('#region-reqEncounters').value=r.reqEncounters||0;$('#region-connections').value=(r.connections||[]).join(',');$('#region-narratives').value=(r.narratives||[]).join('\n')},
+    saveRegion(){const narratives=$('#region-narratives').value.split('\n').filter(n=>n.trim());const connections=Array.from($$('#region-connections input:checked')).map(c=>c.value);const r={id:$('#region-id').value||genId('reg'),name:$('#region-name').value,icon:$('#region-icon').value||'🗺️',type:$('#region-type').value,desc:$('#region-desc').value||'',distance:parseInt($('#region-distance').value)||0,reqEncounters:parseInt($('#region-reqEncounters').value)||0,connections,narratives};if(!r.name){toast('Falta nombre','error');return}const i=Data.regions.findIndex(x=>x.id===r.id);if(i>=0)Data.regions[i]=r;else Data.regions.push(r);Data.save();this.renderRegions();this.updateSelects();this.clear('region');toast('Guardado','success')},
+    editRegion(id){const r=Data.find('regions',id);if(!r)return;$('#region-id').value=r.id;$('#region-name').value=r.name;$('#region-icon').value=r.icon||'';$('#region-type').value=r.type||'danger';$('#region-desc').value=r.desc||'';$('#region-distance').value=r.distance||0;$('#region-reqEncounters').value=r.reqEncounters||0;$('#region-narratives').value=(r.narratives||[]).join('\n');setTimeout(()=>{$$('#region-connections input').forEach(c=>c.checked=(r.connections||[]).includes(c.value))},50)},
     deleteRegion(id){if(!confirm('¿Eliminar?'))return;Data.regions=Data.regions.filter(r=>r.id!==id);Data.save();this.renderRegions();this.updateSelects();toast('Eliminado','info')},
     saveRace(){const r={id:$('#race-id').value||genId('race'),name:$('#race-name').value,icon:$('#race-icon').value||'👤',sprite:$('#race-sprite').value||'',combatType:$('#race-combatType').value||'warrior',bonus:{health:parseInt($('#race-hp').value)||0,armor:parseInt($('#race-armor').value)||0,speed:parseInt($('#race-speed').value)||10,precision:parseInt($('#race-precision').value)||0,damage:parseInt($('#race-damage').value)||0},desc:$('#race-desc').value||''};if(!r.name){toast('Falta nombre','error');return}const i=Data.races.findIndex(x=>x.id===r.id);if(i>=0)Data.races[i]=r;else Data.races.push(r);Data.save();this.renderRaces();this.clear('race');toast('Guardado','success')},
     editRace(id){const r=Data.find('races',id);if(!r)return;$('#race-id').value=r.id;$('#race-name').value=r.name;$('#race-icon').value=r.icon||'';$('#race-sprite').value=r.sprite||'';$('#race-combatType').value=r.combatType||'warrior';$('#race-hp').value=r.bonus?.health||'';$('#race-armor').value=r.bonus?.armor||'';$('#race-speed').value=r.bonus?.speed||'';$('#race-precision').value=r.bonus?.precision||'';$('#race-damage').value=r.bonus?.damage||'';$('#race-desc').value=r.desc||''},
@@ -2242,6 +2260,10 @@ const Editor={
         $('#enemy-regions').innerHTML=regHtml;$('#pet-regions').innerHTML=regHtml;
         const safeRegions=Data.regions.filter(r=>r.type==='safe');
         $('#npc-region').innerHTML=safeRegions.map(r=>`<option value="${r.id}">${r.icon} ${r.name}</option>`).join('');
+        // Region connections multi-select (all regions)
+        const allRegionsHtml=Data.regions.map(r=>`<label><input type="checkbox" value="${r.id}"> ${r.icon} ${r.name}</label>`).join('');
+        const regConEl=$('#region-connections');
+        if(regConEl)regConEl.innerHTML=allRegionsHtml;
         const allItems=[...Data.weapons,...Data.armors,...Data.items];
         const itemsHtml=allItems.map(it=>`<label><input type="checkbox" value="${it.id}"> ${it.icon||'📦'} ${it.name}</label>`).join('');
         $('#npc-sells').innerHTML=itemsHtml;
