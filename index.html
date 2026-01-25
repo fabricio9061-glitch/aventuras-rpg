@@ -153,7 +153,7 @@
         
         .effects-row{display:flex;flex-wrap:wrap;justify-content:center;gap:.1rem;margin-top:.15rem;min-height:12px}
         .effect-tag{font-size:.45rem;padding:.05rem .15rem;border-radius:3px}
-        .eff-bleed{background:rgba(139,0,0,.6);border:1px solid var(--red)}.eff-poison{background:rgba(0,100,0,.6);border:1px solid var(--green-bright)}.eff-fire{background:rgba(255,100,0,.5);border:1px solid orange}.eff-fury{background:rgba(255,50,50,.6);border:1px solid #ff4444}.eff-shield{background:rgba(100,149,237,.5);border:1px solid #6495ED}.eff-regen{background:rgba(50,205,50,.5);border:1px solid #32CD32}
+        .eff-bleed{background:rgba(139,0,0,.6);border:1px solid var(--red)}.eff-poison{background:rgba(0,100,0,.6);border:1px solid var(--green-bright)}.eff-fire{background:rgba(255,100,0,.5);border:1px solid orange}.eff-ice{background:rgba(0,191,255,.5);border:1px solid #00BFFF}.eff-fury{background:rgba(255,50,50,.6);border:1px solid #ff4444}.eff-shield{background:rgba(100,149,237,.5);border:1px solid #6495ED}.eff-regen{background:rgba(50,205,50,.5);border:1px solid #32CD32}
         
         .chronicles-panel{display:flex;flex-direction:column;height:100%}
         .chronicles-content{flex:1;overflow-y:auto;padding:.5rem;display:flex;flex-direction:column;gap:.4rem}
@@ -900,7 +900,7 @@ const roll=d=>{if(typeof d==='number')return d;const m=String(d).match(/(\d+)?d(
 const rollDetailed=d=>{if(typeof d==='number')return{total:d,rolls:[d],dice:d};const m=String(d).match(/(\d+)?d(\d+)([+-]\d+)?/i);if(!m)return{total:parseInt(d)||0,rolls:[],dice:d};const count=parseInt(m[1])||1,sides=parseInt(m[2]),mod=parseInt(m[3])||0;const rolls=[];for(let i=0;i<count;i++)rolls.push(Math.floor(Math.random()*sides)+1);return{total:rolls.reduce((a,b)=>a+b,0)+mod,rolls,dice:d,mod}};
 const d20=()=>Math.floor(Math.random()*20)+1,dX=x=>Math.floor(Math.random()*x)+1,pick=a=>a.length?a[Math.floor(Math.random()*a.length)]:null;
 const hpClass=p=>p>60?'':p>30?'medium':p>15?'low':'critical';
-const effectName=type=>{const names={bleed:'Sangrado',poison:'Veneno',fire:'Fuego',fury:'Furia',shield:'Escudo',regen:'Regenera'};return names[type]||type};
+const effectName=type=>{const names={bleed:'Sangrado',poison:'Veneno',fire:'Fuego',ice:'Hielo',frozen:'Congelado',fury:'Furia',shield:'Escudo',regen:'Regenera'};return names[type]||type};
 const sprite=i=>i?.sprite?`<img src="${i.sprite}">`:(i?.icon||'📦');
 const genId=p=>`${p}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
 const toast=(m,t='info')=>{const e=document.createElement('div');e.className=`toast ${t}`;e.textContent=m;$('#toastContainer').appendChild(e);setTimeout(()=>e.remove(),3000)};
@@ -1481,9 +1481,19 @@ const Combat={
         const actor=G.turnOrder[G.currentActor];
         this.highlightActor(actor);
         
+        // Verificar congelamiento
+        const entity=actor.type==='player'?G.p:actor.type==='pet'?G.p.pet:actor.entity;
+        if(entity.frozen&&entity.frozenTurns>0){
+            entity.frozenTurns--;
+            if(entity.frozenTurns<=0)entity.frozen=false;
+            this.log(`<span style="color:#00BFFF">❄️ ${entity.name||G.p.name} está congelado y pierde su turno!</span>`);
+            this.updateUI();
+            setTimeout(()=>this.advanceToNextActor(),500);
+            return;
+        }
+        
         // Plugin hooks: inicio de turno
         if(typeof Plugins!=='undefined'){
-            const entity=actor.type==='player'?G.p:actor.type==='pet'?G.p.pet:actor.entity;
             Plugins.trigger('onTurnStart',entity,actor.type==='player');
             Plugins.processEquippedEffects(entity,'onTurnStart');
             if(actor.type==='player')Plugins.processEquippedEffects(G.p,'onTurnStart');
@@ -1758,7 +1768,21 @@ const Combat={
         await delay(400);
         this.advanceToNextActor();
     },
-    applyEff(t,type){const effs={bleed:{dmg:1,turns:3},poison:{dmg:2,turns:2},fire:{dmg:'1d4',turns:2}};const ef=effs[type];if(!ef)return;if(!t.effects)t.effects=[];const ex=t.effects.find(e=>e.type===type);if(ex)ex.turns=ef.turns;else t.effects.push({type,dmg:ef.dmg,turns:ef.turns});this.log(`<span style="color:var(--orange)">⚡ ${effectName(type)} → ${t.name}</span>`)},
+    applyEff(t,type){
+        const effs={bleed:{dmg:1,turns:3},poison:{dmg:2,turns:2},fire:{dmg:'1d4',turns:2},ice:{dmg:1,turns:2}};
+        const ef=effs[type];if(!ef)return;
+        if(!t.effects)t.effects=[];
+        const ex=t.effects.find(e=>e.type===type);
+        if(ex)ex.turns=ef.turns;
+        else t.effects.push({type,dmg:ef.dmg,turns:ef.turns});
+        this.log(`<span style="color:var(--orange)">⚡ ${effectName(type)} → ${t.name}</span>`);
+        // Efecto especial de hielo: 30% de congelar
+        if(type==='ice'&&!t.frozen&&Math.random()<0.30){
+            t.frozen=true;
+            t.frozenTurns=1;
+            this.log(`<span style="color:#00BFFF;font-weight:bold">❄️ ¡${t.name} CONGELADO! Pierde su próximo turno</span>`);
+        }
+    },
     processAllEffects(){this.processEff(G.p);if(G.p.pet)this.processEff(G.p.pet);G.enemies.forEach(e=>this.processEff(e));this.updateUI();Game.updateUI()},
     processEff(t){if(!t.effects?.length||t.hp<=0)return;let total=0;t.effects.forEach(ef=>{const d=typeof ef.dmg==='string'?roll(ef.dmg):ef.dmg;total+=d;ef.turns--});t.effects=t.effects.filter(e=>e.turns>0);if(total>0){t.hp=Math.max(0,t.hp-total);this.log(`<span style="color:var(--orange)">🔥 ${t.name} -${total} efectos (HP:${t.hp})</span>`)}},
     victory(){
