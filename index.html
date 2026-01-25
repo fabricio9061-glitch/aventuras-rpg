@@ -874,6 +874,7 @@
                 <div class="form-group">
                     <label>Ingredientes (puede repetir)</label>
                     <div style="display:flex;gap:.3rem;margin-bottom:.3rem">
+                        <input type="text" id="recipe-ingredient-search" placeholder="🔍 Buscar item..." style="flex:1" oninput="Editor.filterIngredientItems(this.value)">
                         <select id="recipe-ingredient-select" style="flex:1"></select>
                         <button class="btn btn-sm" onclick="Editor.addIngredient()">+ Agregar</button>
                     </div>
@@ -2250,6 +2251,13 @@ const Editor={
     renderDropsList(){const list=$('#enemy-drops-list');if(!list)return;list.innerHTML=this.enemyDrops.map((d,i)=>{const it=Data.findItem(d.itemId);return`<span style="background:var(--bg-panel);padding:.2rem .4rem;border-radius:3px;display:flex;align-items:center;gap:.3rem">${it?.icon||'?'} ${it?.name||d.itemId} <span style="color:var(--gold)">${d.chance}%</span><span style="cursor:pointer;color:var(--red)" onclick="Editor.removeDrop(${i})">×</span></span>`}).join('')},
     filterDropItems(query){
         const sel=$('#enemy-drop-select');if(!sel)return;
+        const q=query.toLowerCase().trim();
+        const allItems=[...Data.weapons,...Data.armors,...Data.items];
+        const filtered=q?allItems.filter(i=>(i.name||'').toLowerCase().includes(q)||(i.id||'').toLowerCase().includes(q)):allItems;
+        sel.innerHTML='<option value="">-- Seleccionar --</option>'+filtered.slice(0,50).map(i=>`<option value="${i.id}">${i.icon||'📦'} ${i.name}</option>`).join('');
+    },
+    filterIngredientItems(query){
+        const sel=$('#recipe-ingredient-select');if(!sel)return;
         const q=query.toLowerCase().trim();
         const allItems=[...Data.weapons,...Data.armors,...Data.items];
         const filtered=q?allItems.filter(i=>(i.name||'').toLowerCase().includes(q)||(i.id||'').toLowerCase().includes(q)):allItems;
