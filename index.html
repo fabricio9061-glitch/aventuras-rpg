@@ -876,6 +876,7 @@
                     <div style="display:flex;gap:.3rem;margin-bottom:.3rem">
                         <input type="text" id="recipe-ingredient-search" placeholder="🔍 Buscar item..." style="flex:1" oninput="Editor.filterIngredientItems(this.value)">
                         <select id="recipe-ingredient-select" style="flex:1"></select>
+                        <input type="number" id="recipe-ingredient-qty" value="1" min="1" max="99" style="width:50px" placeholder="Cant">
                         <button class="btn btn-sm" onclick="Editor.addIngredient()">+ Agregar</button>
                     </div>
                     <div id="recipe-ingredients-list" style="display:flex;flex-wrap:wrap;gap:.3rem;min-height:30px;padding:.3rem;background:var(--bg-dark);border-radius:4px"></div>
@@ -2189,11 +2190,22 @@ const Craft={
         let h='<div style="display:grid;gap:.5rem">';
         recipes.forEach(r=>{
             const result=Data.findItem(r.result);
-            const ingredients=(r.ingredients||[]).map(iid=>{
-                const it=Data.findItem(iid);
-                const has=G.p.inv.filter(x=>x.id===iid).length;
-                const need=(r.ingredients||[]).filter(x=>x===iid).length;
-                return{it,has,need};
+            // Procesar ingredientes - soportar ambos formatos {id,qty} y string
+            const ingList=(r.ingredients||[]).map(ing=>{
+                const itemId=ing.id||ing;
+                const need=ing.qty||1;
+                return{itemId,need};
+            });
+            // Agrupar ingredientes iguales
+            const grouped={};
+            ingList.forEach(i=>{
+                if(!grouped[i.itemId])grouped[i.itemId]={itemId:i.itemId,need:0};
+                grouped[i.itemId].need+=i.need;
+            });
+            const ingredients=Object.values(grouped).map(g=>{
+                const it=Data.findItem(g.itemId);
+                const has=G.p.inv.filter(x=>x.id===g.itemId).length;
+                return{it,has,need:g.need,itemId:g.itemId};
             });
             const canCraft=ingredients.every(i=>i.has>=i.need)&&G.p.inv.length<G.p.maxSlots;
             const ingHtml=ingredients.map(i=>`<span style="color:${i.has>=i.need?'var(--green-bright)':'var(--red-bright)'}${i.has<i.need?';opacity:.7':''}">${i.it?.icon||'?'}${i.it?.name||'?'} (${i.has}/${i.need})</span>`).join(' + ');
@@ -2217,9 +2229,13 @@ const Craft={
         if(!recipe)return;
         const result=Data.findItem(recipe.result);
         if(!result){toast('Resultado inválido','error');return}
-        // Check ingredients
+        // Check ingredients - soportar ambos formatos
         const needed={};
-        (recipe.ingredients||[]).forEach(iid=>{needed[iid]=(needed[iid]||0)+1});
+        (recipe.ingredients||[]).forEach(ing=>{
+            const itemId=ing.id||ing;
+            const qty=ing.qty||1;
+            needed[itemId]=(needed[itemId]||0)+qty;
+        });
         for(const iid in needed){
             const has=G.p.inv.filter(x=>x.id===iid).length;
             if(has<needed[iid]){toast('Faltan materiales','error');return}
@@ -2350,16 +2366,18 @@ const Editor={
     saveNpc(){const sells=Array.from($$('#npc-sells input:checked')).map(c=>c.value);const n={id:$('#npc-id').value||genId('n'),name:$('#npc-name').value,role:$('#npc-role').value,icon:$('#npc-icon').value||'🧔',sprite:$('#npc-sprite').value||'',region:$('#npc-region').value,dialogue:$('#npc-dialogue').value||'',sells};if(!n.name){toast('Falta nombre','error');return}const i=Data.npcs.findIndex(x=>x.id===n.id);if(i>=0)Data.npcs[i]=n;else Data.npcs.push(n);Data.save();this.renderNpcs();this.clear('npc');toast('Guardado','success')},
     editNpc(id){const n=Data.find('npcs',id);if(!n)return;$('#npc-id').value=n.id;$('#npc-name').value=n.name;$('#npc-role').value=n.role||'merchant';$('#npc-icon').value=n.icon||'';$('#npc-sprite').value=n.sprite||'';$('#npc-region').value=n.region||'';$('#npc-dialogue').value=n.dialogue||'';setTimeout(()=>$$('#npc-sells input').forEach(c=>c.checked=(n.sells||[]).includes(c.value)),50)},
     saveRecipe(){
+        const id=$('#recipe-id').value||genId('r');
+        if(id.startsWith('plg_')){toast('Recetas del plugin son de solo lectura','error');return}
         const ingredients=this.recipeIngredients;
-        if(ingredients.length<2){toast('Mínimo 2 ingredientes','error');return}
-        const r={id:$('#recipe-id').value||genId('r'),name:$('#recipe-name').value,icon:$('#recipe-icon').value||'🔨',result:$('#recipe-result').value,ingredients:[...ingredients],desc:$('#recipe-desc').value||''};
+        if(ingredients.length<1){toast('Mínimo 1 ingrediente','error');return}
+        const r={id,name:$('#recipe-name').value,icon:$('#recipe-icon').value||'🔨',result:$('#recipe-result').value,ingredients:[...ingredients],desc:$('#recipe-desc').value||''};
         if(!r.name||!r.result){toast('Falta nombre o resultado','error');return}
         const i=Data.recipes.findIndex(x=>x.id===r.id);
         if(i>=0)Data.recipes[i]=r;else Data.recipes.push(r);
         Data.save();this.renderRecipes();this.clear('recipe');this.recipeIngredients=[];this.renderIngredientsList();toast('Guardado','success')
     },
     editRecipe(id){const r=Data.find('recipes',id);if(!r)return;$('#recipe-id').value=r.id;$('#recipe-name').value=r.name;$('#recipe-icon').value=r.icon||'';$('#recipe-result').value=r.result||'';$('#recipe-desc').value=r.desc||'';this.recipeIngredients=[...(r.ingredients||[])];this.renderIngredientsList()},
-    deleteRecipe(id){if(!confirm('¿Eliminar?'))return;Data.recipes=Data.recipes.filter(r=>r.id!==id);Data.save();this.renderRecipes();toast('Eliminado','info')},
+    deleteRecipe(id){if(id.startsWith('plg_')){toast('No se puede eliminar','error');return}if(!confirm('¿Eliminar?'))return;Data.recipes=Data.recipes.filter(r=>r.id!==id);Data.save();this.renderRecipes();toast('Eliminado','info')},
     edit(t,p,id){const it=Data.find(t,id);if(!it)return;Object.keys(it).forEach(k=>{const e=$(`#${p}-${k}`);if(e)e.value=it[k]||''})},
     del(t,id){if(!confirm('¿Eliminar?'))return;Data[t]=Data[t].filter(x=>x.id!==id);Data.save();this.renderAll();toast('Eliminado','info')},
     renderAll(){this.renderRegions();this.renderRaces();this.renderWeapons();this.renderArmors();this.renderItems();this.renderEnemies();this.renderPets();this.renderNpcs();this.renderRecipes();this.renderSpells();this.updateSelects()},
@@ -2371,7 +2389,7 @@ const Editor={
     renderEnemies(){$('#enemies-list').innerHTML=Data.enemies.map(e=>{const w=e.weaponId?Data.find('weapons',e.weaponId):null;const a=e.armorId?Data.find('armors',e.armorId):null;const equip=(w?`⚔️${w.icon}`:'')+(a?`🛡️${a.icon}`:'');return`<div class="item-card${e.fromPlugin?' plugin-item':''}" onclick="Editor.editEnemy('${e.id}')"><span class="item-card-icon">${sprite(e)}${e.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${e.name}</div><div class="item-card-stats"><span class="item-id">${e.id}</span> HP:${e.health} ${equip}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editEnemy('${e.id}')">✏️</button>${e.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('enemies','${e.id}')">🗑️</button>`}</div></div>`}).join('')},
     renderPets(){$('#pets-list').innerHTML=Data.pets.map(p=>`<div class="item-card${p.fromPlugin?' plugin-item':''}" onclick="Editor.editPet('${p.id}')"><span class="item-card-icon">${sprite(p)}${p.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${p.name}</div><div class="item-card-stats"><span class="item-id">${p.id}</span> ⚡${p.speed||12}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editPet('${p.id}')">✏️</button>${p.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('pets','${p.id}')">🗑️</button>`}</div></div>`).join('')},
     renderNpcs(){const roles={merchant:'Comerciante',blacksmith:'Herrero',alchemist:'Alquimista',innkeeper:'Tabernero',healer:'Curandero',guard:'Guardia',villager:'Aldeano'};$('#npcs-list').innerHTML=Data.npcs.map(n=>`<div class="item-card" onclick="Editor.editNpc('${n.id}')"><span class="item-card-icon">${sprite(n)}</span><div class="item-card-info"><div class="item-card-name">${n.name}</div><div class="item-card-stats">${roles[n.role]||n.role}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editNpc('${n.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('npcs','${n.id}')">🗑️</button></div></div>`).join('')},
-    renderRecipes(){$('#recipes-list').innerHTML=(Data.recipes||[]).map(r=>{const result=Data.findItem(r.result);const ingNames=(r.ingredients||[]).map(i=>{const it=Data.findItem(i);return it?it.icon:'?'}).join('+');return`<div class="item-card" onclick="Editor.editRecipe('${r.id}')"><span class="item-card-icon">${r.icon||'🔨'}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats"><span class="item-id">${r.id}</span> ${ingNames}→${result?result.icon:''}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRecipe('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRecipe('${r.id}')">🗑️</button></div></div>`}).join('')},
+    renderRecipes(){$('#recipes-list').innerHTML=(Data.recipes||[]).map(r=>{const result=Data.findItem(r.result);const ingNames=(r.ingredients||[]).map(i=>{const it=Data.findItem(i.id||i);return it?it.icon:'?'}).join('+');return`<div class="item-card${r.fromPlugin?' plugin-item':''}" onclick="Editor.editRecipe('${r.id}')"><span class="item-card-icon">${r.icon||'🔨'}${r.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats"><span class="item-id">${r.id}</span> ${ingNames}→${result?result.icon:''}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRecipe('${r.id}')">✏️</button>${r.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRecipe('${r.id}')">🗑️</button>`}</div></div>`}).join('')},
     // Spells management
     saveSpell(){const id=$('#spell-id').value||genId('sp');if(id.startsWith('plg_')){toast('Hechizos del plugin son de solo lectura','error');return}const s={id,name:$('#spell-name').value,damage:$('#spell-damage').value||'1d6',cost:parseInt($('#spell-cost').value)||2,icon:$('#spell-icon').value||'✨',effect:$('#spell-effect').value||null,desc:$('#spell-desc').value||''};if(!s.name){toast('Falta nombre','error');return}const i=(Data.spells||[]).findIndex(x=>x.id===s.id);if(i>=0)Data.spells[i]=s;else{if(!Data.spells)Data.spells=[];Data.spells.push(s)}Data.save();this.renderSpells();this.updateSelects();this.clear('spell');toast('Guardado','success')},
     editSpell(id){const s=Data.findSpell(id);if(!s)return;$('#spell-id').value=s.id;$('#spell-name').value=s.name;$('#spell-damage').value=s.damage||'';$('#spell-cost').value=s.cost||'';$('#spell-icon').value=s.icon||'';$('#spell-effect').value=s.effect||'';$('#spell-desc').value=s.desc||''},
@@ -2419,7 +2437,10 @@ const Editor={
         if(!id)return;
         const it=Data.findItem(id);
         if(!it)return;
-        this.recipeIngredients.push(id);
+        const qtyInput=$('#recipe-ingredient-qty');
+        const qty=parseInt(qtyInput?.value)||1;
+        this.recipeIngredients.push({id:id,qty:qty});
+        if(qtyInput)qtyInput.value='1';
         this.renderIngredientsList();
     },
     removeIngredient(index){
@@ -2428,9 +2449,11 @@ const Editor={
     },
     renderIngredientsList(){
         const list=$('#recipe-ingredients-list');
-        list.innerHTML=this.recipeIngredients.map((id,i)=>{
-            const it=Data.findItem(id);
-            return`<span style="background:var(--bg-lighter);padding:.15rem .4rem;border-radius:4px;font-size:.65rem;display:inline-flex;align-items:center;gap:.2rem">${it?it.icon:'?'} ${it?it.name:id} <button onclick="Editor.removeIngredient(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;padding:0;font-size:.7rem">×</button></span>`;
+        list.innerHTML=this.recipeIngredients.map((ing,i)=>{
+            const itemId=ing.id||ing;
+            const qty=ing.qty||1;
+            const it=Data.findItem(itemId);
+            return`<span style="background:var(--bg-lighter);padding:.15rem .4rem;border-radius:4px;font-size:.65rem;display:inline-flex;align-items:center;gap:.2rem">${it?it.icon:'?'} ${it?it.name:itemId}${qty>1?' x'+qty:''} <button onclick="Editor.removeIngredient(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;padding:0;font-size:.7rem">×</button></span>`;
         }).join('');
     }
 };
