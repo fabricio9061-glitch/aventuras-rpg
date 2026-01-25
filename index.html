@@ -1268,36 +1268,36 @@ const Game={
         $('#charCreate').classList.add('hidden');
         $('#charCreate').style.display='none';
         
-        // Determinar arma inicial según tipo de combate
+        // 30% de probabilidad de nacer mago (aplica a todas las razas)
+        const isMage=Math.random()<0.30;
+        
+        // Determinar arma inicial según si es mago o no
         let weapon;
-        const combatType=race.combatType||'warrior';
-        if(combatType==='mage'){
-            // Magos empiezan con bastón
-            const staff=Data.weapons.find(w=>w.magic)||Data.weapons[0];
+        if(isMage){
+            // Magos: solo armas mágicas (bastones)
+            const magicWeapons=Data.weapons.filter(w=>w.magic);
+            const staff=magicWeapons.length>0?magicWeapons[0]:Data.weapons[0];
             weapon={...staff,uid:genId('i')};
-        }else if(combatType==='hybrid'){
-            // Híbridos reciben arma aleatoria
-            const allWeapons=Data.weapons.filter(w=>w.rarity==='common');
-            weapon={...pick(allWeapons),uid:genId('i')};
         }else{
-            // Guerreros empiezan con daga
-            weapon={...Data.weapons[0],uid:genId('i')};
+            // No magos: solo armas físicas
+            const physicalWeapons=Data.weapons.filter(w=>!w.magic);
+            weapon={...physicalWeapons[0]||Data.weapons[0],uid:genId('i')};
         }
         
         const armor={...Data.armors[0],uid:genId('i')};
         const baseSpeed=race.bonus.speed||10;
         
-        // Calcular maná: 100 base para magos/híbridos + bonus de arma
-        const usesMana=combatType==='mage'||combatType==='hybrid';
-        const baseMana=usesMana?100:0;
-        const weaponManaBonus=weapon.manaBonus||0;
+        // Maná: 100 base solo para magos + bonus de arma mágica
+        const baseMana=isMage?100:0;
+        const weaponManaBonus=(isMage&&weapon.manaBonus)?weapon.manaBonus:0;
         const maxMana=baseMana+weaponManaBonus;
         
-        // Hechizos iniciales (solo para magos/híbridos)
-        const spells=usesMana?[{...Data.spells[0]}]:[];
+        // Hechizos iniciales (solo para magos)
+        const spells=isMage&&Data.spells?.length>0?[{...Data.spells[0]}]:[];
         
         G.p={
             name,race,
+            isMage:isMage,
             maxHp:20+(race.bonus.health||0),
             hp:20+(race.bonus.health||0),
             maxMana:maxMana,
@@ -1320,7 +1320,12 @@ const Game={
         Story.clear();
         Story.add(`<strong style="color:var(--gold);font-size:1.1rem">⚔️ Aventuras de Acero y Runas ⚔️</strong>`);
         Story.add(`Eres <strong>${G.p.name}</strong>, ${race.name} ${race.icon}`,'narrative');
-        if(usesMana)Story.add(`✨ Conoces el hechizo: ${spells[0].icon} ${spells[0].name}`,'system');
+        if(isMage){
+            Story.add(`✨ <strong style="color:#DAA520">¡Naciste con el don de la magia!</strong>`,'system');
+            if(spells.length>0)Story.add(`📖 Conoces: ${spells[0].icon} ${spells[0].name}`,'system');
+        }else{
+            Story.add(`⚔️ Eres un guerrero. No puedes usar magia.`,'system');
+        }
         Story.add(`💀 MODO HARDCORE: Si mueres, pierdes todo.`,'system');
         this.updateUI();this.exploreActions();
     },
@@ -1391,9 +1396,8 @@ const Game={
             if(npcs.length>0)actions.push({text:'🏘️ NPCs',fn:()=>Town.visit(G.region)});
             if((Data.recipes||[]).length>0)actions.push({text:'🔨 Crafteo',fn:()=>Craft.open()});
         }
-        // Agregar libro de hechizos si es mago
-        const combatType=G.p.race?.combatType||'warrior';
-        if(combatType==='mage'||combatType==='hybrid'){
+        // Agregar libro de hechizos SOLO si es mago
+        if(G.p.isMage){
             actions.push({text:'📖 Hechizos',fn:()=>Spellbook.open()});
         }
         actions.push({text:'🎒 Inventario',fn:()=>Inv.open()},{text:'🔄 Nueva',fn:()=>this.newGame(),cls:'btn-danger'});
@@ -1503,7 +1507,6 @@ const Combat={
     showPlayerActions(){
         const ca=$('#combatActions');ca.innerHTML='';
         const aliveEnemies=G.enemies.filter(e=>e.hp>0);
-        const hasMana=G.p.maxMana>0;
         const hasSpells=(G.p.spells||[]).length>0;
         
         // Botón Atacar siempre visible
@@ -1517,11 +1520,11 @@ const Combat={
         }
         ca.appendChild(atkBtn);
         
-        // Botones de hechizos si tiene maná
-        if(hasMana&&hasSpells){
+        // Botones de hechizos SOLO si es mago
+        if(G.p.isMage&&hasSpells){
             const spellBtn=document.createElement('button');
             spellBtn.className='btn';
-            spellBtn.style.background='linear-gradient(135deg,#8B5CF6,#A855F7)';
+            spellBtn.style.background='linear-gradient(135deg,#B8860B,#DAA520)';
             spellBtn.textContent='✨ Hechizos';
             spellBtn.onclick=()=>this.showSpellSelect(aliveEnemies);
             ca.appendChild(spellBtn);
@@ -1546,7 +1549,7 @@ const Combat={
             const btn=document.createElement('button');
             btn.className='btn';
             btn.disabled=!canCast;
-            btn.style.cssText=`display:flex;flex-direction:column;align-items:center;padding:.5rem .8rem;min-width:90px;${canCast?'background:linear-gradient(135deg,#8B5CF6,#A855F7)':'opacity:.5'}`;
+            btn.style.cssText=`display:flex;flex-direction:column;align-items:center;padding:.5rem .8rem;min-width:90px;${canCast?'background:linear-gradient(135deg,#B8860B,#DAA520)':'opacity:.5'}`;
             btn.innerHTML=`<span style="font-size:1.3rem">${sp.icon}</span><span style="font-size:.7rem">${sp.name}</span><span style="font-size:.6rem;color:var(--cyan)">💙${sp.cost} ⚔️${sp.damage}</span>`;
             if(canCast){
                 btn.onclick=()=>{
@@ -1601,9 +1604,10 @@ const Combat={
         const armor=target.armor||0;
         const finalDmg=Math.max(0,magicDmg-armor);
         
-        this.log(`<span class="log-player">${p.name}</span> lanza <span style="color:#9966ff">${spell.icon} ${spell.name}</span>`);
+        this.log(`<span class="log-player">${p.name}</span> lanza <span style="color:#DAA520">${spell.icon} ${spell.name}</span>`);
         this.log(`├ 💙 Maná: -${spell.cost} (${p.mana}/${p.maxMana})`);
-        this.log(`├ ✨ Daño mágico: ${spell.damage} = ${magicDmg} − ${armor} (armadura) = ${finalDmg}`);
+        this.log(`├ ✨ Daño: ${spell.damage} [${dmgRoll.rolls.join('+')}] = ${magicDmg}`);
+        this.log(`├ 🛡️ ${magicDmg} − ${armor} (armadura) = ${finalDmg}`);
         
         if(finalDmg>0){
             target.hp-=finalDmg;
@@ -1829,7 +1833,7 @@ const Combat={
         const pHpPct=(G.p.hp/G.p.maxHp)*100;
         const hasMana=G.p.maxMana>0;
         const pManaPct=hasMana?(G.p.mana/G.p.maxMana)*100:0;
-        const manaBar=hasMana?`<div class="hp-container" style="margin-top:.15rem"><div class="hp-fill" style="width:${pManaPct}%;background:linear-gradient(to right,#8B5CF6,#A855F7)"></div><div class="hp-text">💙${G.p.mana}/${G.p.maxMana}</div></div>`:'';
+        const manaBar=hasMana?`<div class="hp-container" style="margin-top:.15rem"><div class="hp-fill" style="width:${pManaPct}%;background:linear-gradient(to right,#4169E1,#1E90FF)"></div><div class="hp-text">💙${G.p.mana}/${G.p.maxMana}</div></div>`:'';
         pDiv.innerHTML=`
             <div class="combatant-order">⚡${Game.speed()}</div>
             <div class="combatant-sprite">${sprite({icon:G.p.race.icon,sprite:G.p.race.sprite})}</div>
@@ -1884,7 +1888,27 @@ const Inv={
     open(){if(!G.p)return;this.render();openModal('inventoryModal')},
     render(){if(!G.p)return;$('#inventoryInfo').textContent=`${G.p.inv.length}/${G.p.maxSlots}`;const g=$('#inventoryGrid');g.innerHTML='';G.p.inv.forEach(it=>{const s=document.createElement('div');s.className=`inv-slot rarity-${it.rarity||'common'}`;s.innerHTML=`<div class="inv-slot-icon">${sprite(it)}</div><div class="inv-slot-name">${it.name}</div>`;s.onclick=()=>this.detail(it,'inv');g.appendChild(s)});for(let i=G.p.inv.length;i<G.p.maxSlots;i++){const s=document.createElement('div');s.className='inv-slot empty';s.innerHTML='<div class="inv-slot-name" style="color:var(--text-dim)">vacío</div>';g.appendChild(s)}},
     detail(it,ctx){G.item=it;$('#detailIcon').innerHTML=sprite(it);$('#detailName').textContent=it.name;$('#detailType').textContent=it.damage?'Arma':it.defense!==undefined?'Armadura':it.type||'Item';$('#detailDesc').textContent=it.desc||'Sin descripción.';let st='';if(it.damage)st+=`<div class="item-stat-box"><div class="item-stat-label">Daño</div><div class="item-stat-value">${it.damage}</div></div>`;if(it.defense!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Defensa</div><div class="item-stat-value">${it.defense}</div></div>`;if(it.weight!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Peso</div><div class="item-stat-value">${it.weight}</div></div>`;if(it.effect&&(it.type==='potion'||it.type==='food'))st+=`<div class="item-stat-box"><div class="item-stat-label">Cura</div><div class="item-stat-value">${it.effect}</div></div>`;if(it.manaBonus)st+=`<div class="item-stat-box"><div class="item-stat-label">+Maná</div><div class="item-stat-value">${it.manaBonus}</div></div>`;if(it.spellId){const sp=Data.findSpell(it.spellId);st+=`<div class="item-stat-box"><div class="item-stat-label">Enseña</div><div class="item-stat-value">${sp?sp.name:'?'}</div></div>`}if(it.value)st+=`<div class="item-stat-box"><div class="item-stat-label">Valor</div><div class="item-stat-value">${it.value}MP</div></div>`;$('#detailStats').innerHTML=st;const canEq=!G.combat&&G.region.type==='safe';let acts='';if(ctx.startsWith('eq-')){if(canEq)acts=`<button class="btn btn-danger" onclick="Inv.unequip('${ctx.split('-')[1]}')">❌ Quitar</button>`;else acts='<span style="color:var(--text-dim)">Solo zona segura</span>'}else{if(it.damage&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('weapon')">⚔️ Equipar</button>`;if(it.defense!==undefined&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('armor')">🛡️ Equipar</button>`;if(it.type==='potion'||it.type==='food')acts+=`<button class="btn btn-primary" onclick="Inv.use()">✨ Usar</button>`;if(it.type==='antidote')acts+=`<button class="btn btn-primary" onclick="Inv.use()">💊 Usar</button>`;if(it.type==='scroll')acts+=`<button class="btn btn-primary" onclick="Inv.use()">📜 Aprender</button>`;if(it.type==='escape'&&G.combat)acts+=`<button class="btn btn-primary" onclick="Inv.use()">💨 Usar</button>`;if(it.type==='backpack')acts+=`<button class="btn btn-primary" onclick="Inv.use()">🎒 Usar</button>`}acts+=`<button class="btn" onclick="closeModal('itemDetailModal')">Cerrar</button>`;$('#detailActions').innerHTML=acts;openModal('itemDetailModal')},
-    equip(slot){const it=G.item;if(!it?.uid)return;closeModal('itemDetailModal');if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon=it}else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor=it}G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);toast('Equipado','success');Game.updateUI();Game.autoSave();this.render()},
+    equip(slot){
+        const it=G.item;if(!it?.uid)return;
+        // Verificar restricciones de mago/guerrero para armas
+        if(slot==='weapon'){
+            if(G.p.isMage&&!it.magic){toast('Los magos solo usan armas mágicas','error');return}
+            if(!G.p.isMage&&it.magic){toast('Los guerreros no usan armas mágicas','error');return}
+        }
+        closeModal('itemDetailModal');
+        if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon=it}
+        else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor=it}
+        G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);
+        // Recalcular maná máximo si es mago y equipó arma mágica
+        if(G.p.isMage){
+            const baseMana=100;
+            const weaponBonus=G.p.weapon?.manaBonus||0;
+            const armorBonus=G.p.armor?.manaBonus||0;
+            G.p.maxMana=baseMana+weaponBonus+armorBonus;
+            G.p.mana=Math.min(G.p.mana,G.p.maxMana);
+        }
+        toast('Equipado','success');Game.updateUI();Game.autoSave();this.render()
+    },
     unequip(slot){if(G.p.inv.length>=G.p.maxSlots){toast('Inventario lleno','error');return}closeModal('itemDetailModal');if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon={name:'Puños',damage:'1d2',icon:'✊'}}else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor={name:'Sin armadura',defense:0,icon:'👤'}}toast('Desequipado','info');Game.updateUI();Game.autoSave()},
     use(){
         const it=G.item;if(!it?.uid)return;
@@ -1921,9 +1945,8 @@ const Inv={
                 Story.add(`${cures} curado.`,'system');
             }
         }else if(it.type==='scroll'){
-            // Pergamino enseña hechizo
-            const combatType=G.p.race?.combatType||'warrior';
-            if(combatType==='warrior'){toast('No puedes usar magia','error');return}
+            // Pergamino enseña hechizo - SOLO para magos
+            if(!G.p.isMage){toast('Solo los magos pueden aprender hechizos','error');return}
             if(!it.spellId){toast('Pergamino inválido','error');return}
             if(!Spellbook.learn(it.spellId))return;
         }else if(it.type==='escape'&&G.combat){
@@ -2054,8 +2077,7 @@ const Town={
 const Spellbook={
     open(){
         if(!G.p)return;
-        const combatType=G.p.race?.combatType||'warrior';
-        if(combatType==='warrior'){toast('No usas magia','info');return}
+        if(!G.p.isMage){toast('No usas magia','info');return}
         
         const modal=document.createElement('div');
         modal.className='modal';
