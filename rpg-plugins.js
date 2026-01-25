@@ -383,6 +383,20 @@ function injectPluginData() {
     console.log('   Mascotas: +' + newPets.length);
     console.log('   Enemigos: +' + newEnemies.length);
     console.log('   Hechizos: +' + newSpells.length);
+    
+    // Actualizar Editor cuando esté disponible
+    var editorRetries = 0;
+    var tryUpdateEditor = function() {
+        if (typeof Editor !== 'undefined' && Editor.renderAll) {
+            Editor.renderAll();
+            Editor.updateSelects();
+            console.log('📝 Editor actualizado con datos del plugin');
+        } else if (editorRetries < 20) {
+            editorRetries++;
+            setTimeout(tryUpdateEditor, 250);
+        }
+    };
+    setTimeout(tryUpdateEditor, 100);
 }
 
 // ═══════════════════════════════════════════════════════════════════
