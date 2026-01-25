@@ -1,0 +1,2574 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aventuras de Acero y Runas</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <style>
+        :root{--bg-dark:#0a0908;--bg-panel:#1a1614;--bg-light:#2a2320;--bg-input:#151210;--gold:#d4a437;--gold-dim:#a67c00;--gold-bright:#ffd700;--red:#8b0000;--red-bright:#dc143c;--green:#2d5a27;--green-bright:#4caf50;--blue:#1e3a5f;--blue-bright:#4a9eff;--purple:#9c27b0;--orange:#ff6b35;--cyan:#00bcd4;--text:#e8dcc4;--text-dim:#8a8078;--border:#3d3530}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:'Crimson Text',Georgia,serif;background:var(--bg-dark);color:var(--text);min-height:100vh;min-height:100dvh;-webkit-tap-highlight-color:transparent}
+        ::-webkit-scrollbar{width:5px}::-webkit-scrollbar-thumb{background:var(--gold-dim);border-radius:3px}
+        .hidden{display:none!important}
+        
+        .auth-screen,.char-create{position:fixed;top:0;left:0;right:0;bottom:0;background:var(--bg-dark);z-index:9999;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:1rem}
+        .auth-box,.create-box{background:var(--bg-panel);border:2px solid var(--gold-dim);border-radius:12px;padding:1.5rem;width:100%;max-width:400px;margin:1rem auto}
+        .auth-logo,.create-logo{text-align:center;margin-bottom:1.5rem}
+        .auth-logo h1,.create-logo h1{font-family:'Cinzel',serif;color:var(--gold-bright);font-size:1.5rem;margin-bottom:.5rem}
+        .auth-logo p,.create-logo p{color:var(--text-dim);font-size:.85rem}
+        .auth-form{display:flex;flex-direction:column;gap:.8rem}
+        .auth-input,.create-input{background:var(--bg-input);border:1px solid var(--border);padding:.7rem;color:var(--text);font-size:1rem;border-radius:6px;width:100%}
+        .auth-input:focus,.create-input:focus{outline:none;border-color:var(--gold-dim)}
+        .auth-btn,.create-btn{font-family:'Cinzel',serif;padding:.7rem;background:var(--gold-dim);border:none;color:var(--bg-dark);cursor:pointer;border-radius:6px;font-size:1rem;font-weight:600;margin-top:.5rem;width:100%}
+        .auth-btn:hover,.create-btn:hover{background:var(--gold-bright)}
+        .auth-btn:active,.create-btn:active{transform:scale(.97);opacity:.9}
+        .auth-btn:disabled{opacity:.5;cursor:not-allowed}
+        .auth-divider{text-align:center;color:var(--text-dim);font-size:.8rem;margin:.8rem 0}
+        .auth-link{color:var(--gold);cursor:pointer;text-decoration:underline;font-size:.85rem}
+        .auth-link:hover{color:var(--gold-bright)}
+        .auth-guest{background:transparent;border:1px solid var(--gold-dim);color:var(--gold)}
+        .auth-guest:hover{background:rgba(212,164,55,.1)}
+        .create-section{margin-bottom:1rem}
+        .create-section label{display:block;font-size:.75rem;color:var(--text-dim);text-transform:uppercase;margin-bottom:.5rem;letter-spacing:.05em}
+        .race-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(90px,1fr));gap:.4rem;padding:.25rem}
+        .race-option{background:var(--bg-light);border:2px solid var(--border);border-radius:6px;padding:.5rem .3rem;text-align:center;cursor:pointer;transition:all .2s}
+        .race-option:hover{border-color:var(--gold-dim)}
+        .race-option:active{transform:scale(.97)}
+        .race-option.selected{border-color:var(--gold-bright);background:rgba(212,164,55,.1)}
+        .race-option-icon{font-size:2rem;margin-bottom:.3rem;width:50px;height:50px;display:flex;align-items:center;justify-content:center;margin:0 auto .3rem}
+        .race-option-icon img{max-width:50px;max-height:50px;object-fit:contain}
+        .race-option-name{font-family:'Cinzel',serif;font-size:.85rem;color:var(--gold)}
+        .race-option-stats{font-size:.7rem;color:var(--text-dim)}
+        .user-info{display:flex;align-items:center;gap:.5rem;font-size:.75rem}
+        .logout-btn{background:none;border:1px solid var(--border);color:var(--text-dim);padding:.2rem .5rem;border-radius:3px;cursor:pointer;font-size:.65rem}
+        .logout-btn:hover{border-color:var(--gold-dim);color:var(--gold)}
+        
+        .main-nav{display:flex;justify-content:center;background:var(--bg-panel);border-bottom:2px solid var(--gold-dim);position:sticky;top:0;z-index:100;padding:.25rem;gap:.25rem;flex-wrap:wrap}
+        .nav-btn{font-family:'Cinzel',serif;font-size:.75rem;padding:.4rem 1rem;background:transparent;border:1px solid transparent;color:var(--text-dim);cursor:pointer;border-radius:3px;transition:all .2s}
+        .nav-btn:hover{color:var(--gold);border-color:var(--gold-dim)}
+        .nav-btn:active{transform:scale(.95)}
+        .nav-btn.active{color:var(--gold-bright);background:rgba(212,164,55,.15);border-color:var(--gold-dim)}
+        
+        .status-bar{position:fixed;top:0;right:0;display:flex;align-items:center;gap:.5rem;padding:.25rem .5rem;background:var(--bg-panel);border-bottom-left-radius:6px;font-size:.65rem;z-index:200}
+        .status-dot{width:8px;height:8px;border-radius:50%;background:var(--red)}.status-dot.connected{background:var(--green-bright)}
+        
+        .tab-content{display:none;min-height:calc(100vh - 50px)}.tab-content.active{display:flex;flex-direction:column}
+        
+        .game-wrapper{display:flex;flex-direction:column;height:calc(100vh - 50px);max-width:1400px;margin:0 auto;padding:.5rem;gap:.5rem}
+        .game-top{display:grid;grid-template-columns:260px 1fr;gap:.5rem;flex-shrink:0}
+        .game-bottom{flex:1;min-height:200px;overflow:hidden}
+        
+        .panel{background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;overflow:hidden}
+        .panel-header{background:var(--bg-light);padding:.4rem .6rem;border-bottom:1px solid var(--border);font-family:'Cinzel',serif;font-size:.7rem;color:var(--gold);text-transform:uppercase;letter-spacing:.05em;display:flex;justify-content:space-between;align-items:center}
+        .panel-body{padding:.5rem}
+        
+        /* Character Panel - hidden during combat */
+        .char-panel{display:flex;flex-direction:column}
+        .char-panel.in-combat .char-hp-section{display:none}
+        .char-header{display:flex;align-items:center;gap:.5rem;padding:.5rem;background:var(--bg-dark);border-bottom:1px solid var(--border)}
+        .char-avatar{width:48px;height:48px;display:flex;align-items:center;justify-content:center;background:var(--bg-light);border:2px solid var(--gold-dim);border-radius:6px;font-size:1.8rem}
+        .char-avatar img{width:100%;height:100%;object-fit:contain}
+        .char-name{font-family:'Cinzel',serif;font-size:1rem;color:var(--gold-bright)}
+        .char-race{font-size:.65rem;color:var(--text-dim)}
+        .char-body{padding:.5rem;display:flex;flex-direction:column;gap:.4rem}
+        
+        .hp-container{background:var(--bg-dark);border:1px solid var(--border);border-radius:4px;height:20px;position:relative;overflow:hidden}
+        .hp-fill{height:100%;transition:width .3s ease;background:linear-gradient(180deg,var(--green-bright),var(--green))}
+        .hp-fill.medium{background:linear-gradient(180deg,var(--gold-bright),var(--gold-dim))}
+        .hp-fill.low{background:linear-gradient(180deg,var(--orange),#cc4400)}
+        .hp-fill.critical{background:linear-gradient(180deg,var(--red-bright),var(--red));animation:pulse 1s infinite}
+        @keyframes pulse{50%{opacity:.7}}
+        .hp-text{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:bold;color:white;text-shadow:1px 1px 2px black}
+        
+        .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:.25rem}
+        .stat-item{display:flex;justify-content:space-between;padding:.2rem .35rem;background:var(--bg-light);border-radius:3px;font-size:.65rem}
+        .stat-label{color:var(--text-dim)}.stat-value{color:var(--gold);font-weight:bold}
+        
+        .equip-slot{display:flex;align-items:center;gap:.4rem;padding:.3rem;background:var(--bg-light);border:1px solid transparent;border-radius:4px;cursor:pointer;transition:all .2s}
+        .equip-slot:hover:not(.disabled){border-color:var(--gold-dim);background:var(--bg-dark)}
+        .equip-slot.disabled{opacity:.5;cursor:not-allowed}
+        .equip-icon{width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:1.2rem}
+        .equip-icon img{width:100%;height:100%;object-fit:contain}
+        .equip-name{font-size:.75rem}.equip-stats{font-size:.6rem;color:var(--text-dim)}
+        
+        .currency-row{display:flex;justify-content:center;gap:1rem;padding:.3rem;background:var(--bg-dark);border-radius:4px;font-size:.8rem}
+        .coin-gold{color:var(--gold-bright)}.coin-silver{color:#c0c0c0}
+        
+        .region-badge{text-align:center;padding:.35rem;border-radius:4px;font-size:.7rem;border:1px solid var(--border);cursor:pointer;transition:all .2s}
+        .region-badge:hover{border-color:var(--gold-dim)}
+        .region-badge.safe{background:rgba(45,90,39,.3);border-color:var(--green);color:var(--green-bright)}
+        .region-badge.danger{background:rgba(139,0,0,.3);border-color:var(--red);color:var(--red-bright)}
+        .region-badge .region-icon{font-size:1rem;margin-right:.3rem}
+        .region-badge .region-name{font-weight:bold}
+        
+        .main-area{display:flex;flex-direction:column;gap:.5rem}
+        /* Hide actions panel during combat */
+        .actions-panel.in-combat{display:none}
+        .actions-panel .panel-body{display:flex;flex-wrap:wrap;gap:.4rem;justify-content:center}
+        
+        /* Combat Arena */
+        .combat-arena{background:linear-gradient(180deg,rgba(139,0,0,.2),transparent);border:2px solid var(--red)}
+        .combat-arena .panel-header{background:linear-gradient(180deg,rgba(139,0,0,.4),var(--bg-panel));color:var(--red-bright)}
+        .combat-grid{display:flex;gap:.5rem;align-items:start;padding:.5rem;flex-wrap:wrap;justify-content:center}
+        .combatant{background:var(--bg-dark);border:2px solid var(--border);border-radius:6px;padding:.4rem;text-align:center;min-width:110px;max-width:140px;flex:0 0 auto;position:relative}
+        .combatant.player{border-color:var(--gold-dim);order:-1}
+        .combatant.enemy{border-color:var(--red)}
+        .combatant.pet{border-color:var(--cyan);order:-1}
+        .combatant.dead{opacity:.4;filter:grayscale(1)}
+        .combatant.active{box-shadow:0 0 12px var(--gold-bright);border-color:var(--gold-bright)}
+        .combatant-order{position:absolute;top:-5px;right:-5px;background:var(--gold);color:var(--bg-dark);min-width:28px;height:18px;border-radius:9px;font-size:.55rem;font-weight:bold;display:flex;align-items:center;justify-content:center;padding:0 4px}
+        .combatant-sprite{font-size:2rem;margin-bottom:.2rem}
+        .combatant-sprite img{width:48px;height:48px;object-fit:contain}
+        .combatant-name{font-family:'Cinzel',serif;font-size:.7rem;margin-bottom:.1rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+        .combatant-stats{font-size:.5rem;color:var(--text-dim);margin-bottom:.2rem}
+        .combatant .hp-container{height:14px}
+        .combatant .hp-text{font-size:.55rem}
+        .combat-vs{font-size:1.2rem;color:var(--gold);align-self:center;padding:0 .3rem}
+        .combat-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem;padding:.5rem;border-top:1px solid var(--border)}
+        
+        /* Combat Log */
+        .combat-log{max-height:120px;overflow-y:auto;padding:.4rem;background:var(--bg-dark);border-top:1px solid var(--border);font-size:.65rem;scroll-behavior:smooth}
+        .combat-log .log-entry{padding:.15rem 0;border-bottom:1px solid rgba(255,255,255,.05)}
+        .combat-log .log-entry:last-child{border-bottom:none}
+        .combat-log .log-turn{text-align:center;color:var(--gold);font-weight:bold;padding:.3rem;margin:.2rem 0}
+        .combat-log .log-order{display:none}
+        .combat-log .log-calc{display:inline;font-size:.6rem;opacity:.8}
+        .combat-log .log-line{font-family:'Consolas',monospace;font-size:.6rem;padding-left:.3rem;border-left:2px solid var(--border);margin-left:.3rem}
+        .combat-actions{padding:.5rem;background:var(--bg-panel);border-top:1px solid var(--border);position:sticky;top:0;z-index:10}
+        .log-entry{padding:.12rem 0;border-bottom:1px dashed rgba(255,255,255,.05)}
+        .log-entry:last-child{border-bottom:none}
+        .log-player{color:var(--gold)}.log-enemy{color:var(--red-bright)}.log-pet{color:var(--cyan)}.log-damage{color:var(--orange)}.log-heal{color:var(--green-bright)}.log-miss{color:var(--text-dim);font-style:italic}.log-crit{color:var(--gold-bright);font-weight:bold}
+        .log-calc{background:var(--bg-panel);padding:.2rem .4rem;border-radius:3px;margin:.15rem 0;font-family:'Consolas',monospace;font-size:.65rem;border-left:3px solid var(--orange)}
+        .log-calc.blocked{border-left-color:var(--blue-bright)}
+        .log-turn{background:linear-gradient(90deg,transparent,var(--bg-light),transparent);color:var(--gold);padding:.25rem .5rem;margin:.3rem -.5rem;text-align:center;font-family:'Cinzel',serif;font-size:.68rem;letter-spacing:.1em}
+        .log-order{display:flex;flex-wrap:wrap;gap:.2rem;justify-content:center;margin:.2rem 0}
+        .log-order-tag{background:var(--bg-light);padding:.1rem .3rem;border-radius:3px;font-size:.55rem}
+        .log-order-tag.player{border:1px solid var(--gold-dim);color:var(--gold)}
+        .log-order-tag.enemy{border:1px solid var(--red);color:var(--red-bright)}
+        .log-order-tag.pet{border:1px solid var(--cyan);color:var(--cyan)}
+        
+        .effects-row{display:flex;flex-wrap:wrap;justify-content:center;gap:.1rem;margin-top:.15rem;min-height:12px}
+        .effect-tag{font-size:.45rem;padding:.05rem .15rem;border-radius:3px}
+        .eff-bleed{background:rgba(139,0,0,.6);border:1px solid var(--red)}.eff-poison{background:rgba(0,100,0,.6);border:1px solid var(--green-bright)}.eff-fire{background:rgba(255,100,0,.5);border:1px solid orange}.eff-ice{background:rgba(0,191,255,.5);border:1px solid #00BFFF}.eff-fury{background:rgba(255,50,50,.6);border:1px solid #ff4444}.eff-shield{background:rgba(100,149,237,.5);border:1px solid #6495ED}.eff-regen{background:rgba(50,205,50,.5);border:1px solid #32CD32}
+        
+        .chronicles-panel{display:flex;flex-direction:column;height:100%}
+        .chronicles-content{flex:1;overflow-y:auto;padding:.5rem;display:flex;flex-direction:column;gap:.4rem}
+        .story-entry{padding:.5rem;border-radius:4px;animation:fadeIn .3s;font-size:.85rem;line-height:1.6}
+        @keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1}}
+        .story-narrative{background:linear-gradient(135deg,rgba(30,25,22,.95),rgba(45,38,33,.8));border-left:3px solid var(--gold-dim);font-style:italic}
+        .story-combat{background:rgba(139,0,0,.15);border-left:3px solid var(--red)}
+        .story-loot{background:rgba(212,164,55,.15);border-left:3px solid var(--gold)}
+        .story-system{background:rgba(74,158,255,.1);border-left:3px solid var(--blue-bright);font-size:.8rem}
+        .story-trap{background:rgba(255,107,53,.15);border-left:3px solid var(--orange)}
+        .story-dialogue{background:rgba(156,39,176,.1);border-left:3px solid var(--purple)}
+        .story-region{background:rgba(0,188,212,.1);border-left:3px solid var(--cyan)}
+        .story-travel{background:rgba(100,100,100,.2);border-left:3px solid var(--text-dim);font-style:italic}
+        
+        .btn{font-family:'Cinzel',serif;font-size:.7rem;padding:.4rem .8rem;background:var(--bg-light);border:1px solid var(--gold-dim);color:var(--gold);cursor:pointer;border-radius:4px;transition:all .2s;white-space:nowrap}
+        .btn:hover:not(:disabled){background:var(--gold-dim);color:var(--bg-dark);transform:translateY(-1px)}
+        .btn:active:not(:disabled){transform:scale(.95);opacity:.9}
+        .btn:disabled{opacity:.5;cursor:not-allowed}
+        .btn-primary{background:var(--gold-dim);color:var(--bg-dark)}
+        .btn-danger{border-color:var(--red);color:var(--red-bright)}.btn-danger:hover:not(:disabled){background:var(--red);color:white}
+        .btn-sm{font-size:.6rem;padding:.25rem .5rem}
+        
+        .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.9);z-index:500;justify-content:center;align-items:center;padding:1rem;overflow-y:auto}
+        .modal-overlay.active{display:flex}
+        .modal{background:var(--bg-panel);border:2px solid var(--gold-dim);border-radius:8px;width:100%;max-width:500px;max-height:90vh;overflow-y:auto;animation:modalIn .2s}
+        @keyframes modalIn{from{opacity:0;transform:scale(.95)}}
+        .modal-lg{max-width:800px}
+        .modal-header{display:flex;justify-content:space-between;align-items:center;padding:.6rem .8rem;background:var(--bg-light);border-bottom:1px solid var(--border)}
+        .modal-title{font-family:'Cinzel',serif;font-size:.9rem;color:var(--gold)}
+        .modal-close{background:none;border:none;color:var(--text-dim);font-size:1.3rem;cursor:pointer}.modal-close:hover{color:var(--gold)}
+        .modal-body{padding:.8rem}
+        
+        .item-detail{text-align:center}
+        .item-detail-icon{font-size:3.5rem;margin-bottom:.5rem}
+        .item-detail-icon img{width:72px;height:72px;object-fit:contain}
+        .item-detail-name{font-family:'Cinzel',serif;font-size:1.1rem;color:var(--gold-bright)}
+        .item-detail-type{color:var(--text-dim);font-size:.75rem;margin-bottom:.5rem}
+        .item-detail-desc{background:var(--bg-dark);padding:.6rem;border-radius:4px;text-align:left;margin-bottom:.6rem;font-size:.8rem}
+        .item-stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(80px,1fr));gap:.4rem;margin-bottom:.6rem}
+        .item-stat-box{background:var(--bg-light);padding:.4rem;border-radius:4px}
+        .item-stat-label{font-size:.55rem;color:var(--text-dim);text-transform:uppercase}
+        .item-stat-value{font-size:.95rem;color:var(--gold);font-family:'Cinzel',serif}
+        .item-actions{display:flex;flex-wrap:wrap;justify-content:center;gap:.4rem}
+        
+        .inventory-info{text-align:center;padding:.4rem;color:var(--text-dim);font-size:.75rem;border-bottom:1px solid var(--border)}
+        .inventory-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:.35rem;padding:.6rem}
+        .inv-slot{aspect-ratio:1;background:var(--bg-dark);border:1px solid var(--border);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;padding:.15rem}
+        .inv-slot:hover{border-color:var(--gold-dim);transform:scale(1.05)}
+        .inv-slot.empty{cursor:default}.inv-slot.empty:hover{transform:none;border-color:var(--border)}
+        .inv-slot-icon{font-size:1.4rem}.inv-slot-icon img{width:32px;height:32px;object-fit:contain}
+        .inv-slot-name{font-size:.5rem;text-align:center;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
+        .rarity-common{border-color:#555}.rarity-rare{border-color:var(--blue-bright)}.rarity-epic{border-color:var(--purple)}.rarity-legendary{border-color:var(--gold-bright);box-shadow:0 0 8px rgba(255,215,0,.4)}
+        
+        /* Travel Map */
+        .travel-map{display:flex;flex-direction:column;gap:.5rem}
+        .travel-current{text-align:center;padding:.5rem;background:var(--bg-dark);border-radius:6px;margin-bottom:.5rem}
+        .travel-current-icon{font-size:2rem}
+        .travel-current-name{font-family:'Cinzel',serif;color:var(--gold-bright);font-size:1rem}
+        .travel-current-progress{font-size:.65rem;color:var(--text-dim);margin-top:.2rem}
+        .travel-routes{display:flex;flex-direction:column;gap:.4rem}
+        .travel-route{background:var(--bg-dark);border:1px solid var(--border);border-radius:6px;padding:.5rem;display:flex;align-items:center;gap:.5rem;cursor:pointer;transition:all .2s}
+        .travel-route:hover:not(.locked){border-color:var(--gold-dim);transform:translateX(4px)}
+        .travel-route.locked{opacity:.5;cursor:not-allowed}
+        .travel-route.locked:hover{transform:none}
+        .travel-route-icon{font-size:1.5rem;width:40px;text-align:center}
+        .travel-route-info{flex:1}
+        .travel-route-name{font-family:'Cinzel',serif;color:var(--gold);font-size:.8rem}
+        .travel-route-desc{font-size:.6rem;color:var(--text-dim)}
+        .travel-route-req{font-size:.55rem;color:var(--red-bright);margin-top:.15rem}
+        .travel-route-steps{font-size:.6rem;color:var(--cyan);margin-top:.1rem}
+        .travel-route-arrow{color:var(--gold-dim);font-size:1.2rem}
+        .travel-progress-bar{height:4px;background:var(--bg-panel);border-radius:2px;margin-top:.3rem;overflow:hidden}
+        .travel-progress-fill{height:100%;background:var(--gold);transition:width .3s}
+        
+        .editor-container{max-width:1100px;margin:0 auto;padding:.8rem}
+        .editor-tabs{display:flex;flex-wrap:wrap;gap:.25rem;background:var(--bg-panel);padding:.4rem;border-radius:6px;margin-bottom:.6rem}
+        .editor-tab{padding:.4rem .8rem;background:transparent;border:1px solid var(--border);color:var(--text-dim);cursor:pointer;font-family:'Cinzel',serif;font-size:.65rem;border-radius:4px;transition:all .2s}
+        .editor-tab:hover{border-color:var(--gold-dim);color:var(--gold)}
+        .editor-tab.active{background:var(--gold-dim);color:var(--bg-dark);border-color:var(--gold)}
+        .editor-section{display:none;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:.8rem}
+        .editor-section.active{display:block}
+        .editor-section h3{font-family:'Cinzel',serif;color:var(--gold);font-size:.95rem;margin-bottom:.6rem;padding-bottom:.4rem;border-bottom:1px solid var(--border)}
+        .form-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:.5rem;margin-bottom:.5rem}
+        .form-group{display:flex;flex-direction:column;gap:.15rem}
+        .form-group label{font-size:.55rem;color:var(--text-dim);text-transform:uppercase}
+        .form-group input,.form-group select,.form-group textarea{background:var(--bg-input);border:1px solid var(--border);padding:.4rem;color:var(--text);font-size:.7rem;border-radius:4px;font-family:inherit}
+        .form-group input:focus,.form-group select:focus{outline:none;border-color:var(--gold-dim)}
+        .form-group textarea{resize:vertical;min-height:50px}
+        .form-actions{display:flex;gap:.4rem;justify-content:flex-end;padding-top:.5rem;border-top:1px solid var(--border);margin-top:.5rem}
+        .multi-select{background:var(--bg-input);border:1px solid var(--border);border-radius:4px;padding:.3rem;max-height:80px;overflow-y:auto;font-size:.65rem}
+        .multi-select label{display:flex;align-items:center;gap:.25rem;padding:.1rem;cursor:pointer}
+        .multi-select label:hover{background:var(--bg-light)}
+        .items-list{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:.35rem;margin-top:.6rem;max-height:250px;overflow-y:auto;padding:.15rem}
+        .item-card{background:var(--bg-dark);border:1px solid var(--border);border-radius:4px;padding:.4rem;display:flex;align-items:center;gap:.35rem;cursor:pointer;transition:all .2s}
+        .item-card.plugin-item{border-color:var(--cyan);background:linear-gradient(135deg,var(--bg-dark),rgba(0,255,255,.05))}
+        .plugin-badge{position:absolute;top:-4px;right:-4px;font-size:.5rem}
+        .item-card-icon{position:relative}
+        .item-card:hover{border-color:var(--gold-dim)}
+        .item-card-icon{font-size:1.2rem;width:28px;text-align:center}.item-card-icon img{width:28px;height:28px;object-fit:contain}
+        .item-card-info{flex:1;min-width:0}
+        .item-card-name{font-size:.7rem;color:var(--gold);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+        .item-card-stats{font-size:.55rem;color:var(--text-dim)}
+        .item-id{background:var(--bg-dark);color:var(--cyan);padding:0 .25rem;border-radius:3px;font-family:monospace;font-size:.5rem;margin-right:.3rem}
+        .item-card-actions{display:flex;gap:.15rem}
+        .icon-btn{background:none;border:1px solid var(--border);color:var(--text-dim);padding:.12rem .2rem;cursor:pointer;font-size:.5rem;border-radius:3px;transition:all .2s}
+        .icon-btn:hover{border-color:var(--gold-dim);color:var(--gold)}
+        .icon-btn.delete:hover{border-color:var(--red);color:var(--red-bright)}
+        
+        .rules-container{max-width:1000px;margin:0 auto;padding:.8rem}
+        .rules-header{text-align:center;margin-bottom:.8rem}
+        .rules-header h2{font-family:'Cinzel',serif;color:var(--gold);font-size:1.4rem}
+        .rules-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:.5rem}
+        .rules-card{background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:.6rem}
+        .rules-card h4{font-family:'Cinzel',serif;color:var(--gold);font-size:.8rem;margin-bottom:.35rem;padding-bottom:.25rem;border-bottom:1px solid var(--border)}
+        .rules-card p,.rules-card li{font-size:.7rem;margin-bottom:.15rem}
+        .rules-card ul{padding-left:1rem}
+        .rules-table{width:100%;border-collapse:collapse;font-size:.65rem;margin:.3rem 0}
+        .rules-table th,.rules-table td{border:1px solid var(--border);padding:.2rem .3rem;text-align:left}
+        .rules-table th{background:var(--bg-light);color:var(--gold)}
+        .rules-highlight{background:var(--bg-dark);border-left:3px solid var(--gold);padding:.35rem;margin:.3rem 0;font-size:.7rem}
+        
+        .toast-container{position:fixed;top:2.5rem;right:.8rem;z-index:1000;display:flex;flex-direction:column;gap:.4rem}
+        .toast{padding:.4rem .8rem;border-radius:4px;font-size:.75rem;animation:toastIn .3s,toastOut .3s 2.5s forwards;color:white}
+        @keyframes toastIn{from{transform:translateX(100%);opacity:0}}@keyframes toastOut{to{transform:translateX(100%);opacity:0}}
+        .toast.success{background:var(--green)}.toast.error{background:var(--red)}.toast.info{background:var(--blue)}
+        .dice-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:600;justify-content:center;align-items:center}
+        .dice-overlay.active{display:flex}
+        .dice-display{background:var(--bg-panel);border:2px solid var(--gold-dim);border-radius:12px;padding:1.5rem 2rem;text-align:center}
+        .dice-icon{font-size:3rem;animation:diceRoll .4s}
+        @keyframes diceRoll{0%{transform:rotate(0) scale(.5)}50%{transform:rotate(180deg) scale(1.2)}100%{transform:rotate(360deg) scale(1)}}
+        .dice-label{font-size:.8rem;color:var(--text-dim)}
+        .dice-result{font-family:'Cinzel',serif;font-size:2rem;color:var(--gold-bright)}
+        .dice-result.crit{color:var(--red-bright);text-shadow:0 0 10px var(--red)}
+        
+        @media(min-width:1000px){
+            html{font-size:18px}
+            .game-wrapper{padding:1rem;gap:1rem}
+            .char-avatar{width:64px;height:64px;font-size:2.4rem}
+            .char-name{font-size:1.3rem}
+            .char-race{font-size:.8rem}
+            .hp-text{font-size:.85rem}
+            .stat-item{font-size:.8rem;padding:.3rem .5rem}
+            .equip-item{padding:.5rem}
+            .equip-icon{width:36px;height:36px;font-size:1.5rem}
+            .equip-name{font-size:.9rem}
+            .equip-stats{font-size:.75rem}
+            .currency-row{font-size:1rem;padding:.5rem}
+            .region-badge{font-size:.85rem;padding:.5rem}
+            .story-entry{font-size:1rem;padding:.7rem}
+            .btn{font-size:.85rem;padding:.5rem 1rem}
+            .nav-btn{font-size:.9rem;padding:.5rem 1.2rem}
+            .panel-header{font-size:.85rem;padding:.5rem .8rem}
+            .combatant{min-width:140px;max-width:180px;padding:.6rem}
+            .combatant-sprite{font-size:2.8rem}
+            .combatant-name{font-size:.85rem}
+            .combatant-stats{font-size:.65rem}
+            .combatant .hp-text{font-size:.7rem}
+            .combat-log{font-size:.85rem}
+            .modal{max-width:600px}
+            .modal-lg{max-width:900px}
+            .modal-title{font-size:1.1rem}
+            .inv-slot{width:70px;height:70px}
+            .inv-slot-icon{font-size:1.8rem}
+            .inv-slot-name{font-size:.65rem}
+        }
+        @media(max-width:850px){
+            .game-top{grid-template-columns:1fr}
+            .char-panel{order:2}
+            .main-area{order:1}
+            .inventory-grid{grid-template-columns:repeat(4,1fr)}
+            .combatant{min-width:90px;max-width:110px}
+            .rules-grid{grid-template-columns:1fr}
+        }
+        @media(max-width:500px){
+            html{font-size:14px}
+            body{-webkit-tap-highlight-color:transparent;-webkit-touch-callout:none}
+            .main-nav{padding:.2rem;gap:.15rem}
+            .nav-btn{font-size:.65rem;padding:.35rem .6rem}
+            .status-bar{font-size:.55rem;padding:.15rem .3rem}
+            .game-wrapper{padding:.3rem;gap:.3rem}
+            .panel{border-radius:6px}
+            .panel-header{padding:.3rem .5rem;font-size:.65rem}
+            .char-header{padding:.4rem;gap:.4rem}
+            .char-avatar{width:40px;height:40px;font-size:1.5rem;border-radius:4px}
+            .char-name{font-size:.9rem}
+            .char-race{font-size:.6rem}
+            .hp-container{height:14px;border-radius:3px}
+            .hp-text{font-size:.6rem}
+            .stats-grid{gap:.15rem;padding:.3rem}
+            .stat-item{padding:.15rem .25rem;font-size:.6rem;border-radius:2px}
+            .equip-row{gap:.3rem;padding:.3rem}
+            .equip-slot{padding:.3rem;border-radius:4px;gap:.3rem}
+            .equip-icon{width:24px;height:24px;font-size:1rem}
+            .equip-name{font-size:.65rem}
+            .equip-stats{font-size:.55rem}
+            .currency-row{padding:.25rem;font-size:.7rem;gap:.6rem;border-radius:3px}
+            .region-badge{padding:.3rem;font-size:.6rem;border-radius:3px}
+            .region-badge .region-icon{font-size:.85rem}
+            .story-panel{min-height:120px}
+            .story-content{padding:.3rem}
+            .story-entry{padding:.35rem;font-size:.75rem;line-height:1.4;border-radius:3px}
+            .actions-container{padding:.3rem;gap:.25rem}
+            .btn{font-size:.65rem;padding:.4rem .6rem;border-radius:4px;min-height:36px}
+            .combat-arena{border-radius:6px}
+            .combat-header{padding:.3rem .5rem}
+            .combat-grid{padding:.4rem;gap:.3rem}
+            .combatant{min-width:70px;max-width:85px;padding:.3rem;border-radius:4px}
+            .combatant-order{min-width:24px;height:14px;font-size:.45rem;top:-3px;right:-3px;padding:0 3px}
+            .combatant-sprite{font-size:1.5rem;margin-bottom:.1rem}
+            .combatant-sprite img{width:32px;height:32px}
+            .combatant-name{font-size:.55rem}
+            .combatant-stats{font-size:.45rem}
+            .combatant .hp-container{height:10px}
+            .combatant .hp-text{font-size:.45rem}
+            .combat-vs{font-size:.9rem;padding:0 .2rem}
+            .combat-log{max-height:100px;padding:.3rem;font-size:.6rem}
+            .log-entry{padding:.1rem 0}
+            .log-calc{padding:.15rem .25rem;font-size:.55rem}
+            .log-turn{padding:.2rem;font-size:.55rem}
+            .effect-tag{font-size:.4rem;padding:.02rem .1rem}
+            .modal{border-radius:8px;margin:.5rem;max-height:85vh}
+            .modal-header{padding:.4rem .6rem}
+            .modal-title{font-size:.8rem}
+            .modal-close{font-size:1.1rem}
+            .modal-body{padding:.5rem}
+            .inventory-grid{grid-template-columns:repeat(4,1fr);gap:.25rem;padding:.3rem}
+            .inv-slot{width:auto;height:auto;aspect-ratio:1;padding:.25rem;border-radius:4px}
+            .inv-slot-icon{font-size:1.2rem}
+            .inv-slot-icon img{width:28px;height:28px}
+            .inv-slot-name{font-size:.45rem}
+            .item-detail-icon{font-size:2.5rem}
+            .item-detail-icon img{width:50px;height:50px}
+            .item-detail-name{font-size:1rem}
+            .item-stats-grid{gap:.3rem}
+            .item-stat-box{padding:.3rem}
+            .item-actions{gap:.25rem}
+            .item-actions .btn{flex:1;min-width:0}
+            .region-selector{gap:.3rem}
+            .region-card{padding:.4rem;border-radius:4px}
+            .region-card-icon{font-size:1.3rem}
+            .region-card-name{font-size:.7rem}
+            .region-card-type{font-size:.5rem}
+            .auth-screen,.char-create{padding:.5rem}
+            .auth-box,.create-box{padding:1rem;border-radius:8px;max-width:95vw;margin:.5rem auto}
+            .auth-logo h1,.create-logo h1{font-size:1.1rem}
+            .auth-logo p,.create-logo p{font-size:.7rem}
+            .auth-logo,.create-logo{margin-bottom:1rem}
+            .auth-input,.create-input{padding:.5rem;font-size:.85rem}
+            .auth-btn,.create-btn{padding:.5rem;font-size:.85rem}
+            .race-grid{grid-template-columns:repeat(3,1fr);gap:.25rem}
+            .race-option{padding:.35rem;border-radius:5px}
+            .race-option-icon{width:32px;height:32px;font-size:1.3rem}
+            .race-option-icon img{max-width:32px;max-height:32px}
+            .race-option-name{font-size:.65rem}
+            .race-option-stats{font-size:.5rem}
+            .create-section{margin-bottom:.7rem}
+            .create-section label{font-size:.55rem;margin-bottom:.3rem}
+            .user-info{font-size:.6rem}
+            .logout-btn{font-size:.55rem;padding:.15rem .35rem}
+            .item-card{padding:.35rem;border-radius:4px}
+            .item-card-icon{font-size:1rem;width:24px}
+            .item-card-icon img{width:24px;height:24px}
+            .item-card-name{font-size:.65rem}
+            .item-card-stats{font-size:.5rem}
+            .npc-card{padding:.4rem}
+            .npc-icon{font-size:1.5rem}
+            .npc-name{font-size:.75rem}
+            .toast{font-size:.7rem;padding:.4rem .8rem;border-radius:4px}
+        }
+        @media(max-width:350px){
+            html{font-size:12px}
+            .race-grid{grid-template-columns:repeat(2,1fr)}
+            .inventory-grid{grid-template-columns:repeat(3,1fr)}
+            .combatant{min-width:60px;max-width:70px}
+            .btn{font-size:.6rem;padding:.35rem .5rem}
+        }
+    </style>
+</head>
+<body>
+    <div class="auth-screen" id="authScreen">
+        <div class="auth-box">
+            <div class="auth-logo">
+                <h1>⚔️ Aventuras de Acero y Runas</h1>
+                <p>Ingresa para guardar tu progreso</p>
+            </div>
+            <div class="auth-form" id="loginForm">
+                <input type="email" class="auth-input" id="authEmail" placeholder="Correo electrónico">
+                <input type="password" class="auth-input" id="authPass" placeholder="Contraseña">
+                <label style="display:flex;align-items:center;gap:.5rem;margin:.5rem 0;font-size:.8rem;color:var(--text-dim);cursor:pointer">
+                    <input type="checkbox" id="rememberMe" style="width:16px;height:16px;cursor:pointer">
+                    Recordar sesión
+                </label>
+                <button class="auth-btn" onclick="Auth.login()">🔓 Iniciar Sesión</button>
+                <p style="text-align:center;margin-top:.8rem">
+                    <span class="auth-link" onclick="Auth.showRegister()">Crear cuenta nueva</span>
+                </p>
+            </div>
+            <div class="auth-form hidden" id="registerForm">
+                <input type="email" class="auth-input" id="regEmail" placeholder="Correo electrónico">
+                <input type="password" class="auth-input" id="regPass" placeholder="Contraseña (mín. 6 caracteres)">
+                <button class="auth-btn" onclick="Auth.register()">📝 Crear Cuenta</button>
+                <p style="text-align:center;margin-top:.8rem">
+                    <span class="auth-link" onclick="Auth.showLogin()">Ya tengo cuenta</span>
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="char-create hidden" id="charCreate">
+        <div class="create-box">
+            <div class="create-logo">
+                <h1>⚔️ Crear Personaje</h1>
+                <p>Elige tu nombre y raza</p>
+            </div>
+            <div class="create-section">
+                <label>Nombre del Héroe</label>
+                <input type="text" class="create-input" id="heroName" placeholder="Escribe tu nombre..." maxlength="20">
+            </div>
+            <div class="create-section">
+                <label>Elige tu Raza</label>
+                <div class="race-grid" id="raceGrid"></div>
+            </div>
+            <button class="create-btn" onclick="Game.createChar()">⚔️ Comenzar Aventura</button>
+        </div>
+    </div>
+
+    <div class="status-bar"><div class="user-info" id="userInfo"></div><div class="status-dot" id="fbStatus"></div><span id="fbStatusText">...</span></div>
+    <nav class="main-nav">
+        <button class="nav-btn active" data-tab="game">⚔️ Juego</button>
+        <button class="nav-btn" data-tab="rules">📜 Reglas</button>
+        <button class="nav-btn" data-tab="editor">🛠️ Editor</button>
+    </nav>
+
+    <div class="tab-content active" id="tab-game">
+        <div class="game-wrapper">
+            <div class="game-top">
+                <div class="panel char-panel" id="charPanel">
+                    <div class="char-header">
+                        <div class="char-avatar" id="charAvatar">🧙</div>
+                        <div><div class="char-name" id="charName">---</div><div class="char-race" id="charRace">---</div></div>
+                    </div>
+                    <div class="char-body">
+                        <div class="char-hp-section">
+                            <div class="hp-container"><div class="hp-fill" id="hpFill"></div><div class="hp-text" id="hpText">0/0</div></div>
+                            <div class="hp-container" id="manaBar" style="display:none;margin-top:3px"><div class="hp-fill" id="manaFill" style="background:linear-gradient(90deg,#4488ff,#66aaff)"></div><div class="hp-text" id="manaText" style="color:#88bbff">0/0</div></div>
+                            <div class="hp-container" style="margin-top:3px"><div class="hp-fill" id="foodFill" style="background:linear-gradient(90deg,#cc8833,#eebb55)"></div><div class="hp-text" id="foodText" style="color:#eebb55">0/0</div></div>
+                        </div>
+                        <div class="region-badge safe" id="regionBadge" onclick="Regions.openSelector()">
+                            <span class="region-icon">🏘️</span><span class="region-name">Pueblo</span>
+                            <div style="font-size:.5rem;color:var(--text-dim)">Click para viajar</div>
+                        </div>
+                        <div class="stats-grid">
+                            <div class="stat-item"><span class="stat-label">Armadura</span><span class="stat-value" id="statArmor">0</span></div>
+                            <div class="stat-item"><span class="stat-label">Evasión</span><span class="stat-value" id="statEvasion">0</span></div>
+                            <div class="stat-item"><span class="stat-label">Precisión</span><span class="stat-value" id="statPrecision">0</span></div>
+                            <div class="stat-item"><span class="stat-label">Peso</span><span class="stat-value" id="statWeight">0</span></div>
+                            <div class="stat-item"><span class="stat-label">Velocidad</span><span class="stat-value" id="statSpeed">0</span></div>
+                        </div>
+                        <div class="equip-slot" id="weaponSlot"><div class="equip-icon" id="weaponIcon">⚔️</div><div><div class="equip-name" id="weaponName">---</div><div class="equip-stats" id="weaponStats">---</div></div></div>
+                        <div class="equip-slot" id="armorSlot"><div class="equip-icon" id="armorIcon">🛡️</div><div><div class="equip-name" id="armorName">---</div><div class="equip-stats" id="armorStats">---</div></div></div>
+                        <div class="currency-row"><span><span class="coin-gold">●</span> <span id="goldAmount">0</span> MO</span><span><span class="coin-silver">●</span> <span id="silverAmount">0</span> MP</span></div>
+                    </div>
+                </div>
+                <div class="main-area">
+                    <div class="panel combat-arena hidden" id="combatArena">
+                        <div class="panel-header"><span>⚔️ COMBATE</span><span>Turno <span id="turnCounter">1</span></span></div>
+                        <div class="combat-grid" id="combatGrid"></div>
+                        <div class="combat-actions" id="combatActions"></div>
+                        <div class="combat-log" id="combatLog"></div>
+                    </div>
+                    <div class="panel actions-panel" id="actionsPanel"><div class="panel-header">🎮 Acciones</div><div class="panel-body" id="actionsContainer"></div></div>
+                </div>
+            </div>
+            <div class="game-bottom">
+                <div class="panel chronicles-panel"><div class="panel-header">📖 Crónicas</div><div class="chronicles-content" id="chroniclesContent"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-rules">
+        <div class="rules-container">
+            <div class="rules-header"><h2>📜 Reglas del Juego</h2></div>
+            <div class="rules-grid">
+                <div class="rules-card"><h4>⚔️ Cálculo de Daño</h4>
+                    <div class="rules-highlight"><strong>Fórmula:</strong><br>Daño Final = Daño Base − Armadura<br>(mínimo 0 si armadura ≥ daño)</div>
+                    <p><strong>Ejemplo:</strong> Daño 7 − Armadura 2 = 5 final</p>
+                </div>
+                <div class="rules-card"><h4>⚡ Sistema de Turnos</h4>
+                    <div class="rules-highlight">1. Se calcula iniciativa (Velocidad + D20)<br>2. Actúan en orden de mayor a menor<br>3. Cuando todos actúan → nuevo turno</div>
+                    <p>La velocidad se reduce por el peso del equipo (1 peso = -1 velocidad)</p>
+                </div>
+                <div class="rules-card"><h4>🎲 Tu Ataque</h4>
+                    <div class="rules-highlight">D20 + Precisión ≥ Dificultad enemigo<br>🎯 Crítico (20): Daño ×2<br>💀 Pifia (1): Fallo automático</div>
+                    <p>Dificultad del enemigo aparece como 🎯 en combate</p>
+                </div>
+                <div class="rules-card"><h4>🛡️ Ataque Enemigo</h4>
+                    <div class="rules-highlight">D20 + Evasión ≥ 12 → Esquivas<br>Si no esquivas: Daño − tu Armadura</div>
+                    <p>Defender: +4 a evasión hasta tu próximo turno</p>
+                </div>
+                <div class="rules-card"><h4>🔥 Efectos de Estado</h4>
+                    <div class="rules-highlight">Se aplican al final de cada turno</div>
+                    <p>🩸 <strong>Sangrado:</strong> 1 daño/turno (3 turnos)</p>
+                    <p>☠️ <strong>Veneno:</strong> 2 daño/turno (2 turnos)</p>
+                    <p>🔥 <strong>Fuego:</strong> 1d4 daño/turno (2 turnos)</p>
+                </div>
+                <div class="rules-card"><h4>🗺️ Sistema de Viaje</h4>
+                    <div class="rules-highlight">Las regiones están conectadas por rutas</div>
+                    <p>⚠️ <strong>Peligro:</strong> Basado en tipos de enemigos de la zona</p>
+                    <p>🔒 Completa encuentros para desbloquear nuevas rutas</p>
+                    <p>👣 Viajar consume pasos y puede generar encuentros</p>
+                </div>
+                <div class="rules-card"><h4>💰 Economía</h4>
+                    <div class="rules-highlight">99 Monedas de Plata = 1 Moneda de Oro</div>
+                    <p>🏪 Items comprados: vender al 60%</p>
+                    <p>🎁 Items de loot: vender al 50%</p>
+                </div>
+                <div class="rules-card"><h4>👹 Grupos de Enemigos</h4>
+                    <p>Algunas criaturas aparecen en grupos:</p>
+                    <p>🐺 Manadas (lobos, ratas): 2-4</p>
+                    <p>💀 Patrullas (goblins): 2-3</p>
+                    <p>🐻 Solitarios (trolls, osos): 1</p>
+                </div>
+                <div class="rules-card"><h4>⚖️ Peso del Equipo</h4>
+                    <div class="rules-highlight">Peso total = arma + armadura<br>Velocidad = Base − Peso (mín. 1)</div>
+                    <p>Equipos pesados dan más protección pero actúas más lento</p>
+                </div>
+                <div class="rules-card"><h4>🍖 Sistema de Comida</h4>
+                    <div class="rules-highlight">Máximo: 20 puntos de alimentación</div>
+                    <p>🍞 Cada comida restaura puntos según su valor</p>
+                    <p>⚠️ Con hambre baja: penalizaciones en combate</p>
+                    <p>🍗 Ejemplos: Pan (3), Carne (5), Estofado (8)</p>
+                </div>
+                <div class="rules-card"><h4>💙 Sistema de Maná</h4>
+                    <div class="rules-highlight">Solo para razas mágicas (magos/hechiceros)</div>
+                    <p>✨ Máximo: 20 puntos de maná</p>
+                    <p>🧪 Pociones de maná restauran puntos</p>
+                    <p>🔮 Magos solo pueden usar armas mágicas (bastones, hechizos)</p>
+                    <p>⚔️ Guerreros usan armas físicas (espadas, dagas)</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="tab-content" id="tab-editor">
+        <div class="editor-container">
+            <div class="editor-tabs">
+                <button class="editor-tab active" data-editor="regions">🗺️ Regiones</button>
+                <button class="editor-tab" data-editor="races">👤 Razas</button>
+                <button class="editor-tab" data-editor="weapons">⚔️ Armas</button>
+                <button class="editor-tab" data-editor="armors">🛡️ Armaduras</button>
+                <button class="editor-tab" data-editor="items">🎒 Items</button>
+                <button class="editor-tab" data-editor="enemies">👹 Enemigos</button>
+                <button class="editor-tab" data-editor="pets">🐺 Mascotas</button>
+                <button class="editor-tab" data-editor="npcs">🧔 NPCs</button>
+                <button class="editor-tab" data-editor="spells">✨ Hechizos</button>
+                <button class="editor-tab" data-editor="recipes">🔨 Recetas</button>
+            </div>
+            
+            <div class="editor-section active" id="editor-regions">
+                <h3>🗺️ Regiones</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>ID</label><input type="text" id="region-id"></div>
+                    <div class="form-group"><label>Nombre</label><input type="text" id="region-name"></div>
+                    <div class="form-group"><label>Icono</label><input type="text" id="region-icon" maxlength="2"></div>
+                    <div class="form-group"><label>Tipo</label><select id="region-type"><option value="safe">Segura</option><option value="danger">Peligrosa</option></select></div>
+                    <div class="form-group"><label>Distancia (desde pueblo)</label><input type="number" id="region-distance" min="0" placeholder="0"></div>
+                    <div class="form-group"><label>Encuentros para desbloquear</label><input type="number" id="region-reqEncounters" min="0" placeholder="0"></div>
+                </div>
+                <div class="form-group"><label>Descripción</label><input type="text" id="region-desc"></div>
+                <div class="form-group"><label>🔗 Conecta con (selecciona regiones)</label><div class="multi-select" id="region-connections"></div></div>
+                <div class="form-group"><label>Narrativas (una por línea)</label><textarea id="region-narratives" rows="2"></textarea></div>
+                <div class="form-actions"><button class="btn" onclick="Editor.clear('region')">🆕</button><button class="btn btn-primary" onclick="Editor.saveRegion()">💾</button></div>
+                <div class="items-list" id="regions-list"></div>
+            </div>
+
+            <div class="editor-section" id="editor-races">
+                <h3>👤 Razas</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>ID</label><input type="text" id="race-id"></div>
+                    <div class="form-group"><label>Nombre</label><input type="text" id="race-name"></div>
+                    <div class="form-group"><label>Emoji</label><input type="text" id="race-icon" maxlength="2"></div>
+                    <div class="form-group"><label>Sprite</label><input type="text" id="race-sprite"></div>
+                    <div class="form-group"><label>+HP</label><input type="number" id="race-hp"></div>
+                    <div class="form-group"><label>+Armadura</label><input type="number" id="race-armor"></div>
+                    <div class="form-group"><label>+Velocidad</label><input type="number" id="race-speed"></div>
+                    <div class="form-group"><label>+Precisión</label><input type="number" id="race-precision"></div>
+                    <div class="form-group"><label>+Daño</label><input type="number" id="race-damage"></div>
+                    <div class="form-group"><label>⚔️ Tipo Combate</label><select id="race-combatType">
+                        <option value="warrior">⚔️ Guerrero (solo armas físicas)</option>
+                        <option value="mage">✨ Mago (solo magia/bastones)</option>
+                        <option value="hybrid">🔮 Híbrido (magia + armas)</option>
+                    </select></div>
+                </div>
+                <div class="form-group"><label>Descripción</label><textarea id="race-desc"></textarea></div>
+                <div class="form-actions"><button class="btn" onclick="Editor.clear('race')">🆕</button><button class="btn btn-primary" onclick="Editor.saveRace()">💾</button></div>
+                <div class="items-list" id="races-list"></div>
+            </div>
+
+            <div class="editor-section" id="editor-weapons">
+                <h3>⚔️ Armas</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>ID</label><input type="text" id="weapon-id"></div>
+                    <div class="form-group"><label>Nombre</label><input type="text" id="weapon-name"></div>
+                    <div class="form-group"><label>Daño</label><input type="text" id="weapon-damage" placeholder="1d8"></div>
+                    <div class="form-group"><label>Peso</label><input type="number" id="weapon-weight" placeholder="0"></div>
+                    <div class="form-group"><label>Emoji</label><input type="text" id="weapon-icon" maxlength="2"></div>
+                    <div class="form-group"><label>Sprite</label><input type="text" id="weapon-sprite"></div>
+                    <div class="form-group"><label>Rareza</label><select id="weapon-rarity"><option value="common">Común</option><option value="rare">Raro</option><option value="epic">Épico</option><option value="legendary">Legendario</option></select></div>
+                    <div class="form-group"><label>Valor MP</label><input type="number" id="weapon-value"></div>
+                    <div class="form-group"><label>Tipo</label><select id="weapon-magic">
+                        <option value="false">⚔️ Física (espada, daga, arco)</option>
+                        <option value="true">✨ Mágica (bastón, pergamino, hechizo)</option>
+                    </select></div>
+                    <div class="form-group"><label>+Maná</label><input type="number" id="weapon-manaBonus" placeholder="0"></div>
+                    <div class="form-group"><label>Efecto</label><select id="weapon-effect"><option value="">Ninguno</option><option value="bleed">Sangrado</option><option value="poison">Veneno</option><option value="fire">Fuego</option></select></div>
+                </div>
+                <div class="form-group"><label>Descripción</label><textarea id="weapon-desc"></textarea></div>
+                <div class="form-actions"><button class="btn" onclick="Editor.clear('weapon')">🆕</button><button class="btn btn-primary" onclick="Editor.saveWeapon()">💾</button></div>
+                <div class="items-list" id="weapons-list"></div>
+            </div>
+
+            <div class="editor-section" id="editor-armors">
+                <h3>🛡️ Armaduras</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>ID</label><input type="text" id="armor-id"></div>
+                    <div class="form-group"><label>Nombre</label><input type="text" id="armor-name"></div>
+                    <div class="form-group"><label>Defensa</label><input type="number" id="armor-defense"></div>
+                    <div class="form-group"><label>Peso</label><input type="number" id="armor-weight" placeholder="0"></div>
+                    <div class="form-group"><label>Emoji</label><input type="text" id="armor-icon" maxlength="2"></div>
+                    <div class="form-group"><label>Sprite</label><input type="text" id="armor-sprite"></div>
+                    <div class="form-group"><label>Rareza</label><select id="armor-rarity"><option value="common">Común</option><option value="rare">Raro</option><option value="epic">Épico</option><option value="legendary">Legendario</option></select></div>
+                    <div class="form-group"><label>Valor MP</label><input type="number" id="armor-value"></div>
+                    <div class="form-group"><label>✨ Mágica</label><select id="armor-magic"><option value="false">No</option><option value="true">Sí</option></select></div>
+                    <div class="form-group"><label>+Maná</label><input type="number" id="armor-manaBonus" placeholder="0"></div>
+                </div>
+                <div class="form-group"><label>Descripción</label><textarea id="armor-desc"></textarea></div>
+                <div class="form-actions"><button class="btn" onclick="Editor.clear('armor')">🆕</button><button class="btn btn-primary" onclick="Editor.saveArmor()">💾</button></div>
+                <div class="items-list" id="armors-list"></div>
+            </div>
+
+            <div class="editor-section" id="editor-items">
+                <h3>🎒 Items</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>ID</label><input type="text" id="item-id"></div>
+                    <div class="form-group"><label>Nombre</label><input type="text" id="item-name"></div>
+                    <div class="form-group"><label>Tipo</label><select id="item-type" onchange="Editor.onItemTypeChange()">
+                        <option value="potion">🧪 Poción</option>
+                        <option value="food">🍞 Comida</option>
+                        <option value="antidote">💊 Antídoto</option>
+                        <option value="scroll">📜 Pergamino (enseña hechizo)</option>
+                        <option value="escape">💨 Escape</option>
+                        <option value="backpack">🎒 Mochila</option>
+                        <option value="misc">📦 Otro/Crafteo</option>
+                    </select></div>
+                    <div class="form-group"><label>Emoji</label><input type="text" id="item-icon" maxlength="2"></div>
+                    <div class="form-group"><label>Sprite</label><input type="text" id="item-sprite"></div>
+                    <div class="form-group"><label>Valor MP</label><input type="number" id="item-value"></div>
+                    <div class="form-group"><label>Rareza</label><select id="item-rarity"><option value="common">Común</option><option value="rare">Raro</option><option value="epic">Épico</option><option value="legendary">Legendario</option></select></div>
+                </div>
+                <!-- Campos condicionales según tipo -->
+                <div id="item-type-fields" style="background:var(--bg-dark);padding:.5rem;border-radius:4px;margin-bottom:.5rem">
+                    <div id="item-potion-fields">
+                        <div class="form-grid">
+                            <div class="form-group"><label>Tipo Poción</label><select id="item-potion-type">
+                                <option value="health">❤️ Curación (HP)</option>
+                                <option value="mana">💙 Maná (MP)</option>
+                            </select></div>
+                            <div class="form-group"><label>Cantidad</label><input type="text" id="item-effect" placeholder="1d8 o número"></div>
+                        </div>
+                    </div>
+                    <div id="item-food-fields" style="display:none">
+                        <div class="form-grid">
+                            <div class="form-group"><label>🍖 Alimenta (1-20)</label><input type="number" id="item-food-value" min="1" max="20" placeholder="1-20"></div>
+                        </div>
+                    </div>
+                    <div id="item-scroll-fields" style="display:none">
+                        <div class="form-grid">
+                            <div class="form-group"><label>📜 Enseña Hechizo</label><select id="item-scroll-spell"></select></div>
+                        </div>
+                    </div>
+                    <div id="item-antidote-fields" style="display:none">
+                        <div class="form-grid">
+                            <div class="form-group"><label>Cura efecto</label><select id="item-antidote-cures">
+                                <option value="poison">☠️ Veneno</option>
+                                <option value="bleed">🩸 Sangrado</option>
+                                <option value="fire">🔥 Quemadura</option>
+                                <option value="all">✨ Todos</option>
+                            </select></div>
+                        </div>
+                    </div>
+                    <div id="item-escape-fields" style="display:none">
+                        <div style="font-size:.65rem;color:var(--text-dim)">Items de escape: bombas de humo, pergaminos de teleportación, etc.</div>
+                    </div>
+                    <div id="item-backpack-fields" style="display:none">
+                        <div class="form-grid">
+                            <div class="form-group"><label>🎒 Espacios extra</label><input type="number" id="item-backpack-slots" min="1" max="20" placeholder="5"></div>
+                        </div>
+                    </div>
+                    <div id="item-misc-fields" style="display:none">
+                        <div style="font-size:.65rem;color:var(--text-dim)">Items misceláneos para crafteo u otros usos.</div>
+                    </div>
+                </div>
+                <div class="form-group"><label>Descripción</label><textarea id="item-desc"></textarea></div>
+                <div class="form-actions"><button class="btn" onclick="Editor.clear('item')">🆕</button><button class="btn btn-primary" onclick="Editor.saveItem()">💾</button></div>
+                <div class="items-list" id="items-list"></div>
+            </div>
+
+            <div class="editor-section" id="editor-enemies">
+                <h3>👹 Enemigos</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>ID</label><input type="text" id="enemy-id"></div>
+                    <div class="form-group"><label>Nombre</label><input type="text" id="enemy-name"></div>
+                    <div class="form-group"><label>Salud</label><input type="number" id="enemy-health"></div>
+                    <div class="form-group"><label>Daño Base</label><input type="text" id="enemy-damage" placeholder="1d6"></div>
+                    <div class="form-group"><label>Dificultad</label><input type="number" id="enemy-difficulty" min="1" max="20"></div>
+                    <div class="form-group"><label>Armadura Base</label><input type="number" id="enemy-armor"></div>
+                    <div class="form-group"><label>⚡Velocidad</label><input type="number" id="enemy-speed" placeholder="10"></div>
+                    <div class="form-group"><label>Emoji</label><input type="text" id="enemy-icon" maxlength="2"></div>
+                    <div class="form-group"><label>Sprite</label><input type="text" id="enemy-sprite"></div>
+                    <div class="form-group"><label>Efecto</label><select id="enemy-effect"><option value="">Ninguno</option><option value="bleed">Sangrado</option><option value="poison">Veneno</option><option value="fire">Fuego</option></select></div>
+                    <div class="form-group"><label>Loot Min</label><input type="number" id="enemy-loot-min"></div>
+                    <div class="form-group"><label>Loot Max</label><input type="number" id="enemy-loot-max"></div>
+                </div>
+                <div style="background:var(--bg-dark);padding:.4rem;border-radius:4px;margin-bottom:.5rem">
+                    <div style="font-size:.65rem;color:var(--gold);margin-bottom:.3rem">⚔️ Equipo y Tipo</div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>Arma</label><select id="enemy-weaponId"><option value="">Sin arma</option></select></div>
+                        <div class="form-group"><label>Armadura</label><select id="enemy-armorId"><option value="">Sin armadura</option></select></div>
+                        <div class="form-group"><label>✨ Usa Maná</label><select id="enemy-usesMana">
+                            <option value="false">No (criatura física)</option>
+                            <option value="true">Sí (mago/hechicero)</option>
+                        </select></div>
+                    </div>
+                </div>
+                <div style="background:var(--bg-dark);padding:.4rem;border-radius:4px;margin-bottom:.5rem">
+                    <div style="font-size:.65rem;color:var(--gold);margin-bottom:.3rem">👥 Configuración de Grupo</div>
+                    <div class="form-grid">
+                        <div class="form-group"><label>¿Grupo?</label><select id="enemy-canGroup"><option value="false">No</option><option value="true">Sí</option></select></div>
+                        <div class="form-group"><label>Mín</label><input type="number" id="enemy-groupMin" placeholder="2" min="2"></div>
+                        <div class="form-group"><label>Máx</label><input type="number" id="enemy-groupMax" placeholder="4" min="2"></div>
+                        <div class="form-group"><label>%Prob</label><input type="number" id="enemy-groupChance" placeholder="30" min="0" max="100"></div>
+                    </div>
+                </div>
+                <div class="form-group"><label>Narrativa</label><textarea id="enemy-desc"></textarea></div>
+                <div class="form-group"><label>Regiones</label><div class="multi-select" id="enemy-regions"></div></div>
+                <div class="form-group">
+                    <label>Drops (ítem + % probabilidad)</label>
+                    <div style="display:flex;gap:.3rem;margin-bottom:.3rem">
+                        <input type="text" id="enemy-drop-search" placeholder="🔍 Buscar item..." style="flex:1" oninput="Editor.filterDropItems(this.value)">
+                        <select id="enemy-drop-select" style="flex:1"></select>
+                        <input type="number" id="enemy-drop-chance" placeholder="%" min="1" max="100" value="20" style="width:60px">
+                        <button class="btn btn-sm" onclick="Editor.addDrop()">+</button>
+                    </div>
+                    <div id="enemy-drops-list" style="display:flex;flex-wrap:wrap;gap:.3rem;min-height:30px;padding:.3rem;background:var(--bg-dark);border-radius:4px"></div>
+                </div>
+                <div class="form-actions"><button class="btn" onclick="Editor.clear('enemy')">🆕</button><button class="btn btn-primary" onclick="Editor.saveEnemy()">💾</button></div>
+                <div class="items-list" id="enemies-list"></div>
+            </div>
+
+            <div class="editor-section" id="editor-pets">
+                <h3>🐺 Mascotas</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>ID</label><input type="text" id="pet-id"></div>
+                    <div class="form-group"><label>Nombre</label><input type="text" id="pet-name"></div>
+                    <div class="form-group"><label>Salud</label><input type="number" id="pet-health"></div>
+                    <div class="form-group"><label>Daño</label><input type="text" id="pet-damage"></div>
+                    <div class="form-group"><label>⚡Velocidad</label><input type="number" id="pet-speed" placeholder="12"></div>
+                    <div class="form-group"><label>Dado domesticar</label><input type="number" id="pet-difficulty"></div>
+                    <div class="form-group"><label>Emoji</label><input type="text" id="pet-icon" maxlength="2"></div>
+                    <div class="form-group"><label>Sprite</label><input type="text" id="pet-sprite"></div>
+                </div>
+                <div class="form-group"><label>Regiones</label><div class="multi-select" id="pet-regions"></div></div>
+                <div class="form-group"><label>Descripción</label><textarea id="pet-desc"></textarea></div>
+                <div class="form-actions"><button class="btn" onclick="Editor.clear('pet')">🆕</button><button class="btn btn-primary" onclick="Editor.savePet()">💾</button></div>
+                <div class="items-list" id="pets-list"></div>
+            </div>
+
+            <div class="editor-section" id="editor-npcs">
+                <h3>🧔 NPCs</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>ID</label><input type="text" id="npc-id"></div>
+                    <div class="form-group"><label>Nombre</label><input type="text" id="npc-name"></div>
+                    <div class="form-group"><label>Rol</label><select id="npc-role"><option value="merchant">Comerciante</option><option value="blacksmith">Herrero</option><option value="alchemist">Alquimista</option><option value="innkeeper">Tabernero</option><option value="healer">Curandero</option><option value="guard">Guardia</option><option value="villager">Aldeano</option></select></div>
+                    <div class="form-group"><label>Emoji</label><input type="text" id="npc-icon" maxlength="2"></div>
+                    <div class="form-group"><label>Sprite</label><input type="text" id="npc-sprite"></div>
+                    <div class="form-group"><label>Región</label><select id="npc-region"></select></div>
+                </div>
+                <div class="form-group"><label>Diálogo</label><textarea id="npc-dialogue"></textarea></div>
+                <div class="form-group"><label>Vende</label><div class="multi-select" id="npc-sells"></div></div>
+                <div class="form-actions"><button class="btn" onclick="Editor.clear('npc')">🆕</button><button class="btn btn-primary" onclick="Editor.saveNpc()">💾</button></div>
+                <div class="items-list" id="npcs-list"></div>
+            </div>
+
+            <div class="editor-section" id="editor-spells">
+                <h3>✨ Hechizos</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>ID</label><input type="text" id="spell-id"></div>
+                    <div class="form-group"><label>Nombre</label><input type="text" id="spell-name"></div>
+                    <div class="form-group"><label>Daño</label><input type="text" id="spell-damage" placeholder="2d5"></div>
+                    <div class="form-group"><label>Costo Maná</label><input type="number" id="spell-cost" placeholder="2"></div>
+                    <div class="form-group"><label>Emoji</label><input type="text" id="spell-icon" maxlength="2" placeholder="⚡"></div>
+                    <div class="form-group"><label>Efecto</label><select id="spell-effect"><option value="">Ninguno</option><option value="fire">🔥 Fuego</option><option value="poison">☠️ Veneno</option><option value="bleed">🩸 Sangrado</option></select></div>
+                </div>
+                <div class="form-group"><label>Descripción</label><textarea id="spell-desc"></textarea></div>
+                <div class="form-actions"><button class="btn" onclick="Editor.clear('spell')">🆕</button><button class="btn btn-primary" onclick="Editor.saveSpell()">💾</button></div>
+                <div class="items-list" id="spells-list"></div>
+            </div>
+
+            <div class="editor-section" id="editor-recipes">
+                <h3>🔨 Recetas de Crafteo</h3>
+                <div class="form-grid">
+                    <div class="form-group"><label>ID</label><input type="text" id="recipe-id"></div>
+                    <div class="form-group"><label>Nombre</label><input type="text" id="recipe-name"></div>
+                    <div class="form-group"><label>Emoji</label><input type="text" id="recipe-icon" maxlength="2"></div>
+                    <div class="form-group"><label>Resultado</label><input type="text" id="recipe-result-search" placeholder="🔍 Buscar resultado..." oninput="Editor.filterResultItems(this.value)"><select id="recipe-result"></select></div>
+                </div>
+                <div class="form-group"><label>Descripción</label><textarea id="recipe-desc"></textarea></div>
+                <div class="form-group">
+                    <label>Ingredientes (puede repetir)</label>
+                    <div style="display:flex;gap:.3rem;margin-bottom:.3rem">
+                        <input type="text" id="recipe-ingredient-search" placeholder="🔍 Buscar item..." style="flex:1" oninput="Editor.filterIngredientItems(this.value)">
+                        <select id="recipe-ingredient-select" style="flex:1"></select>
+                        <input type="number" id="recipe-ingredient-qty" value="1" min="1" max="99" style="width:50px" placeholder="Cant">
+                        <button class="btn btn-sm" onclick="Editor.addIngredient()">+ Agregar</button>
+                    </div>
+                    <div id="recipe-ingredients-list" style="display:flex;flex-wrap:wrap;gap:.3rem;min-height:30px;padding:.3rem;background:var(--bg-dark);border-radius:4px"></div>
+                </div>
+                <div class="form-actions"><button class="btn" onclick="Editor.clear('recipe')">🆕</button><button class="btn btn-primary" onclick="Editor.saveRecipe()">💾</button></div>
+                <div class="items-list" id="recipes-list"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div class="modal-overlay" id="inventoryModal"><div class="modal modal-lg"><div class="modal-header"><span class="modal-title">🎒 Inventario</span><button class="modal-close" data-close="inventoryModal">&times;</button></div><div class="inventory-info" id="inventoryInfo">0/10</div><div class="inventory-grid" id="inventoryGrid"></div></div></div>
+    <div class="modal-overlay" id="itemDetailModal"><div class="modal"><div class="modal-header"><span class="modal-title">Detalles</span><button class="modal-close" data-close="itemDetailModal">&times;</button></div><div class="modal-body"><div class="item-detail"><div class="item-detail-icon" id="detailIcon">📦</div><div class="item-detail-name" id="detailName">Item</div><div class="item-detail-type" id="detailType">Tipo</div><div class="item-detail-desc" id="detailDesc">...</div><div class="item-stats-grid" id="detailStats"></div><div class="item-actions" id="detailActions"></div></div></div></div></div>
+    <div class="modal-overlay" id="regionModal"><div class="modal modal-lg"><div class="modal-header"><span class="modal-title">🗺️ Mapa de Viaje</span><button class="modal-close" data-close="regionModal">&times;</button></div><div class="modal-body"><div class="travel-map" id="travelMap"></div></div></div></div>
+    <div class="modal-overlay" id="townModal"><div class="modal"><div class="modal-header"><span class="modal-title" id="townTitle">🏘️</span><button class="modal-close" data-close="townModal">&times;</button></div><div class="modal-body" id="townContent"></div></div></div>
+    <div class="modal-overlay" id="shopModal"><div class="modal modal-lg"><div class="modal-header"><span class="modal-title" id="shopTitle">🏪</span><button class="modal-close" data-close="shopModal">&times;</button></div><div class="modal-body" id="shopContent"></div></div></div>
+    <div class="modal-overlay" id="craftModal"><div class="modal modal-lg"><div class="modal-header"><span class="modal-title">🔨 Crafteo</span><button class="modal-close" data-close="craftModal">&times;</button></div><div class="modal-body" id="craftContent"></div></div></div>
+    <div class="dice-overlay" id="diceOverlay"><div class="dice-display"><div class="dice-icon">🎲</div><div class="dice-label" id="diceLabel">D20</div><div class="dice-result" id="diceResult">--</div></div></div>
+    <div class="toast-container" id="toastContainer"></div>
+
+<script>
+const $=s=>document.querySelector(s),$$=s=>document.querySelectorAll(s);
+const roll=d=>{if(typeof d==='number')return d;const m=String(d).match(/(\d+)?d(\d+)([+-]\d+)?/i);if(!m)return parseInt(d)||0;let t=parseInt(m[3])||0;for(let i=0;i<(parseInt(m[1])||1);i++)t+=Math.floor(Math.random()*parseInt(m[2]))+1;return t};
+const rollDetailed=d=>{if(typeof d==='number')return{total:d,rolls:[d],dice:d};const m=String(d).match(/(\d+)?d(\d+)([+-]\d+)?/i);if(!m)return{total:parseInt(d)||0,rolls:[],dice:d};const count=parseInt(m[1])||1,sides=parseInt(m[2]),mod=parseInt(m[3])||0;const rolls=[];for(let i=0;i<count;i++)rolls.push(Math.floor(Math.random()*sides)+1);return{total:rolls.reduce((a,b)=>a+b,0)+mod,rolls,dice:d,mod}};
+const d20=()=>Math.floor(Math.random()*20)+1,dX=x=>Math.floor(Math.random()*x)+1,pick=a=>a.length?a[Math.floor(Math.random()*a.length)]:null;
+const hpClass=p=>p>60?'':p>30?'medium':p>15?'low':'critical';
+const effectName=type=>{const names={bleed:'Sangrado',poison:'Veneno',fire:'Fuego',ice:'Hielo',frozen:'Congelado',fury:'Furia',shield:'Escudo',regen:'Regenera'};return names[type]||type};
+const sprite=i=>i?.sprite?`<img src="${i.sprite}">`:(i?.icon||'📦');
+const genId=p=>`${p}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
+const toast=(m,t='info')=>{const e=document.createElement('div');e.className=`toast ${t}`;e.textContent=m;$('#toastContainer').appendChild(e);setTimeout(()=>e.remove(),3000)};
+const openModal=id=>$(`#${id}`).classList.add('active'),closeModal=id=>$(`#${id}`).classList.remove('active'),closeAllModals=()=>$$('.modal-overlay').forEach(m=>m.classList.remove('active'));
+const showDice=async(r,s=20,c=false)=>{$('#diceLabel').textContent=`D${s}`;$('#diceResult').textContent=r;$('#diceResult').classList.toggle('crit',c);$('#diceOverlay').classList.add('active');await new Promise(r=>setTimeout(r,450));$('#diceOverlay').classList.remove('active')};
+const scrollChron=()=>{const c=$('#chroniclesContent');c.scrollTop=c.scrollHeight};
+const delay=ms=>new Promise(r=>setTimeout(r,ms));
+
+const Data={
+    regions:[
+        {id:'pueblo',name:'Pueblo Inicio',icon:'🏘️',type:'safe',desc:'Pueblo tranquilo.',distance:0,reqEncounters:0,connections:['bosque','camino'],narratives:['El sol brilla.','Aldeanos pasean.']},
+        {id:'camino',name:'Camino Real',icon:'🛤️',type:'danger',desc:'Ruta principal entre regiones.',distance:3,reqEncounters:0,connections:['pueblo','bosque','mazmorra'],narratives:['El camino se extiende.','Huellas en el polvo.']},
+        {id:'bosque',name:'Bosque Sombrío',icon:'🌲',type:'danger',desc:'Bosque lleno de criaturas.',distance:4,reqEncounters:0,connections:['pueblo','camino','pantano','montana'],narratives:['Los árboles se alzan.','Senderos oscuros.']},
+        {id:'mazmorra',name:'Mazmorras',icon:'🏚️',type:'danger',desc:'Ruinas subterráneas.',distance:5,reqEncounters:3,connections:['camino'],narratives:['Eco de pasos.','Aire húmedo.']},
+        {id:'montana',name:'Montañas',icon:'⛰️',type:'danger',desc:'Cumbres heladas.',distance:6,reqEncounters:5,connections:['bosque'],narratives:['Viento aullador.','Caminos peligrosos.']},
+        {id:'pantano',name:'Pantano',icon:'🌿',type:'danger',desc:'Aguas ponzoñosas.',distance:5,reqEncounters:4,connections:['bosque','mar'],narratives:['Gases burbujeantes.','Niebla espesa.']},
+        {id:'mar',name:'Alta Mar',icon:'🌊',type:'danger',desc:'Aguas profundas.',distance:8,reqEncounters:8,connections:['pantano'],narratives:['Olas mecen.','Algo bajo el agua.']},
+        {id:'desierto',name:'Desierto',icon:'🏜️',type:'danger',desc:'Dunas ardientes.',distance:10,reqEncounters:10,connections:['montana'],narratives:['Calor sofocante.','Arena movediza.']}
+    ],
+    races:[
+        {id:'human',name:'Humano',icon:'🧑',bonus:{health:2,speed:10},combatType:'warrior'},
+        {id:'elf',name:'Elfo',icon:'🧝',bonus:{precision:2,speed:14},combatType:'hybrid'},
+        {id:'dwarf',name:'Enano',icon:'🧔',bonus:{armor:2,speed:8},combatType:'warrior'},
+        {id:'orc',name:'Orco',icon:'👹',bonus:{damage:2,speed:10},combatType:'warrior'},
+        {id:'halfling',name:'Mediano',icon:'🧒',bonus:{speed:16,precision:1},combatType:'mage'},
+        {id:'wizard',name:'Mago',icon:'🧙',bonus:{speed:10},combatType:'mage'}
+    ],
+    weapons:[
+        {id:'w1',name:'Daga',damage:'1d4',icon:'🗡️',value:10,rarity:'common',weight:1,magic:false},
+        {id:'w2',name:'Espada',damage:'1d6',icon:'⚔️',value:20,rarity:'common',weight:2,magic:false},
+        {id:'w3',name:'Hacha',damage:'1d6',icon:'🪓',value:20,rarity:'common',weight:3,magic:false},
+        {id:'w4',name:'Bastón',damage:'1d4',icon:'🪄',value:10,rarity:'common',weight:1,magic:true,manaBonus:10},
+        {id:'w5',name:'Espada Larga',damage:'1d8',icon:'⚔️',value:50,rarity:'rare',weight:4,magic:false},
+        {id:'w6',name:'Bastón Arcano',damage:'1d6',icon:'🔮',value:40,rarity:'rare',weight:1,magic:true,manaBonus:20}
+    ],
+    armors:[{id:'a1',name:'Cuero',defense:1,icon:'🦺',value:15,rarity:'common',weight:1},{id:'a2',name:'Cuero reforzado',defense:2,icon:'🦺',value:30,rarity:'common',weight:2},{id:'a3',name:'Cota malla',defense:3,icon:'⛓️',value:75,rarity:'rare',weight:4},{id:'a4',name:'Túnica',defense:0,icon:'👕',value:5,rarity:'common',weight:0},{id:'a5',name:'Placas',defense:5,icon:'🛡️',value:150,rarity:'epic',weight:6}],
+    items:[{id:'i1',name:'Poción menor',type:'potion',effect:'1d8',icon:'🧪',value:10,rarity:'common'},{id:'i2',name:'Antídoto',type:'antidote',icon:'💊',value:15,rarity:'common'},{id:'i3',name:'Bomba humo',type:'escape',icon:'💨',value:25,rarity:'common'},{id:'i4',name:'Carne',type:'food',effect:'1d4',icon:'🥩',value:5,rarity:'common'},{id:'i5',name:'Poción mayor',type:'potion',effect:'2d8',icon:'🧪',value:35,rarity:'rare'}],
+    enemies:[
+        {id:'e1',name:'Rata',health:8,damage:'1d4',difficulty:6,armor:0,speed:12,icon:'🐀',loot:[5,10],drops:['i1'],regions:['mazmorra','camino'],canGroup:true,groupMin:2,groupMax:5,groupChance:50,desc:'Ratas gigantes.'},
+        {id:'e2',name:'Goblin',health:12,damage:'1d6',difficulty:8,armor:0,speed:11,icon:'👺',loot:[8,15],drops:['i1','w1'],regions:['bosque','mazmorra','camino'],canGroup:true,groupMin:2,groupMax:4,groupChance:35,desc:'Goblins hostiles.',weaponId:'w1'},
+        {id:'e3',name:'Esqueleto',health:15,damage:'1d6',difficulty:10,armor:1,speed:8,icon:'💀',loot:[10,25],drops:['i1'],regions:['mazmorra'],canGroup:true,groupMin:2,groupMax:3,groupChance:30,desc:'Huesos reanimados.',weaponId:'w2'},
+        {id:'e4',name:'Orco',health:30,damage:'1d8',difficulty:12,armor:2,speed:9,icon:'👹',loot:[20,40],drops:['w2'],regions:['bosque','montana'],canGroup:false,desc:'Orco guerrero.',weaponId:'w3',armorId:'a2'},
+        {id:'e5',name:'Troll',health:45,damage:'2d6',difficulty:14,armor:3,speed:7,icon:'🧌',loot:[40,80],drops:['a2'],regions:['pantano'],canGroup:false,desc:'Troll del pantano.'},
+        {id:'e6',name:'Sirena',health:25,damage:'1d8',difficulty:12,armor:0,speed:13,icon:'🧜‍♀️',loot:[30,60],drops:['i5'],regions:['mar'],canGroup:false,effect:'poison',desc:'Sirena letal.'},
+        {id:'e7',name:'Kraken',health:50,damage:'2d8',difficulty:15,armor:3,speed:6,icon:'🦑',loot:[60,120],regions:['mar'],canGroup:false,desc:'Tentáculos emergen.'},
+        {id:'e8',name:'Escorpión',health:20,damage:'1d6',difficulty:10,armor:2,speed:10,icon:'🦂',loot:[15,30],drops:['i2'],regions:['desierto'],canGroup:true,groupMin:2,groupMax:3,groupChance:25,effect:'poison',desc:'Escorpión venenoso.'},
+        {id:'e9',name:'Lobo',health:14,damage:'1d6',difficulty:9,armor:0,speed:14,icon:'🐺',loot:[8,16],drops:['i4'],regions:['bosque','montana','camino'],canGroup:true,groupMin:3,groupMax:6,groupChance:60,desc:'Manada de lobos.'},
+        {id:'e10',name:'Yeti',health:40,damage:'2d6',difficulty:14,armor:2,speed:10,icon:'❄️',loot:[40,80],drops:['a3'],regions:['montana'],canGroup:false,desc:'Yeti furioso.'},
+        {id:'e11',name:'Bandido',health:18,damage:'1d6',difficulty:9,armor:1,speed:11,icon:'🥷',loot:[15,35],drops:['w1','i1'],regions:['camino'],canGroup:true,groupMin:2,groupMax:4,groupChance:40,desc:'Bandidos del camino.',weaponId:'w1',armorId:'a1'}
+    ],
+    recipes:[
+        {id:'r1',name:'Poción Potente',result:'i5',ingredients:['i1','i1'],icon:'🧪',desc:'Combina 2 pociones menores.'},
+        {id:'r2',name:'Espada Mejorada',result:'w5',ingredients:['w2','i1'],icon:'⚔️',desc:'Mejora una espada con poción.'},
+        {id:'r3',name:'Armadura Reforzada',result:'a2',ingredients:['a1','i4'],icon:'🦺',desc:'Refuerza cuero con materiales.'}
+    ],
+    spells:[
+        {id:'sp1',name:'Chispa',damage:'2d5',cost:2,icon:'⚡',effect:null,desc:'Descarga eléctrica básica.'},
+        {id:'sp2',name:'Bola de Fuego',damage:'2d8',cost:5,icon:'🔥',effect:'fire',desc:'Esfera de fuego ardiente.'},
+        {id:'sp3',name:'Rayo de Hielo',damage:'1d10',cost:4,icon:'❄️',effect:null,desc:'Frío penetrante.'},
+        {id:'sp4',name:'Veneno',damage:'1d6',cost:3,icon:'☠️',effect:'poison',desc:'Nube tóxica.'}
+    ],
+    pluginSprites:{},
+    pets:[{id:'p1',name:'Lobo',health:20,damage:'1d6',speed:14,difficulty:24,icon:'🐺',regions:['bosque','montana']},{id:'p2',name:'Oso',health:35,damage:'1d8',speed:10,difficulty:30,icon:'🐻',regions:['bosque','montana']},{id:'p3',name:'Águila',health:15,damage:'1d4',speed:18,difficulty:24,icon:'🦅',regions:['montana']}],
+    npcs:[{id:'n1',name:'Grimbold',role:'blacksmith',icon:'🧔',region:'pueblo',dialogue:'¡Mis armas son las mejores!',sells:['w1','w2','w3','w5']},{id:'n2',name:'Elara',role:'alchemist',icon:'🧙‍♀️',region:'pueblo',dialogue:'Pociones de calidad.',sells:['i1','i2','i5']},{id:'n3',name:'Tobias',role:'innkeeper',icon:'🧑‍🍳',region:'pueblo',dialogue:'¡Siéntate, amigo!',sells:['i4']},{id:'n4',name:'Clara',role:'healer',icon:'👩‍⚕️',region:'pueblo',dialogue:'Puedo curarte por 10 MP.',sells:[]}],
+    traps:[{name:'Púas',damage:'1d6',effect:'bleed',detectDiff:10,dodgeDiff:12},{name:'Dardo',damage:'1d4',effect:'poison',detectDiff:12,dodgeDiff:10},{name:'Foso',damage:'2d6',detectDiff:8,dodgeDiff:14}],
+    find(t,id){return this[t]?.find(x=>x.id===id)},
+    findItem(id){return this.find('weapons',id)||this.find('armors',id)||this.find('items',id)},
+    findSpell(id){return this.find('spells',id)},
+    getRegion(id){return this.regions.find(r=>r.id===id)||this.regions[0]},
+    getEnemiesForRegion(rid){return this.enemies.filter(e=>(e.regions||[]).includes(rid))},
+    getPetsForRegion(rid){return this.pets.filter(p=>!p.regions||p.regions.length===0||(p.regions||[]).includes(rid))},
+    getNpcsForRegion(rid){return this.npcs.filter(n=>n.region===rid)},
+    getConnectedRegions(rid){const r=this.getRegion(rid);return(r.connections||[]).map(c=>this.getRegion(c)).filter(x=>x)},
+    getMagicWeapons(){return this.weapons.filter(w=>w.magic)},
+    getPhysicalWeapons(){return this.weapons.filter(w=>!w.magic)},
+    save(){
+        // Filtrar items del plugin antes de guardar (IDs que empiezan con 'plg_')
+        const filterPlugin = arr => (arr||[]).filter(x => !x.id || !x.id.toString().startsWith('plg_'));
+        const d={
+            regions:filterPlugin(this.regions),
+            races:this.races,
+            weapons:filterPlugin(this.weapons),
+            armors:filterPlugin(this.armors),
+            items:filterPlugin(this.items),
+            enemies:filterPlugin(this.enemies),
+            pets:filterPlugin(this.pets),
+            npcs:this.npcs,
+            recipes:this.recipes,
+            spells:filterPlugin(this.spells),
+            pluginSprites:this.pluginSprites
+        };
+        localStorage.setItem('rpg_data',JSON.stringify(d));
+        if(FB.db&&FB.ok)FB.db.ref('gameData').set(d)
+    },
+    load(){const s=localStorage.getItem('rpg_data');if(s)try{const d=JSON.parse(s);Object.keys(d).forEach(k=>{if(this[k]!==undefined)this[k]=d[k]});if(!this.pluginSprites)this.pluginSprites={}}catch(e){}}
+};
+
+let domReady=false;
+const clearAll=()=>{localStorage.clear();try{firebase.auth().signOut()}catch(e){}location.reload()};
+
+const Auth={
+    user:null,
+    showRegister(){$('#loginForm').classList.add('hidden');$('#registerForm').classList.remove('hidden')},
+    showLogin(){$('#registerForm').classList.add('hidden');$('#loginForm').classList.remove('hidden')},
+    async login(){
+        const email=$('#authEmail').value.trim(),pass=$('#authPass').value;
+        const remember=$('#rememberMe').checked;
+        if(!email||!pass){toast('Completa todos los campos','error');return}
+        try{
+            // Configurar persistencia según preferencia
+            const persistence=remember?firebase.auth.Auth.Persistence.LOCAL:firebase.auth.Auth.Persistence.SESSION;
+            await firebase.auth().setPersistence(persistence);
+            localStorage.setItem('rpg_remember',remember?'1':'0');
+            const r=await firebase.auth().signInWithEmailAndPassword(email,pass);
+            this.user=r.user;this.onAuth();
+        }catch(e){toast(e.message,'error')}
+    },
+    async register(){
+        const email=$('#regEmail').value.trim(),pass=$('#regPass').value;
+        if(!email||!pass){toast('Completa todos los campos','error');return}
+        if(pass.length<6){toast('La contraseña debe tener al menos 6 caracteres','error');return}
+        try{
+            const r=await firebase.auth().createUserWithEmailAndPassword(email,pass);
+            this.user=r.user;this.onAuth();
+        }catch(e){toast(e.message,'error')}
+    },
+    guest(){this.user={guest:true,email:'Invitado'};this.onAuth()},
+    onAuth(){
+        const doInit=()=>{
+            $('#authScreen').classList.add('hidden');
+            $('#authScreen').style.display='none';
+            $('#userInfo').innerHTML=`<span>👤 ${(this.user?.email||'').split('@')[0]||'Invitado'}</span><button class="logout-btn" onclick="Auth.logout()">Salir</button>`;
+            Game.init();
+        };
+        if(domReady){doInit()}else{document.addEventListener('DOMContentLoaded',doInit)}
+    },
+    logout(){
+        this.user=null;
+        G.p=null;G.combat=false;G.enemies=[];G.traveling=null;
+        localStorage.removeItem('rpg_save');
+        localStorage.removeItem('rpg_remember');
+        try{firebase.auth().signOut()}catch(e){}
+        closeAllModals();
+        $('#authScreen').classList.remove('hidden');
+        $('#authScreen').style.display='';
+        $('#charCreate').classList.add('hidden');
+        $('#charCreate').style.display='none';
+        $('#combatArena').classList.add('hidden');
+        $('#userInfo').innerHTML='';
+        Story.clear();
+        // Reset input fields
+        $('#authEmail').value='';
+        $('#authPass').value='';
+        $('#regEmail').value='';
+        $('#regPass').value='';
+        $('#heroName').value='';
+        $('#rememberMe').checked=false;
+        // Show login form
+        $('#loginForm').classList.remove('hidden');
+        $('#registerForm').classList.add('hidden');
+    }
+};
+
+const FB={db:null,ok:false,init(){
+    try{
+        firebase.initializeApp({apiKey:"AIzaSyAV4eSg9QjyE08zwtFsvjAomuMYVcNik9k",databaseURL:"https://rpggo-756a7-default-rtdb.firebaseio.com",projectId:"rpggo-756a7",authDomain:"rpggo-756a7.firebaseapp.com"});
+        this.db=firebase.database();
+        this.db.ref('.info/connected').on('value',s=>{
+            this.ok=s.val()===true;
+            $('#fbStatus').classList.toggle('connected',this.ok);
+            $('#fbStatusText').textContent=this.ok?'✓':'✗';
+            if(this.ok)this.load();
+        });
+        firebase.auth().onAuthStateChanged(u=>{
+            const shouldRemember=localStorage.getItem('rpg_remember')==='1';
+            if(u&&shouldRemember){
+                // Solo auto-login si el usuario marcó "Recordar sesión"
+                u.getIdToken(true).then(()=>{Auth.user=u;Auth.onAuth()}).catch(e=>{
+                    Auth.user=null;
+                    firebase.auth().signOut().then(()=>{
+                        $('#authScreen').classList.remove('hidden');
+                        $('#authScreen').style.display='flex';
+                    });
+                });
+            }else{
+                // No recordar: cerrar sesión existente y mostrar login
+                if(u&&!shouldRemember){
+                    firebase.auth().signOut();
+                }
+                if(!Auth.user){
+                    $('#authScreen').classList.remove('hidden');
+                    $('#authScreen').style.display='flex';
+                }
+            }
+        });
+    }catch(e){console.error('Firebase init:',e)}
+},
+load(){
+    if(!this.db)return;
+    this.db.ref('gameData').once('value').then(s=>{
+        const d=s.val();
+        if(d){
+            console.log('Firebase data loaded:',Object.keys(d));
+            Object.keys(d).forEach(k=>{if(Data[k])Data[k]=d[k]});
+            // Cargar plugins DESPUÉS de Firebase
+            if(typeof loadPluginItems === 'function') loadPluginItems();
+            Editor.renderAll();
+        }
+    }).catch(e=>console.error('Firebase load error:',e));
+}};
+
+let G={p:null,combat:false,enemies:[],turn:0,region:null,item:null,turnOrder:[],currentActor:0,regionProgress:{},traveling:null};
+
+const Story={add(t,c=''){const e=document.createElement('div');e.className=`story-entry ${c?'story-'+c:''}`;e.innerHTML=t;$('#chroniclesContent').appendChild(e);setTimeout(scrollChron,50)},clear(){$('#chroniclesContent').innerHTML=''}};
+
+// ==================== REGIONS WITH TRAVEL SYSTEM ====================
+const Regions={
+    openSelector(){
+        if(!G.region){toast('No hay región','error');return}
+        if(G.combat){toast('No en combate','error');return}
+        const map=$('#travelMap');
+        const current=G.region;
+        const progress=G.regionProgress[current.id]||{encounters:0};
+        
+        // Current location
+        let h=`<div class="travel-current">
+            <div class="travel-current-icon">${current.icon}</div>
+            <div class="travel-current-name">${current.name}</div>
+            <div class="travel-current-progress">📍 Ubicación actual • ${progress.encounters} encuentros completados</div>
+        </div>`;
+        
+        // Available routes
+        h+=`<div style="font-family:'Cinzel',serif;color:var(--gold);font-size:.8rem;margin-bottom:.3rem">🛤️ Rutas disponibles:</div>`;
+        h+=`<div class="travel-routes">`;
+        
+        const connected=Data.getConnectedRegions(current.id);
+        connected.forEach(dest=>{
+            const destProgress=G.regionProgress[dest.id]||{encounters:0,unlocked:dest.reqEncounters===0};
+            const isUnlocked=dest.reqEncounters===0||progress.encounters>=dest.reqEncounters;
+            const steps=Math.abs(dest.distance-current.distance)+1;
+            
+            // Calcular nivel de peligro basado en enemigos de la zona
+            let dangerLevel='';
+            let enemyCount=0;
+            let enemyInfo='';
+            if(dest.type==='danger'){
+                const enemies=Data.getEnemiesForRegion(dest.id);
+                enemyCount=enemies.length;
+                const avgDanger=enemies.length>0?Math.round(enemies.reduce((s,e)=>{
+                    const baseDmg=e.damage?parseInt(e.damage.split('d')[1]||4):4;
+                    return s+(e.health||10)+baseDmg;
+                },0)/enemies.length):10;
+                if(avgDanger<=12)dangerLevel='<span style="color:#4a4">Bajo</span>';
+                else if(avgDanger<=18)dangerLevel='<span style="color:#fa4">Medio</span>';
+                else if(avgDanger<=25)dangerLevel='<span style="color:#f64">Alto</span>';
+                else dangerLevel='<span style="color:#f22">Extremo</span>';
+                enemyInfo=`<div style="font-size:.55rem;display:flex;gap:.5rem;flex-wrap:wrap"><span>👹 ${enemyCount} tipo${enemyCount!==1?'s':''}</span><span>⚠️ ${dangerLevel}</span></div>`;
+            }
+            
+            h+=`<div class="travel-route ${isUnlocked?'':'locked'}" onclick="${isUnlocked?`Regions.startTravel('${dest.id}')`:''}">
+                <div class="travel-route-icon">${dest.icon}</div>
+                <div class="travel-route-info">
+                    <div class="travel-route-name">${dest.name}</div>
+                    <div class="travel-route-desc">${dest.desc}</div>
+                    ${!isUnlocked?`<div class="travel-route-req">🔒 Necesitas ${dest.reqEncounters} encuentros (tienes ${progress.encounters})</div>`:''}
+                    <div class="travel-route-steps">🚶 ${steps} ${steps===1?'paso':'pasos'} de viaje</div>
+                    ${dest.type==='danger'?enemyInfo:`<div style="font-size:.55rem;color:var(--green-bright)">🏠 Zona segura</div>`}
+                </div>
+                <div class="travel-route-arrow">${isUnlocked?'→':'🔒'}</div>
+            </div>`;
+        });
+        
+        h+=`</div>`;
+        map.innerHTML=h;
+        openModal('regionModal');
+    },
+    
+    startTravel(destId){
+        closeModal('regionModal');
+        const dest=Data.getRegion(destId);
+        const current=G.region;
+        const steps=Math.abs(dest.distance-current.distance)+1;
+        
+        G.traveling={dest,steps,current:0};
+        Story.add(`<strong>🚶 Iniciando viaje a ${dest.name}...</strong>`,'travel');
+        this.travelStep();
+    },
+    
+    travelStep(){
+        const t=G.traveling;
+        if(!t)return;
+        
+        t.current++;
+        const progress=(t.current/t.steps)*100;
+        
+        Story.add(`Paso ${t.current}/${t.steps} hacia ${t.dest.icon} ${t.dest.name}...`,'travel');
+        
+        // Chance of encounter during travel (30%)
+        if(t.dest.type==='danger'&&Math.random()<0.3){
+            Story.add('¡Algo te intercepta en el camino!','combat');
+            // Use enemies from either current region or destination
+            const pool=[...Data.getEnemiesForRegion(G.region.id),...Data.getEnemiesForRegion(t.dest.id)];
+            if(pool.length>0){
+                const template=pick(pool);
+                let count=1;
+                if(template.canGroup&&Math.random()*100<(template.groupChance||0)*0.5){
+                    count=Math.floor(Math.random()*2)+2; // Smaller groups during travel
+                }
+                const enemies=[];
+                for(let i=0;i<count;i++){
+                    enemies.push({...template,uid:genId('e'),hp:template.health,maxHp:template.health,effects:[],name:count>1?`${template.name} ${String.fromCharCode(65+i)}`:template.name});
+                }
+                Game.setActions([
+                    {text:'⚔️ Luchar',fn:()=>Combat.start(enemies,true),cls:'btn-primary'},
+                    {text:'💨 Huir',fn:()=>{
+                        Story.add('Retrocedes al lugar anterior.','system');
+                        G.traveling=null;
+                        Game.exploreActions();
+                    },cls:'btn-danger'}
+                ]);
+                return;
+            }
+        }
+        
+        // Continue or arrive
+        if(t.current>=t.steps){
+            this.arriveAt(t.dest);
+        }else{
+            Game.setActions([{text:`🚶 Continuar (${t.current}/${t.steps})`,fn:()=>this.travelStep(),cls:'btn-primary'}]);
+        }
+    },
+    
+    continueTravelAfterCombat(){
+        if(!G.traveling){Game.exploreActions();return}
+        Story.add('Continúas tu viaje...','travel');
+        if(G.traveling.current>=G.traveling.steps){
+            this.arriveAt(G.traveling.dest);
+        }else{
+            Game.setActions([{text:`🚶 Continuar (${G.traveling.current}/${G.traveling.steps})`,fn:()=>this.travelStep(),cls:'btn-primary'}]);
+        }
+    },
+    
+    arriveAt(dest){
+        G.traveling=null;
+        G.region=dest;
+        if(!G.regionProgress[dest.id])G.regionProgress[dest.id]={encounters:0};
+        
+        Story.add(`<strong>📍 Has llegado a ${dest.icon} ${dest.name}</strong>`,'region');
+        Story.add(dest.desc,'narrative');
+        Game.updateUI();
+        Game.autoSave();
+        
+        if(dest.type==='safe'){
+            const npcs=Data.getNpcsForRegion(dest.id);
+            if(npcs.length>0){
+                Story.add(`Hay ${npcs.length} personas aquí.`,'system');
+            }
+        }else{
+            Story.add('Zona peligrosa. ¡Prepárate!','system');
+        }
+        Game.exploreActions();
+    }
+};
+
+const Game={
+    selectedRace:null,
+    init(){if(!this.load())this.showCreate()},
+    showCreate(){
+        $('#authScreen').classList.add('hidden');
+        $('#authScreen').style.display='none';
+        const el=$('#charCreate');
+        el.classList.remove('hidden');
+        el.style.display='flex';
+        $('#raceGrid').innerHTML=Data.races.map(r=>`<div class="race-option" data-id="${r.id}" onclick="Game.selectRace('${r.id}')"><div class="race-option-icon">${sprite(r)}</div><div class="race-option-name">${r.name}</div><div class="race-option-stats">HP+${r.bonus.health||0} ⚡${r.bonus.speed||10}</div></div>`).join('');
+        this.selectRace(Data.races[0].id);
+    },
+    selectRace(id){
+        this.selectedRace=Data.races.find(r=>r.id===id);
+        $$('.race-option').forEach(o=>o.classList.toggle('selected',o.dataset.id===id));
+    },
+    createChar(){
+        const name=$('#heroName').value.trim()||pick(['Aldric','Brynn','Cedric','Dara','Freya','Kira','Theron']);
+        const race=this.selectedRace||pick(Data.races);
+        $('#charCreate').classList.add('hidden');
+        $('#charCreate').style.display='none';
+        
+        // 30% de probabilidad de nacer mago (aplica a todas las razas)
+        const isMage=Math.random()<0.30;
+        
+        // Determinar arma inicial según si es mago o no
+        let weapon;
+        if(isMage){
+            // Magos: solo armas mágicas (bastones)
+            const magicWeapons=Data.weapons.filter(w=>w.magic);
+            const staff=magicWeapons.length>0?magicWeapons[0]:Data.weapons[0];
+            weapon={...staff,uid:genId('i')};
+        }else{
+            // No magos: solo armas físicas
+            const physicalWeapons=Data.weapons.filter(w=>!w.magic);
+            weapon={...physicalWeapons[0]||Data.weapons[0],uid:genId('i')};
+        }
+        
+        const armor={...Data.armors[0],uid:genId('i')};
+        const baseSpeed=race?.bonus?.speed||10;
+        
+        // Maná: 100 base solo para magos + bonus de arma mágica
+        const baseMana=isMage?100:0;
+        const weaponManaBonus=(isMage&&weapon.manaBonus)?weapon.manaBonus:0;
+        const maxMana=baseMana+weaponManaBonus;
+        
+        // Hechizos iniciales (solo para magos)
+        const spells=isMage&&Data.spells?.length>0?[{...Data.spells[0]}]:[];
+        
+        G.p={
+            name,race,
+            isMage:isMage,
+            maxHp:20+(race?.bonus?.health||0),
+            hp:20+(race?.bonus?.health||0),
+            maxMana:maxMana,
+            mana:maxMana,
+            maxFood:20,
+            food:20,
+            speed:baseSpeed,
+            weapon,armor,
+            inv:[{...Data.items[0],uid:genId('i')}],
+            maxSlots:10,
+            gold:0,silver:25,
+            effects:[],pet:null,defending:false,
+            spells:spells,
+            maxSpells:3
+        };
+        G.combat=false;G.enemies=[];G.turn=0;
+        G.region=Data.getRegion('pueblo');
+        G.regionProgress={pueblo:{encounters:0}};
+        G.traveling=null;
+        Story.clear();
+        Story.add(`<strong style="color:var(--gold);font-size:1.1rem">⚔️ Aventuras de Acero y Runas ⚔️</strong>`);
+        Story.add(`Eres <strong>${G.p.name}</strong>, ${race.name} ${race.icon}`,'narrative');
+        if(isMage){
+            Story.add(`✨ <strong style="color:#DAA520">¡Naciste con el don de la magia!</strong>`,'system');
+            if(spells.length>0)Story.add(`📖 Conoces: ${spells[0].icon} ${spells[0].name}`,'system');
+        }else{
+            Story.add(`⚔️ Eres un guerrero. No puedes usar magia.`,'system');
+        }
+        Story.add(`💀 MODO HARDCORE: Si mueres, pierdes todo.`,'system');
+        this.updateUI();this.exploreActions();
+    },
+    newGame(){if(!confirm('¿Crear nuevo personaje? Se perderá el progreso actual.'))return;this.deleteSave();G.p=null;G.combat=false;G.enemies=[];Story.clear();this.showCreate()},
+    deleteSave(){localStorage.removeItem('rpg_save')},
+    fullReset(){
+        // Limpiar completamente el estado
+        G.p=null;G.combat=false;G.enemies=[];G.turn=0;G.region=null;
+        G.turnOrder=[];G.currentActor=0;G.regionProgress={};G.traveling=null;
+        Story.clear();
+        $('#combatArena').classList.add('hidden');
+        $('#actionsPanel').classList.add('hidden');
+        this.showCreate();
+    },
+    save(silent=true){localStorage.setItem('rpg_save',JSON.stringify({p:G.p,region:G.region,regionProgress:G.regionProgress}));if(!silent)toast('Guardado','success')},
+    autoSave(){if(G.p&&!G.combat)this.save(true)},
+    load(){const s=localStorage.getItem('rpg_save');if(!s)return false;try{const d=JSON.parse(s);if(!d||!d.p||!d.p.name||!d.p.race){console.log('Invalid save');return false}G.p=d.p;G.region=d.region?Data.getRegion(d.region.id):Data.getRegion('pueblo');G.regionProgress=d.regionProgress||{};G.combat=false;G.traveling=null;Story.add('Partida cargada.','system');this.updateUI();this.exploreActions();return true}catch(e){console.error('Load error:',e);return false}},
+    updateUI(){
+        const p=G.p;if(!p)return;
+        $('#charAvatar').innerHTML=p.race.sprite?`<img src="${p.race.sprite}">`:p.race.icon;
+        $('#charName').textContent=p.name;
+        $('#charRace').textContent=p.race.name;
+        const hp=(p.hp/p.maxHp)*100;
+        $('#hpFill').style.width=hp+'%';$('#hpFill').className=`hp-fill ${hpClass(hp)}`;$('#hpText').textContent=`❤️${p.hp}/${p.maxHp}`;
+        // Mana bar (only for magic users)
+        if(p.maxMana>0){
+            $('#manaBar').style.display='block';
+            const mana=(p.mana/p.maxMana)*100;
+            $('#manaFill').style.width=mana+'%';$('#manaText').textContent=`💙${p.mana}/${p.maxMana}`;
+        }else{$('#manaBar').style.display='none'}
+        // Food bar
+        const food=(p.food/p.maxFood)*100;
+        $('#foodFill').style.width=food+'%';$('#foodText').textContent=`🍖${p.food}/${p.maxFood}`;
+        const rb=$('#regionBadge');rb.className=`region-badge ${G.region.type}`;
+        rb.innerHTML=`<span class="region-icon">${G.region.icon}</span><span class="region-name">${G.region.name}</span><div style="font-size:.5rem;color:var(--text-dim)">Click para viajar</div>`;
+        $('#statArmor').textContent=this.armor();
+        $('#statEvasion').textContent=p.race?.bonus?.evasion||0;
+        $('#statPrecision').textContent=p.race?.bonus?.precision||0;
+        $('#statSpeed').textContent=`${Game.speed()} (${p.race?.bonus?.speed||10}-${Game.weight()})`;
+        $('#statWeight').textContent=Game.weight();
+        $('#weaponIcon').innerHTML=sprite(p.weapon);$('#weaponName').textContent=p.weapon?.name||'Puños';$('#weaponStats').textContent=`${p.weapon?.damage||'1d2'} ⚖️${p.weapon?.weight||0}`;
+        $('#armorIcon').innerHTML=sprite(p.armor);$('#armorName').textContent=p.armor?.name||'Sin armadura';$('#armorStats').textContent=`Def:${p.armor?.defense||0} ⚖️${p.armor?.weight||0}`;
+        $('#goldAmount').textContent=p.gold;$('#silverAmount').textContent=p.silver;
+        const canEq=!G.combat&&G.region.type==='safe';
+        $('#weaponSlot').classList.toggle('disabled',!canEq);$('#armorSlot').classList.toggle('disabled',!canEq);
+        // Toggle combat mode classes
+        $('#charPanel').classList.toggle('in-combat',G.combat);
+        $('#actionsPanel').classList.toggle('in-combat',G.combat);
+    },
+    armor(){if(!G.p)return 0;return(G.p.armor?.defense||0)+(G.p.race?.bonus?.armor||0)},
+    weight(){if(!G.p)return 0;return(G.p.weapon?.weight||0)+(G.p.armor?.weight||0)},
+    speed(){if(!G.p)return 0;const base=G.p.race?.bonus?.speed||10;const wt=this.weight();return Math.max(1,base-wt)},
+    setActions(acts){const c=$('#actionsContainer');c.innerHTML='';acts.forEach(a=>{const b=document.createElement('button');b.className=`btn ${a.cls||''}`;b.textContent=a.text;b.disabled=a.disabled||false;b.onclick=a.fn;c.appendChild(b)})},
+    exploreActions(){
+        if(!G.p||!G.region){console.log('No player or region');return}
+        // Verificar muerte por hambre
+        if(G.p.food<=0){
+            Story.add(`<div style="text-align:center;padding:1rem;background:rgba(139,69,0,.4);border:2px solid #8B4513;border-radius:8px"><div style="font-size:2rem">💀🍖</div><strong style="color:#CD853F">¡Has muerto de hambre!</strong></div>`,'combat');
+            Game.deleteSave();
+            this.setActions([{text:'🔄 Nueva Aventura',fn:()=>this.fullReset(),cls:'btn-primary'}]);
+            return;
+        }
+        const actions=[{text:'🗺️ Viajar',fn:()=>Regions.openSelector()}];
+        if(G.region.type==='danger'){
+            actions.unshift({text:'⚔️ Explorar',fn:()=>Explore.start(),cls:'btn-primary'});
+        }else{
+            const npcs=Data.getNpcsForRegion(G.region.id);
+            if(npcs.length>0)actions.push({text:'🏘️ NPCs',fn:()=>Town.visit(G.region)});
+            if((Data.recipes||[]).length>0)actions.push({text:'🔨 Crafteo',fn:()=>Craft.open()});
+        }
+        // Agregar libro de hechizos SOLO si es mago
+        if(G.p.isMage){
+            actions.push({text:'📖 Hechizos',fn:()=>Spellbook.open()});
+        }
+        actions.push({text:'🎒 Inventario',fn:()=>Inv.open()},{text:'🔄 Nueva',fn:()=>this.newGame(),cls:'btn-danger'});
+        this.setActions(actions);
+    }
+};
+
+const Explore={
+    start(){
+        if(G.region.type==='safe'){toast('Zona segura','info');return}
+        // Consumir comida al explorar
+        G.p.food=Math.max(0,G.p.food-1);
+        if(G.p.food<=3&&G.p.food>0)Story.add(`<span style="color:#CD853F">⚠️ Tienes hambre (${G.p.food}/20)</span>`,'system');
+        Game.updateUI();
+        
+        Story.add(pick(G.region.narratives)||'Exploras...','narrative');
+        Game.setActions([{text:'...',disabled:true}]);
+        setTimeout(()=>{
+            // Verificar hambre
+            if(G.p.food<=0){
+                Game.exploreActions();
+                return;
+            }
+            const r=dX(100);
+            if(r<=55)this.enemy();
+            else if(r<=75)this.trap();
+            else if(r<=88)this.treasure();
+            else if(r<=96)this.pet();
+            else this.safe()
+        },800);
+    },
+    enemy(){const pool=Data.getEnemiesForRegion(G.region.id);if(pool.length===0){Story.add('Nada aquí...','system');Game.exploreActions();return}const template=pick(pool);let count=1;if(template.canGroup&&Math.random()*100<(template.groupChance||0)){const min=template.groupMin||2,max=template.groupMax||4;count=Math.floor(Math.random()*(max-min+1))+min}const enemies=[];for(let i=0;i<count;i++){
+        const weapon=template.weaponId?Data.find('weapons',template.weaponId):null;
+        const armor=template.armorId?Data.find('armors',template.armorId):null;
+        const dmg=weapon?weapon.damage:template.damage;
+        const def=(armor?armor.defense:0)+(template.armor||0);
+        enemies.push({...template,uid:genId('e'),hp:template.health,maxHp:template.health,effects:[],name:count>1?`${template.name} ${String.fromCharCode(65+i)}`:template.name,damage:dmg,armor:def,weapon,equipArmor:armor})
+    }if(count>1)Story.add(`¡${count} ${template.name}s aparecen!`,'narrative');else Story.add(template.desc||`Un ${template.name} aparece.`,'narrative');setTimeout(()=>{Story.add(`<strong>¡Combate!</strong>`,'combat');Game.setActions([{text:`⚔️ Luchar (${count})`,fn:()=>Combat.start(enemies),cls:'btn-primary'},{text:'💨 Huir',fn:()=>this.flee(enemies),cls:'btn-danger'}])},600)},
+    async flee(enemies){const r=d20();await showDice(r,20,r>=14);Story.add(`Huida: D20=${r} vs 14`,'system');if(r>=14){Story.add('¡Escapas!','narrative');Game.exploreActions()}else{Story.add('¡No escapas!','combat');Combat.start(enemies)}},
+    async trap(){const trap=pick(Data.traps);Story.add('Sientes peligro...','narrative');setTimeout(async()=>{Story.add(`<strong>¡Trampa!</strong> ${trap.name}`,'trap');const det=d20();await showDice(det,20,det>=trap.detectDiff);Story.add(`Percepción: D20=${det} vs ${trap.detectDiff}`,'system');if(det>=trap.detectDiff){Story.add('¡La detectas!','system');Game.setActions([{text:'🏃 Esquivar',fn:async()=>{const r=d20();await showDice(r,20,r>=trap.dodgeDiff);if(r>=trap.dodgeDiff){Story.add('¡Esquivado!','loot');Game.exploreActions()}else this.trapDmg(trap,true)},cls:'btn-primary'},{text:'🔧 Desactivar',fn:async()=>{const r=d20();await showDice(r,20,r>=15);if(r>=15){const mp=dX(15)+5;G.p.silver+=mp;Story.add(`¡Éxito! +${mp} MP`,'loot')}else if(r>=10)Story.add('No funciona.','system');else{Story.add('¡La activas!','trap');this.trapDmg(trap,false);return}Game.updateUI();Game.exploreActions()}}])}else{Story.add('No la detectas...','trap');this.trapDmg(trap,false)}},800)},
+    trapDmg(trap,reduced){let dmg=roll(trap.damage);if(reduced)dmg=Math.ceil(dmg*0.5);const arm=Math.floor(Game.armor()/2);const final=Math.max(0,dmg-arm);Story.add(`${trap.name}: ${dmg} − ${arm} arm = <strong>${final} daño</strong>${final===0?' (bloqueado)':''}`,'system');if(final>0)G.p.hp-=final;if(trap.effect)Combat.applyEff(G.p,trap.effect);Game.updateUI();if(G.p.hp<=0){Story.add('<strong style="color:var(--red-bright)">💀 Has muerto...</strong>','combat');Story.add('Tu aventura termina aquí.','system');Game.deleteSave();Game.setActions([{text:'🔄 Nueva Partida',fn:()=>{G.p=null;Story.clear();Game.showCreate()},cls:'btn-primary'}])}else Game.exploreActions()},
+    treasure(){Story.add('¡Algo brilla!','narrative');setTimeout(()=>{const mp=dX(30)+10;G.p.silver+=mp;while(G.p.silver>=99){G.p.silver-=99;G.p.gold++}Story.add(`+${mp} MP`,'loot');if(Math.random()<0.3&&G.p.inv.length<G.p.maxSlots){const it={...pick(Data.items),uid:genId('i')};G.p.inv.push(it);Story.add(`También: ${it.icon} ${it.name}`,'loot')}Game.updateUI();Game.autoSave();Game.exploreActions()},800)},
+    pet(){if(G.p.pet){this.safe();return}const pool=Data.getPetsForRegion(G.region.id);if(pool.length===0){this.treasure();return}const pet=pick(pool);Story.add(`${pet.icon} Un ${pet.name} aparece.`,'narrative');const meat=G.p.inv.some(i=>i.type==='food');Game.setActions([{text:'🥩 Domesticar',fn:async()=>{const idx=G.p.inv.findIndex(i=>i.type==='food');if(idx>=0)G.p.inv.splice(idx,1);const r=dX(pet.difficulty),th=Math.ceil(pet.difficulty*0.6);await showDice(r,pet.difficulty,r>=th);if(r>=th){G.p.pet={...pet,hp:pet.health,maxHp:pet.health};Story.add(`<strong style="color:var(--green-bright)">¡${pet.name} es tu compañero!</strong>`,'loot');toast('¡Compañero!','success');Game.autoSave()}else Story.add(`El ${pet.name} se aleja.`,'narrative');Game.updateUI();Game.exploreActions()},disabled:!meat,cls:meat?'btn-primary':''},{text:'⚔️ Cazar',fn:()=>Combat.start([{...pet,uid:genId('e'),hp:pet.health,maxHp:pet.health,difficulty:10,armor:0,loot:[5,15],drops:['i4'],effects:[]}])},{text:'🚶 Dejar',fn:()=>{Story.add('Te alejas.','narrative');Game.exploreActions()}}])},
+    safe(){Story.add('Lugar tranquilo.','narrative');const h=Math.floor(G.p.maxHp*0.3);G.p.hp=Math.min(G.p.maxHp,G.p.hp+h);G.p.effects=[];Story.add(`<span style="color:var(--green-bright)">+${h} HP</span>. Curado.`,'system');Game.updateUI();Game.autoSave();Game.exploreActions()}
+};
+
+const Combat={
+    duringTravel:false,
+    start(enemies,duringTravel=false){
+        this.duringTravel=duringTravel;
+        G.combat=true;G.enemies=enemies;G.turn=0;G.p.defending=false;
+        // Plugin hook: inicio de combate
+        if(typeof Plugins!=='undefined')Plugins.trigger('onCombatStart');
+        $('#combatArena').classList.remove('hidden');
+        $('#combatLog').innerHTML='';
+        Game.updateUI(); // This will hide HP bar and actions panel
+        this.newTurn();
+    },
+    calcTurnOrder(){const combatants=[];combatants.push({type:'player',entity:G.p,speed:Game.speed(),init:d20()});if(G.p.pet&&G.p.pet.hp>0)combatants.push({type:'pet',entity:G.p.pet,speed:G.p.pet.speed||12,init:d20()});G.enemies.filter(e=>e.hp>0).forEach(e=>{combatants.push({type:'enemy',entity:e,speed:e.speed||10,init:d20()})});combatants.sort((a,b)=>{if(b.speed!==a.speed)return b.speed-a.speed;return b.init-a.init});return combatants},
+    newTurn(){G.turn++;G.p.defending=false;G.turnOrder=this.calcTurnOrder();G.currentActor=0;this.log(`<div class="log-turn">─ Turno ${G.turn} ─</div>`);this.updateUI();this.processNextActor()},
+    async processNextActor(){
+        try{
+            // Verificar condiciones de fin de combate
+            const aliveEnemies=G.enemies.filter(e=>e.hp>0);
+            if(aliveEnemies.length===0){this.victory();return}
+            if(G.p.hp<=0){this.defeat();return}
+            
+            // Buscar siguiente actor vivo
+            while(G.currentActor<G.turnOrder.length){
+                const actor=G.turnOrder[G.currentActor];
+                if((actor.type==='player'&&G.p.hp>0)||(actor.type==='pet'&&G.p.pet?.hp>0)||(actor.type==='enemy'&&actor.entity.hp>0))break;
+                G.currentActor++;
+            }
+            
+            // Si se acabaron los actores, nuevo turno
+            if(G.currentActor>=G.turnOrder.length){
+                this.processAllEffects();
+                setTimeout(()=>this.newTurn(),300);
+                return;
+            }
+            
+            const actor=G.turnOrder[G.currentActor];
+            this.highlightActor(actor);
+            
+            // Verificar congelamiento
+            const entity=actor.type==='player'?G.p:actor.type==='pet'?G.p.pet:actor.entity;
+            if(entity.frozen&&entity.frozenTurns>0){
+                entity.frozenTurns--;
+                if(entity.frozenTurns<=0)entity.frozen=false;
+                this.log(`<span style="color:#00BFFF">❄️ ${entity.name||G.p.name} está congelado y pierde su turno!</span>`);
+                this.updateUI();
+                setTimeout(()=>this.advanceToNextActor(),500);
+                return;
+            }
+            
+            // Plugin hooks: inicio de turno
+            if(typeof Plugins!=='undefined'){
+                if(typeof Plugins.trigger==='function')Plugins.trigger('onTurnStart',entity,actor.type==='player');
+                if(typeof Plugins.processEquippedEffects==='function'){
+                    Plugins.processEquippedEffects(entity,'onTurnStart');
+                    if(actor.type==='player')Plugins.processEquippedEffects(G.p,'onTurnStart');
+                }
+                this.updateUI();Game.updateUI();
+            }
+            
+            // Ejecutar acción según tipo de actor
+            if(actor.type==='player'){
+                this.showPlayerActions();
+            }else if(actor.type==='pet'){
+                await this.executePetAction();
+            }else{
+                await this.executeEnemyAction(actor.entity);
+            }
+        }catch(err){
+            console.error('Error en processNextActor:',err);
+            this.showPlayerActions(); // Fallback to player actions
+        }
+    },
+    advanceToNextActor(){
+        G.currentActor++;
+        this.processNextActor();
+    },
+    highlightActor(actor){$$('.combatant').forEach(c=>c.classList.remove('active'));const el=actor.type==='player'?$(`.combatant.player`):actor.type==='pet'?$(`.combatant.pet`):$(`[data-uid="${actor.entity.uid}"]`);if(el)el.classList.add('active')},
+    showPlayerActions(){
+        const ca=$('#combatActions');ca.innerHTML='';
+        const aliveEnemies=G.enemies.filter(e=>e.hp>0);
+        const hasSpells=(G.p.spells||[]).length>0;
+        
+        // Botón Atacar siempre visible
+        const atkBtn=document.createElement('button');
+        atkBtn.className='btn btn-primary';
+        atkBtn.textContent='⚔️ Atacar';
+        if(aliveEnemies.length===1){
+            atkBtn.onclick=()=>this.playerAttack(aliveEnemies[0]);
+        }else{
+            atkBtn.onclick=()=>this.showTargetSelect(aliveEnemies,'attack');
+        }
+        ca.appendChild(atkBtn);
+        
+        // Botones de hechizos SOLO si es mago
+        if(G.p.isMage&&hasSpells){
+            const spellBtn=document.createElement('button');
+            spellBtn.className='btn';
+            spellBtn.style.background='linear-gradient(135deg,#B8860B,#DAA520)';
+            spellBtn.textContent='✨ Hechizos';
+            spellBtn.onclick=()=>this.showSpellSelect(aliveEnemies);
+            ca.appendChild(spellBtn);
+        }
+        
+        // Otros botones
+        [{text:'🛡️ Defender',fn:()=>this.playerDefend()},{text:'🎒 Item',fn:()=>Inv.open()},{text:'💨 Huir',fn:()=>this.playerFlee(),cls:'btn-danger'}].forEach(a=>{
+            const b=document.createElement('button');
+            b.className=`btn ${a.cls||''}`;
+            b.textContent=a.text;
+            b.onclick=a.fn;
+            ca.appendChild(b);
+        });
+    },
+    showSpellSelect(enemies){
+        const ca=$('#combatActions');
+        ca.innerHTML=`<div style="text-align:center;margin-bottom:.5rem;color:var(--cyan)">✨ Selecciona hechizo (💙${G.p.mana}/${G.p.maxMana}):</div>`;
+        const grid=document.createElement('div');
+        grid.style.cssText='display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center';
+        (G.p.spells||[]).forEach(sp=>{
+            const canCast=G.p.mana>=sp.cost;
+            const btn=document.createElement('button');
+            btn.className='btn';
+            btn.disabled=!canCast;
+            btn.style.cssText=`display:flex;flex-direction:column;align-items:center;padding:.5rem .8rem;min-width:90px;${canCast?'background:linear-gradient(135deg,#B8860B,#DAA520)':'opacity:.5'}`;
+            btn.innerHTML=`<span style="font-size:1.3rem">${sp.icon}</span><span style="font-size:.7rem">${sp.name}</span><span style="font-size:.6rem;color:var(--cyan)">💙${sp.cost} ⚔️${sp.damage}</span>`;
+            if(canCast){
+                btn.onclick=()=>{
+                    if(enemies.length===1)this.castSpell(sp,enemies[0]);
+                    else this.showTargetSelect(enemies,'spell',sp);
+                };
+            }
+            grid.appendChild(btn);
+        });
+        ca.appendChild(grid);
+        const backBtn=document.createElement('button');
+        backBtn.className='btn btn-danger';
+        backBtn.style.marginTop='.5rem';
+        backBtn.textContent='← Volver';
+        backBtn.onclick=()=>this.showPlayerActions();
+        ca.appendChild(backBtn);
+    },
+    showTargetSelect(enemies,action,spell=null){
+        const ca=$('#combatActions');
+        ca.innerHTML=`<div style="text-align:center;margin-bottom:.5rem;color:var(--gold)">🎯 Selecciona objetivo:</div>`;
+        const grid=document.createElement('div');
+        grid.style.cssText='display:flex;flex-wrap:wrap;gap:.5rem;justify-content:center';
+        enemies.forEach(e=>{
+            const btn=document.createElement('button');
+            btn.className='btn';
+            btn.style.cssText='display:flex;flex-direction:column;align-items:center;padding:.5rem .8rem;min-width:80px';
+            btn.innerHTML=`<span style="font-size:1.5rem">${e.icon}</span><span style="font-size:.7rem">${e.name}</span><span style="font-size:.6rem;color:var(--red)">${e.hp}/${e.maxHp}</span>`;
+            btn.onclick=()=>{
+                if(action==='spell'&&spell)this.castSpell(spell,e);
+                else this.playerAttack(e);
+            };
+            grid.appendChild(btn);
+        });
+        ca.appendChild(grid);
+        const backBtn=document.createElement('button');
+        backBtn.className='btn btn-danger';
+        backBtn.style.marginTop='.5rem';
+        backBtn.textContent='← Volver';
+        backBtn.onclick=()=>this.showPlayerActions();
+        ca.appendChild(backBtn);
+    },
+    async castSpell(spell,target){
+        const p=G.p;
+        if(p.mana<spell.cost){this.log(`<span class="log-miss">Sin maná suficiente</span>`);return}
+        
+        p.mana-=spell.cost;
+        await showDice(15,20,true);
+        
+        // Daño SOLO del hechizo (no incluye arma)
+        const dmgRoll=rollDetailed(spell.damage);
+        const magicDmg=dmgRoll.total;
+        const armor=target.armor||0;
+        const finalDmg=Math.max(0,magicDmg-armor);
+        
+        this.log(`<span class="log-player">${p.name}</span> lanza <span style="color:#DAA520">${spell.icon} ${spell.name}</span>`);
+        this.log(`├ 💙 Maná: -${spell.cost} (${p.mana}/${p.maxMana})`);
+        this.log(`├ ✨ Daño: ${spell.damage} [${dmgRoll.rolls.join('+')}] = ${magicDmg}`);
+        this.log(`├ 🛡️ ${magicDmg} − ${armor} (armadura) = ${finalDmg}`);
+        
+        if(finalDmg>0){
+            target.hp-=finalDmg;
+            this.log(`└ <span class="log-damage">💥 ${target.name} recibe ${finalDmg} daño (${Math.max(0,target.hp)}/${target.maxHp})</span>`);
+            if(spell.effect)this.applyEff(target,spell.effect);
+            if(target.hp<=0)this.log(`<span class="log-damage">💀 ${target.name} derrotado!</span>`);
+        }else{
+            this.log(`└ <span class="log-miss">🛡️ ${target.name} bloquea todo</span>`);
+        }
+        
+        this.updateUI();
+        await delay(350);
+        this.advanceToNextActor();
+    },
+    async playerAttack(target){
+        const p=G.p;
+        const atkRoll=d20();
+        const prec=p.race?.bonus?.precision||0;
+        const total=atkRoll+prec;
+        const isCrit=atkRoll===20;
+        const isPifia=atkRoll===1;
+        
+        await showDice(atkRoll,20,isCrit);
+        
+        // Mostrar tirada clara
+        this.log(`<span class="log-player">${p.name}</span> ataca a <span class="log-enemy">${target.name}</span>`);
+        this.log(`├ 🎲 D20=${atkRoll}${prec?` +${prec}`:''} = ${total} vs ${target.difficulty} (dificultad)`);
+        
+        if(isPifia){
+            this.log(`└ <span class="log-miss">💀 ¡PIFIA! (1 natural = fallo automático)</span>`);
+            if(typeof Plugins!=='undefined')Plugins.trigger('onAttack',p,target,0,false);
+        }else if(total>=target.difficulty||isCrit){
+            const dmgRoll=rollDetailed(p.weapon?.damage||'1d2');
+            const bonus=p.race?.bonus?.damage||0;
+            let rawDmg=dmgRoll.total+bonus;
+            
+            // Plugin: modificar daño por efectos (ej: furia)
+            const fury=(p.effects||[]).find(e=>e.type==='fury');
+            if(fury){const furyBonus=Math.floor(rawDmg*0.5);rawDmg+=furyBonus;this.log(`├ 🔥 Furia: +${furyBonus}`)}
+            
+            const armor=target.armor||0;
+            
+            if(isCrit){
+                // Crítico: daño x2 ANTES de restar armadura
+                const critDmg=rawDmg*2;
+                const finalDmg=Math.max(0,critDmg-armor);
+                this.log(`├ <span class="log-crit">🎯 ¡CRÍTICO! (20 natural)</span>`);
+                this.log(`├ ⚔️ Daño: ${rawDmg} ×2 = ${critDmg} − ${armor} (armadura) = ${finalDmg}`);
+                
+                if(finalDmg>0){
+                    target.hp-=finalDmg;
+                    this.log(`└ <span class="log-damage">💥 ${target.name} recibe ${finalDmg} daño (${Math.max(0,target.hp)}/${target.maxHp})</span>`);
+                    if(typeof Plugins!=='undefined'){
+                        const special=Plugins.getSpecialItem(p.weapon?.id);
+                        if(special&&special.onDealDamage)special.onDealDamage(p,target,finalDmg);
+                    }
+                    if(p.weapon?.effect)this.applyEff(target,p.weapon.effect);
+                    if(target.hp<=0)this.log(`<span class="log-damage">💀 ${target.name} derrotado!</span>`);
+                }else{
+                    this.log(`└ <span class="log-miss">🛡️ ${target.name} bloquea todo (armadura ≥ daño)</span>`);
+                }
+                if(typeof Plugins!=='undefined')Plugins.trigger('onAttack',p,target,finalDmg,true);
+            }else{
+                // Golpe normal
+                let finalDmg=Math.max(0,rawDmg-armor);
+                if(typeof Plugins!=='undefined')finalDmg=Plugins.trigger('onAttack',p,target,finalDmg,true)||finalDmg;
+                
+                this.log(`├ ⚔️ Daño: ${rawDmg} − ${armor} (armadura) = ${finalDmg}`);
+                
+                if(finalDmg>0){
+                    target.hp-=finalDmg;
+                    this.log(`└ <span class="log-damage">💥 ${target.name} recibe ${finalDmg} daño (${Math.max(0,target.hp)}/${target.maxHp})</span>`);
+                    if(typeof Plugins!=='undefined'){
+                        const special=Plugins.getSpecialItem(p.weapon?.id);
+                        if(special&&special.onDealDamage)special.onDealDamage(p,target,finalDmg);
+                    }
+                    if(p.weapon?.effect)this.applyEff(target,p.weapon.effect);
+                    if(target.hp<=0)this.log(`<span class="log-damage">💀 ${target.name} derrotado!</span>`);
+                }else{
+                    this.log(`└ <span class="log-miss">🛡️ ${target.name} bloquea todo (armadura ≥ daño)</span>`);
+                }
+            }
+        }else{
+            this.log(`└ <span class="log-miss">❌ ¡Falla! (${total} < ${target.difficulty})</span>`);
+            if(typeof Plugins!=='undefined')Plugins.trigger('onAttack',p,target,0,false);
+        }
+        
+        this.updateUI();
+        await delay(350);
+        this.advanceToNextActor();
+    },
+    playerDefend(){G.p.defending=true;this.log(`<span class="log-player">${G.p.name}</span> defiende <span class="log-heal">+4 Eva</span>`);this.updateUI();setTimeout(()=>this.advanceToNextActor(),200)},
+    async playerFlee(){const r=d20();await showDice(r,20,r>=12);this.log(`Huida: D20=${r} vs 12`);if(r>=12){this.log('<span class="log-heal">¡Escape!</span>');this.escape()}else{this.log('<span class="log-miss">¡No escapas!</span>');await delay(300);this.advanceToNextActor()}},
+    async executePetAction(){const pet=G.p.pet;const aliveEnemies=G.enemies.filter(e=>e.hp>0);if(aliveEnemies.length===0){this.advanceToNextActor();return}const target=pick(aliveEnemies);const dmgRoll=rollDetailed(pet.damage);const baseDmg=dmgRoll.total;const armor=target.armor||0;const finalDmg=Math.max(0,baseDmg-armor);this.log(`<span class="log-pet">${pet.icon} ${pet.name}</span> → <span class="log-enemy">${target.name}</span>`);this.log(`├ Daño: ${dmgRoll.dice}=[${dmgRoll.rolls}] = ${baseDmg}`);if(finalDmg>0){this.log(`├ ⚔️ ${baseDmg} − ${armor} = ${finalDmg}`);target.hp-=finalDmg;this.log(`└ <span class="log-damage">${target.name} -${finalDmg} (${Math.max(0,target.hp)}/${target.maxHp})</span>`);if(target.hp<=0)this.log(`<span class="log-damage">💀 ${target.name} derrotado!</span>`)}else{this.log(`└ <span class="log-miss">🛡️ Bloqueado</span>`)}this.updateUI();await delay(350);this.advanceToNextActor()},
+    async executeEnemyAction(enemy){
+        const p=G.p;
+        // Mostrar mensaje de preparación
+        this.log(`<span class="log-enemy">⚠️ ${enemy.name} (Dif:${enemy.difficulty}) ataca a ${p.name}...</span>`);
+        this.updateUI();
+        await delay(600);
+        
+        // Tirada de evasión del jugador
+        const evaBonus=((p.race?.bonus?.evasion)||0)+(p.defending?4:0);
+        const dodgeRoll=d20();
+        const dodgeTotal=dodgeRoll+evaBonus;
+        
+        this.log(`├ 🎲 Evasión: D20=${dodgeRoll}${evaBonus?` +${evaBonus}`:''} = ${dodgeTotal} vs 12`);
+        
+        if(dodgeTotal>=12){
+            this.log(`└ <span class="log-heal">✨ ¡${p.name} esquiva el ataque!</span>`);
+        }else{
+            this.log(`├ <span class="log-miss">❌ No esquiva (${dodgeTotal} < 12)</span>`);
+            
+            const dmgRoll=rollDetailed(enemy.damage);
+            let baseDmg=dmgRoll.total;
+            const isCrit=Math.random()<0.1;
+            
+            if(isCrit){
+                this.log(`├ <span class="log-crit">🎯 ¡Golpe crítico!</span>`);
+                baseDmg=Math.ceil(baseDmg*1.5);
+            }
+            
+            const playerArmor=Game.armor();
+            let finalDmg=Math.max(0,baseDmg-playerArmor);
+            
+            // Plugin: hooks de daño recibido
+            if(typeof Plugins!=='undefined'&&finalDmg>0){
+                const special=Plugins.getSpecialItem(p.armor?.id);
+                if(special&&special.onTakeDamage)special.onTakeDamage(p,enemy,finalDmg);
+                (p.effects||[]).filter(e=>e.type==='shield').forEach(eff=>{
+                    const custom=Plugins.customEffects[eff.type];
+                    if(custom&&custom.onTakeDamage)finalDmg=custom.onTakeDamage(p,eff,finalDmg);
+                });
+            }
+            
+            this.log(`├ ⚔️ Daño: ${baseDmg} − ${playerArmor} (armadura) = ${finalDmg}`);
+            
+            if(finalDmg>0){
+                p.hp-=finalDmg;
+                this.log(`└ <span class="log-damage">💥 ${p.name} recibe ${finalDmg} daño (${Math.max(0,p.hp)}/${p.maxHp})</span>`);
+                if(enemy.effect)this.applyEff(p,enemy.effect);
+            }else{
+                this.log(`└ <span class="log-heal">🛡️ ${p.name} bloquea todo (armadura ≥ daño)</span>`);
+            }
+        }
+        this.updateUI();Game.updateUI();
+        if(p.hp<=0){this.defeat();return}
+        await delay(400);
+        this.advanceToNextActor();
+    },
+    applyEff(t,type){
+        const effs={bleed:{dmg:1,turns:3},poison:{dmg:2,turns:2},fire:{dmg:'1d4',turns:2},ice:{dmg:1,turns:2}};
+        const ef=effs[type];if(!ef)return;
+        if(!t.effects)t.effects=[];
+        const ex=t.effects.find(e=>e.type===type);
+        if(ex)ex.turns=ef.turns;
+        else t.effects.push({type,dmg:ef.dmg,turns:ef.turns});
+        this.log(`<span style="color:var(--orange)">⚡ ${effectName(type)} → ${t.name}</span>`);
+        // Efecto especial de hielo: 30% de congelar
+        if(type==='ice'&&!t.frozen&&Math.random()<0.30){
+            t.frozen=true;
+            t.frozenTurns=1;
+            this.log(`<span style="color:#00BFFF;font-weight:bold">❄️ ¡${t.name} CONGELADO! Pierde su próximo turno</span>`);
+        }
+    },
+    processAllEffects(){this.processEff(G.p);if(G.p.pet)this.processEff(G.p.pet);G.enemies.forEach(e=>this.processEff(e));this.updateUI();Game.updateUI()},
+    processEff(t){if(!t.effects?.length||t.hp<=0)return;let total=0;t.effects.forEach(ef=>{const d=typeof ef.dmg==='string'?roll(ef.dmg):ef.dmg;total+=d;ef.turns--});t.effects=t.effects.filter(e=>e.turns>0);if(total>0){t.hp=Math.max(0,t.hp-total);this.log(`<span style="color:var(--orange)">🔥 ${t.name} -${total} efectos (HP:${t.hp})</span>`)}},
+    victory(){
+        $('#combatArena').classList.add('hidden');
+        G.combat=false;
+        // Plugin hook: fin de combate
+        if(typeof Plugins!=='undefined')Plugins.trigger('onCombatEnd',true);
+        // Increment encounter count for current region
+        if(!G.regionProgress[G.region.id])G.regionProgress[G.region.id]={encounters:0};
+        G.regionProgress[G.region.id].encounters++;
+        
+        let totalLoot=0;
+        G.enemies.forEach(e=>{
+            if(e.loot){const mp=dX(e.loot[1]-e.loot[0])+e.loot[0];totalLoot+=mp}
+            // Nuevo sistema de drops con probabilidad
+            if(e.drops&&e.drops.length>0){
+                e.drops.forEach(drop=>{
+                    const dropData=typeof drop==='string'?{itemId:drop,chance:30}:drop;
+                    if(Math.random()*100<dropData.chance&&G.p.inv.length<G.p.maxSlots){
+                        const it=Data.findItem(dropData.itemId);
+                        if(it){G.p.inv.push({...it,uid:genId('i')});Story.add(`Encuentras: ${it.icon} ${it.name}`,'loot')}
+                    }
+                });
+            }
+        });
+        G.p.silver+=totalLoot;while(G.p.silver>=99){G.p.silver-=99;G.p.gold++}
+        Story.add(`<strong style="color:var(--green-bright)">🎉 ¡Victoria!</strong> +${totalLoot} MP`,'loot');
+        Story.add(`📊 Encuentros en ${G.region.name}: ${G.regionProgress[G.region.id].encounters}`,'system');
+        G.enemies=[];
+        Game.updateUI();
+        Game.autoSave();
+        
+        // If traveling, continue journey
+        if(this.duringTravel){
+            this.duringTravel=false;
+            Regions.continueTravelAfterCombat();
+        }else{
+            Game.exploreActions();
+        }
+    },
+    defeat(){
+        $('#combatArena').classList.add('hidden');
+        G.combat=false;
+        if(typeof Plugins!=='undefined')Plugins.trigger('onCombatEnd',false);
+        this.duringTravel=false;
+        G.traveling=null;
+        G.enemies=[];
+        Story.add(`<div style="text-align:center;padding:1.5rem;background:linear-gradient(135deg,rgba(139,0,0,.4),rgba(80,0,0,.6));border:2px solid var(--red);border-radius:12px;margin:.5rem 0">
+            <div style="font-size:3rem;margin-bottom:.5rem">💀</div>
+            <strong style="color:var(--red-bright);font-size:1.5rem;display:block">¡HAS MUERTO!</strong>
+            <div style="color:var(--text-dim);margin-top:.5rem;font-size:.9rem">Tu aventura termina aquí...</div>
+        </div>`,'combat');
+        Game.deleteSave();
+        // Mostrar botón prominente de reinicio
+        const resetHtml=`<div style="text-align:center;padding:1.5rem;background:var(--bg-panel);border-radius:8px;margin-top:.5rem">
+            <p style="color:var(--text-dim);margin-bottom:1rem;font-size:.9rem">Tu progreso ha sido eliminado.</p>
+            <button class="btn btn-primary" style="font-size:1.2rem;padding:1rem 2.5rem;animation:pulse 1.5s infinite;box-shadow:0 0 20px rgba(212,164,55,.3)" onclick="Game.fullReset()">🔄 Nueva Aventura</button>
+        </div>`;
+        $('#actionsContainer').innerHTML=resetHtml;
+        $('#actionsPanel').classList.remove('hidden');
+    },
+    escape(){$('#combatArena').classList.add('hidden');G.combat=false;G.enemies=[];Story.add('Escapas.','system');Game.updateUI();if(this.duringTravel){this.duringTravel=false;G.traveling=null;Story.add('Vuelves al punto de partida.','travel')}Game.exploreActions()},
+    log(t){$('#combatLog').innerHTML+=`<div class="log-entry">${t}</div>`;$('#combatLog').scrollTop=999999},
+    updateUI(){
+        if(!G.p)return;
+        const grid=$('#combatGrid');
+        grid.innerHTML='';
+        
+        // Jugador
+        const pDiv=document.createElement('div');
+        pDiv.className=`combatant player ${G.p.hp<=0?'dead':''}`;
+        const pHpPct=(G.p.hp/G.p.maxHp)*100;
+        const hasMana=G.p.maxMana>0;
+        const pManaPct=hasMana?(G.p.mana/G.p.maxMana)*100:0;
+        const manaBar=hasMana?`<div class="hp-container" style="margin-top:.15rem"><div class="hp-fill" style="width:${pManaPct}%;background:linear-gradient(to right,#4169E1,#1E90FF)"></div><div class="hp-text">💙${G.p.mana}/${G.p.maxMana}</div></div>`:'';
+        pDiv.innerHTML=`
+            <div class="combatant-order">⚡${Game.speed()}</div>
+            <div class="combatant-sprite">${sprite({icon:G.p.race.icon,sprite:G.p.race.sprite})}</div>
+            <div class="combatant-name">${G.p.name}</div>
+            <div class="combatant-stats">⚔️${G.p.weapon?.damage||'1d2'} 🛡️${Game.armor()}</div>
+            <div class="hp-container"><div class="hp-fill ${hpClass(pHpPct)}" style="width:${pHpPct}%"></div><div class="hp-text">${G.p.hp}/${G.p.maxHp}</div></div>
+            ${manaBar}
+            <div class="effects-row">${(G.p.effects||[]).map(e=>`<span class="effect-tag eff-${e.type}">${effectName(e.type)} ${e.turns}</span>`).join('')}</div>`;
+        grid.appendChild(pDiv);
+        
+        // Mascota
+        if(G.p.pet&&G.p.pet.hp>0){
+            const petDiv=document.createElement('div');
+            petDiv.className='combatant pet';
+            const petHpPct=(G.p.pet.hp/G.p.pet.maxHp)*100;
+            petDiv.innerHTML=`
+                <div class="combatant-order">⚡${G.p.pet.speed||12}</div>
+                <div class="combatant-sprite">${G.p.pet.icon}</div>
+                <div class="combatant-name">${G.p.pet.name}</div>
+                <div class="combatant-stats">⚔️${G.p.pet.damage}</div>
+                <div class="hp-container"><div class="hp-fill" style="width:${petHpPct}%"></div><div class="hp-text">${G.p.pet.hp}/${G.p.pet.maxHp}</div></div>`;
+            grid.appendChild(petDiv);
+        }
+        
+        const vs=document.createElement('div');
+        vs.className='combat-vs';
+        vs.textContent='⚔';
+        grid.appendChild(vs);
+        
+        // Enemigos
+        G.enemies.forEach(e=>{
+            const eDiv=document.createElement('div');
+            eDiv.className=`combatant enemy ${e.hp<=0?'dead':''}`;
+            eDiv.dataset.uid=e.uid;
+            const eHpPct=(e.hp/e.maxHp)*100;
+            const weaponInfo=e.weapon?`${e.weapon.icon}${e.damage}`:e.damage;
+            eDiv.innerHTML=`
+                <div class="combatant-order">⚡${e.speed||10}</div>
+                <div class="combatant-sprite">${sprite(e)}</div>
+                <div class="combatant-name">${e.name}</div>
+                <div class="combatant-stats">⚔️${weaponInfo} 🛡️${e.armor||0} 🎯${e.difficulty||10}</div>
+                <div class="hp-container"><div class="hp-fill ${hpClass(eHpPct)}" style="width:${eHpPct}%"></div><div class="hp-text">${Math.max(0,e.hp)}/${e.maxHp}</div></div>
+                <div class="effects-row">${(e.effects||[]).map(ef=>`<span class="effect-tag eff-${ef.type}">${effectName(ef.type)} ${ef.turns}</span>`).join('')}</div>`;
+            grid.appendChild(eDiv);
+        });
+        
+        $('#turnCounter').textContent=G.turn;
+    }
+};
+
+const Inv={
+    open(){if(!G.p)return;this.render();openModal('inventoryModal')},
+    render(){if(!G.p)return;$('#inventoryInfo').textContent=`${G.p.inv.length}/${G.p.maxSlots}`;const g=$('#inventoryGrid');g.innerHTML='';G.p.inv.forEach(it=>{const s=document.createElement('div');s.className=`inv-slot rarity-${it.rarity||'common'}`;s.innerHTML=`<div class="inv-slot-icon">${sprite(it)}</div><div class="inv-slot-name">${it.name}</div>`;s.onclick=()=>this.detail(it,'inv');g.appendChild(s)});for(let i=G.p.inv.length;i<G.p.maxSlots;i++){const s=document.createElement('div');s.className='inv-slot empty';s.innerHTML='<div class="inv-slot-name" style="color:var(--text-dim)">vacío</div>';g.appendChild(s)}},
+    detail(it,ctx){G.item=it;$('#detailIcon').innerHTML=sprite(it);$('#detailName').textContent=it.name;$('#detailType').textContent=it.damage?'Arma':it.defense!==undefined?'Armadura':it.type||'Item';$('#detailDesc').textContent=it.desc||'Sin descripción.';let st='';if(it.damage)st+=`<div class="item-stat-box"><div class="item-stat-label">Daño</div><div class="item-stat-value">${it.damage}</div></div>`;if(it.defense!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Defensa</div><div class="item-stat-value">${it.defense}</div></div>`;if(it.weight!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Peso</div><div class="item-stat-value">${it.weight}</div></div>`;if(it.effect&&(it.type==='potion'||it.type==='food'))st+=`<div class="item-stat-box"><div class="item-stat-label">Cura</div><div class="item-stat-value">${it.effect}</div></div>`;if(it.manaBonus)st+=`<div class="item-stat-box"><div class="item-stat-label">+Maná</div><div class="item-stat-value">${it.manaBonus}</div></div>`;if(it.spellId){const sp=Data.findSpell(it.spellId);st+=`<div class="item-stat-box"><div class="item-stat-label">Enseña</div><div class="item-stat-value">${sp?sp.name:'?'}</div></div>`}if(it.value)st+=`<div class="item-stat-box"><div class="item-stat-label">Valor</div><div class="item-stat-value">${it.value}MP</div></div>`;$('#detailStats').innerHTML=st;const canEq=!G.combat&&G.region.type==='safe';let acts='';if(ctx.startsWith('eq-')){if(canEq)acts=`<button class="btn btn-danger" onclick="Inv.unequip('${ctx.split('-')[1]}')">❌ Quitar</button>`;else acts='<span style="color:var(--text-dim)">Solo zona segura</span>'}else{if(it.damage&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('weapon')">⚔️ Equipar</button>`;if(it.defense!==undefined&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('armor')">🛡️ Equipar</button>`;if(it.type==='potion'||it.type==='food')acts+=`<button class="btn btn-primary" onclick="Inv.use()">✨ Usar</button>`;if(it.type==='antidote')acts+=`<button class="btn btn-primary" onclick="Inv.use()">💊 Usar</button>`;if(it.type==='scroll')acts+=`<button class="btn btn-primary" onclick="Inv.use()">📜 Aprender</button>`;if(it.type==='escape'&&G.combat)acts+=`<button class="btn btn-primary" onclick="Inv.use()">💨 Usar</button>`;if(it.type==='backpack')acts+=`<button class="btn btn-primary" onclick="Inv.use()">🎒 Usar</button>`}acts+=`<button class="btn" onclick="closeModal('itemDetailModal')">Cerrar</button>`;$('#detailActions').innerHTML=acts;openModal('itemDetailModal')},
+    equip(slot){
+        const it=G.item;if(!it?.uid)return;
+        // Verificar restricciones de mago/guerrero para armas
+        if(slot==='weapon'){
+            if(G.p.isMage&&!it.magic){toast('Los magos solo usan armas mágicas','error');return}
+            if(!G.p.isMage&&it.magic){toast('Los guerreros no usan armas mágicas','error');return}
+        }
+        closeModal('itemDetailModal');
+        if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon=it}
+        else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor=it}
+        G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);
+        // Recalcular maná máximo si es mago y equipó arma mágica
+        if(G.p.isMage){
+            const baseMana=100;
+            const weaponBonus=G.p.weapon?.manaBonus||0;
+            const armorBonus=G.p.armor?.manaBonus||0;
+            G.p.maxMana=baseMana+weaponBonus+armorBonus;
+            G.p.mana=Math.min(G.p.mana,G.p.maxMana);
+        }
+        toast('Equipado','success');Game.updateUI();Game.autoSave();this.render()
+    },
+    unequip(slot){if(G.p.inv.length>=G.p.maxSlots){toast('Inventario lleno','error');return}closeModal('itemDetailModal');if(slot==='weapon'){if(G.p.weapon?.uid)G.p.inv.push(G.p.weapon);G.p.weapon={name:'Puños',damage:'1d2',icon:'✊'}}else{if(G.p.armor?.uid)G.p.inv.push(G.p.armor);G.p.armor={name:'Sin armadura',defense:0,icon:'👤'}}toast('Desequipado','info');Game.updateUI();Game.autoSave()},
+    use(){
+        const it=G.item;if(!it?.uid)return;
+        closeModal('itemDetailModal');closeModal('inventoryModal');
+        
+        if(it.type==='potion'){
+            // Poción de salud o maná
+            const h=roll(it.effect||'1d4');
+            if(it.potionType==='mana'&&G.p.maxMana>0){
+                const a=Math.min(h,G.p.maxMana-G.p.mana);
+                G.p.mana+=a;
+                Story.add(`${it.icon} ${it.name}: <span style="color:#88bbff">+${a} Maná</span>`,'system');
+                if(G.combat)Combat.log(`<span class="log-heal">${G.p.name} usa ${it.name}: +${a} 💙</span>`);
+            }else{
+                const a=Math.min(h,G.p.maxHp-G.p.hp);
+                G.p.hp+=a;
+                Story.add(`${it.icon} ${it.name}: <span style="color:var(--green-bright)">+${a} HP</span>`,'system');
+                if(G.combat)Combat.log(`<span class="log-heal">${G.p.name} usa ${it.name}: +${a} ❤️</span>`);
+            }
+        }else if(it.type==='food'){
+            // Comida restaura alimentación
+            const f=it.foodValue||1;
+            const a=Math.min(f,G.p.maxFood-G.p.food);
+            G.p.food+=a;
+            Story.add(`${it.icon} ${it.name}: <span style="color:#eebb55">+${a} 🍖</span>`,'system');
+        }else if(it.type==='antidote'){
+            // Antídoto cura efecto específico o todos
+            const cures=it.cures||'poison';
+            if(cures==='all'){
+                G.p.effects=[];
+                Story.add('Todos los efectos curados.','system');
+            }else{
+                G.p.effects=G.p.effects.filter(e=>e.type!==cures);
+                Story.add(`${cures} curado.`,'system');
+            }
+        }else if(it.type==='scroll'){
+            // Pergamino enseña hechizo - SOLO para magos
+            if(!G.p.isMage){toast('Solo los magos pueden aprender hechizos','error');return}
+            if(!it.spellId){toast('Pergamino inválido','error');return}
+            if(!Spellbook.learn(it.spellId))return;
+        }else if(it.type==='escape'&&G.combat){
+            G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);
+            Story.add('¡Escape exitoso!','narrative');
+            Combat.escape();return;
+        }else if(it.type==='backpack'){
+            const s=it.slots||5;
+            G.p.maxSlots+=s;
+            Story.add(`+${s} espacios de inventario.`,'system');
+        }
+        
+        G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);
+        Game.updateUI();Game.autoSave();
+        if(G.combat){Combat.updateUI();Combat.advanceToNextActor()}
+    }
+};
+
+const Town={
+    npc:null,
+    visit(region){
+        const npcs=Data.getNpcsForRegion(region.id);
+        if(npcs.length===0){toast('No hay NPCs aquí','info');return}
+        $('#townTitle').textContent=`${region.icon} ${region.name}`;
+        const roles={merchant:'Comerciante',blacksmith:'Herrero',alchemist:'Alquimista',innkeeper:'Tabernero',healer:'Curandero',guard:'Guardia',villager:'Aldeano'};
+        let h='<div style="display:grid;gap:.4rem">';
+        npcs.forEach(n=>{
+            h+=`<div class="item-card" onclick="Town.interact('${n.id}')">
+                <span class="item-card-icon">${sprite(n)}</span>
+                <div class="item-card-info">
+                    <div class="item-card-name">${n.name}</div>
+                    <div class="item-card-stats">${roles[n.role]||n.role}</div>
+                </div>
+            </div>`;
+        });
+        h+='</div>';
+        $('#townContent').innerHTML=h;
+        openModal('townModal');
+    },
+    interact(id){
+        const n=Data.find('npcs',id);
+        if(!n)return;
+        closeModal('townModal');
+        this.npc=n;
+        Story.add(`<strong>${n.name}</strong>: "${n.dialogue||'¡Saludos!'}"`,`dialogue`);
+        
+        if(n.sells?.length>0){
+            setTimeout(()=>this.shop(n),400);
+        }else if(n.role==='healer'){
+            if(G.p.silver>=10){
+                G.p.silver-=10;
+                G.p.hp=G.p.maxHp;
+                G.p.effects=[];
+                Story.add('Curación completa. (-10 MP)','system');
+                Game.autoSave();
+            }else{
+                Story.add('"No tienes suficiente dinero."','dialogue');
+            }
+            Game.updateUI();
+        }else if(n.role==='innkeeper'){
+            if(G.p.silver>=5){
+                G.p.silver-=5;
+                const h=Math.floor(G.p.maxHp*0.5);
+                G.p.hp=Math.min(G.p.maxHp,G.p.hp+h);
+                Story.add(`Descansas. +${h} HP (-5 MP)`,'system');
+                Game.autoSave();
+            }else{
+                Story.add('"No tienes dinero para una habitación."','dialogue');
+            }
+            Game.updateUI();
+        }else{
+            Story.add('No tiene nada que ofrecerte por ahora.','system');
+        }
+    },
+    shop(n){
+        $('#shopTitle').textContent=`🏪 ${n.name}`;
+        const getItemDetails=(it)=>{
+            let d=[];
+            if(it.damage)d.push(`⚔️${it.damage}`);
+            if(it.defense!==undefined)d.push(`🛡️${it.defense}`);
+            if(it.weight)d.push(`⚖️${it.weight}`);
+            if(it.effect&&(it.type==='potion'||it.type==='food'))d.push(`💚${it.effect}`);
+            if(it.rarity&&it.rarity!=='common')d.push(`✨${it.rarity}`);
+            return d.join(' ');
+        };
+        let h='<div style="display:grid;grid-template-columns:1fr 1fr;gap:.8rem"><div><h4 style="color:var(--gold);margin-bottom:.4rem;font-size:.75rem">En venta</h4><div style="display:grid;gap:.25rem;max-height:200px;overflow-y:auto">';
+        (n.sells||[]).forEach(iid=>{
+            const it=Data.findItem(iid);
+            if(it){
+                const can=G.p.silver>=it.value&&G.p.inv.length<G.p.maxSlots;
+                const details=getItemDetails(it);
+                h+=`<div class="item-card rarity-${it.rarity||'common'}" style="opacity:${can?1:.5}">
+                    <span class="item-card-icon">${sprite(it)}</span>
+                    <div class="item-card-info">
+                        <div class="item-card-name">${it.name}</div>
+                        <div class="item-card-stats">${details||it.type||'Item'}</div>
+                        <div style="color:var(--gold);font-size:.6rem">${it.value} MP</div>
+                    </div>
+                    <button class="btn btn-sm" onclick="Town.buy('${it.id}')" ${can?'':'disabled'}>Comprar</button>
+                </div>`;
+            }
+        });
+        h+='</div></div><div><h4 style="color:var(--gold);margin-bottom:.4rem;font-size:.75rem">Vender</h4><div style="display:grid;gap:.25rem;max-height:200px;overflow-y:auto">';
+        G.p.inv.forEach(it=>{
+            const baseValue=it.value||10;
+            const sellRate=it.bought?0.6:0.5;
+            const sp=Math.floor(baseValue*sellRate);
+            const details=getItemDetails(it);
+            const boughtTag=it.bought?'<span style="color:var(--cyan);font-size:.5rem">🏪</span>':'';
+            h+=`<div class="item-card rarity-${it.rarity||'common'}">
+                <span class="item-card-icon">${sprite(it)}${boughtTag}</span>
+                <div class="item-card-info">
+                    <div class="item-card-name">${it.name}</div>
+                    <div class="item-card-stats">${details||it.type||'Item'}</div>
+                    <div style="color:var(--gold);font-size:.6rem">${sp} MP ${it.bought?'(60%)':'(50%)'}</div>
+                </div>
+                <button class="btn btn-sm" onclick="Town.sell('${it.uid}',${sp})">Vender</button>
+            </div>`;
+        });
+        h+=`</div></div></div><div style="text-align:center;margin-top:.6rem;color:var(--text-dim);font-size:.7rem">💰 ${G.p.gold} MO ${G.p.silver} MP</div>`;
+        $('#shopContent').innerHTML=h;
+        openModal('shopModal');
+    },
+    buy(iid){const it=Data.findItem(iid);if(!it||G.p.silver<it.value||G.p.inv.length>=G.p.maxSlots)return;G.p.silver-=it.value;G.p.inv.push({...it,uid:genId('i'),bought:true});toast(`Comprado: ${it.name}`,'success');Game.updateUI();Game.autoSave();if(this.npc)this.shop(this.npc)},
+    sell(uid,price){const it=G.p.inv.find(i=>i.uid===uid);if(!it)return;G.p.inv=G.p.inv.filter(i=>i.uid!==uid);G.p.silver+=price;while(G.p.silver>=99){G.p.silver-=99;G.p.gold++}toast('Vendido','success');Game.updateUI();Game.autoSave();if(this.npc)this.shop(this.npc)}
+};
+
+const Spellbook={
+    open(){
+        if(!G.p)return;
+        if(!G.p.isMage){toast('No usas magia','info');return}
+        
+        const modal=document.createElement('div');
+        modal.className='modal';
+        modal.id='spellbookModal';
+        modal.innerHTML=`<div class="modal-content" style="max-width:400px">
+            <div class="modal-header"><h3>📖 Libro de Hechizos</h3><button class="close-btn" onclick="closeModal('spellbookModal')">×</button></div>
+            <div class="modal-body">
+                <div style="text-align:center;margin-bottom:.5rem">
+                    <span style="color:var(--cyan)">💙 ${G.p.mana}/${G.p.maxMana} Maná</span>
+                    <span style="color:var(--text-dim);margin-left:.5rem">(${(G.p.spells||[]).length}/${G.p.maxSpells||3} hechizos)</span>
+                </div>
+                <div id="spellbookList" style="display:grid;gap:.5rem"></div>
+                <div style="margin-top:1rem;padding-top:.5rem;border-top:1px solid var(--border)">
+                    <div style="font-size:.8rem;color:var(--text-dim);text-align:center">
+                        Usa pergaminos para aprender nuevos hechizos
+                    </div>
+                </div>
+            </div>
+        </div>`;
+        document.body.appendChild(modal);
+        setTimeout(()=>modal.classList.add('active'),10);
+        this.render();
+    },
+    render(){
+        const list=$('#spellbookList');
+        if(!list)return;
+        list.innerHTML=(G.p.spells||[]).map((sp,i)=>`
+            <div style="background:var(--bg-dark);padding:.5rem;border-radius:6px;display:flex;align-items:center;gap:.5rem">
+                <span style="font-size:1.5rem">${sp.icon}</span>
+                <div style="flex:1">
+                    <div style="font-weight:bold">${sp.name}</div>
+                    <div style="font-size:.7rem;color:var(--text-dim)">⚔️${sp.damage} 💙${sp.cost}${sp.effect?` 🔥${sp.effect}`:''}</div>
+                    <div style="font-size:.65rem;color:var(--text-dim)">${sp.desc||''}</div>
+                </div>
+                <button class="btn btn-danger btn-sm" onclick="Spellbook.forget(${i})">❌</button>
+            </div>
+        `).join('')||'<div style="text-align:center;color:var(--text-dim)">Sin hechizos</div>';
+    },
+    forget(index){
+        if(!confirm('¿Olvidar este hechizo?'))return;
+        G.p.spells.splice(index,1);
+        Game.autoSave();
+        this.render();
+        toast('Hechizo olvidado','info');
+    },
+    learn(spellId){
+        const spell=Data.findSpell(spellId);
+        if(!spell){toast('Hechizo no encontrado','error');return false}
+        if((G.p.spells||[]).length>=(G.p.maxSpells||3)){toast(`Máximo ${G.p.maxSpells||3} hechizos. Olvida uno primero.`,'error');return false}
+        if((G.p.spells||[]).some(s=>s.id===spellId)){toast('Ya conoces este hechizo','info');return false}
+        if(!G.p.spells)G.p.spells=[];
+        G.p.spells.push({...spell});
+        Game.autoSave();
+        toast(`¡Aprendiste ${spell.icon} ${spell.name}!`,'success');
+        return true;
+    }
+};
+
+const Craft={
+    open(){
+        if(G.region.type!=='safe'){toast('Solo en zona segura','error');return}
+        const recipes=Data.recipes||[];
+        if(recipes.length===0){toast('No hay recetas disponibles','info');return}
+        let h='<div style="display:grid;gap:.5rem">';
+        recipes.forEach(r=>{
+            const result=Data.findItem(r.result);
+            // Procesar ingredientes - soportar ambos formatos {id,qty} y string
+            const ingList=(r.ingredients||[]).map(ing=>{
+                const itemId=ing.id||ing;
+                const need=ing.qty||1;
+                return{itemId,need};
+            });
+            // Agrupar ingredientes iguales
+            const grouped={};
+            ingList.forEach(i=>{
+                if(!grouped[i.itemId])grouped[i.itemId]={itemId:i.itemId,need:0};
+                grouped[i.itemId].need+=i.need;
+            });
+            const ingredients=Object.values(grouped).map(g=>{
+                const it=Data.findItem(g.itemId);
+                const has=G.p.inv.filter(x=>x.id===g.itemId).length;
+                return{it,has,need:g.need,itemId:g.itemId};
+            });
+            const canCraft=ingredients.every(i=>i.has>=i.need)&&G.p.inv.length<G.p.maxSlots;
+            const ingHtml=ingredients.map(i=>`<span style="color:${i.has>=i.need?'var(--green-bright)':'var(--red-bright)'}${i.has<i.need?';opacity:.7':''}">${i.it?.icon||'?'}${i.it?.name||'?'} (${i.has}/${i.need})</span>`).join(' + ');
+            h+=`<div class="item-card rarity-${result?.rarity||'common'}" style="opacity:${canCraft?1:.6}">
+                <span class="item-card-icon">${r.icon||'🔨'}</span>
+                <div class="item-card-info">
+                    <div class="item-card-name">${r.name}</div>
+                    <div style="font-size:.55rem;color:var(--text-dim)">${ingHtml}</div>
+                    <div style="font-size:.6rem;margin-top:.2rem">→ ${result?.icon||'?'} <strong>${result?.name||'?'}</strong></div>
+                    ${r.desc?`<div style="font-size:.5rem;color:var(--text-dim);font-style:italic">${r.desc}</div>`:''}
+                </div>
+                <button class="btn btn-sm${canCraft?' btn-primary':''}" onclick="Craft.make('${r.id}')" ${canCraft?'':'disabled'}>Crear</button>
+            </div>`;
+        });
+        h+='</div>';
+        $('#craftContent').innerHTML=h;
+        openModal('craftModal');
+    },
+    make(recipeId){
+        const recipe=Data.recipes.find(r=>r.id===recipeId);
+        if(!recipe)return;
+        const result=Data.findItem(recipe.result);
+        if(!result){toast('Resultado inválido','error');return}
+        // Check ingredients - soportar ambos formatos
+        const needed={};
+        (recipe.ingredients||[]).forEach(ing=>{
+            const itemId=ing.id||ing;
+            const qty=ing.qty||1;
+            needed[itemId]=(needed[itemId]||0)+qty;
+        });
+        for(const iid in needed){
+            const has=G.p.inv.filter(x=>x.id===iid).length;
+            if(has<needed[iid]){toast('Faltan materiales','error');return}
+        }
+        if(G.p.inv.length>=G.p.maxSlots){toast('Inventario lleno','error');return}
+        // Remove ingredients
+        for(const iid in needed){
+            let toRemove=needed[iid];
+            G.p.inv=G.p.inv.filter(x=>{
+                if(x.id===iid&&toRemove>0){toRemove--;return false}
+                return true;
+            });
+        }
+        // Add result
+        G.p.inv.push({...result,uid:genId('i')});
+        Story.add(`🔨 Crafteado: ${result.icon} <strong>${result.name}</strong>`,'loot');
+        toast(`¡${result.name} creado!`,'success');
+        Game.updateUI();
+        Game.autoSave();
+        this.open();
+    }
+};
+
+const Editor={
+    enemyDrops:[],
+    clear(t){const fields={region:['region-id','region-name','region-icon','region-desc','region-narratives','region-distance','region-reqEncounters'],race:['race-id','race-name','race-icon','race-sprite','race-hp','race-armor','race-speed','race-precision','race-damage','race-desc'],weapon:['weapon-id','weapon-name','weapon-damage','weapon-weight','weapon-icon','weapon-sprite','weapon-value','weapon-desc','weapon-manaBonus'],armor:['armor-id','armor-name','armor-defense','armor-weight','armor-icon','armor-sprite','armor-value','armor-desc','armor-manaBonus'],item:['item-id','item-name','item-icon','item-sprite','item-effect','item-value','item-desc','item-food-value','item-backpack-slots'],enemy:['enemy-id','enemy-name','enemy-health','enemy-damage','enemy-difficulty','enemy-armor','enemy-speed','enemy-icon','enemy-sprite','enemy-loot-min','enemy-loot-max','enemy-desc','enemy-groupMin','enemy-groupMax','enemy-groupChance','enemy-weaponId','enemy-armorId'],pet:['pet-id','pet-name','pet-health','pet-damage','pet-speed','pet-difficulty','pet-icon','pet-sprite','pet-desc'],npc:['npc-id','npc-name','npc-icon','npc-sprite','npc-dialogue'],recipe:['recipe-id','recipe-name','recipe-icon','recipe-result','recipe-desc'],spell:['spell-id','spell-name','spell-damage','spell-cost','spell-icon','spell-desc']};(fields[t]||[]).forEach(id=>{const e=$(`#${id}`);if(e)e.value=''});$$('.multi-select input').forEach(c=>c.checked=false);if(t==='enemy'){$('#enemy-canGroup').value='false';$('#enemy-weaponId').value='';$('#enemy-armorId').value='';$('#enemy-usesMana').value='false';this.enemyDrops=[];this.renderDropsList()}if(t==='weapon'){$('#weapon-magic').value='false'}if(t==='armor'){$('#armor-magic').value='false'}if(t==='race'){$('#race-combatType').value='warrior'}if(t==='spell'){$('#spell-effect').value=''}if(t==='item'){$('#item-type').value='potion';$('#item-potion-type').value='health';$('#item-antidote-cures').value='poison';this.onItemTypeChange()}if(t==='recipe'){this.recipeIngredients=[];this.renderIngredientsList()}},
+    addDrop(){const itemId=$('#enemy-drop-select').value;const chance=parseInt($('#enemy-drop-chance').value)||20;if(!itemId)return;this.enemyDrops.push({itemId,chance});this.renderDropsList()},
+    removeDrop(index){this.enemyDrops.splice(index,1);this.renderDropsList()},
+    renderDropsList(){const list=$('#enemy-drops-list');if(!list)return;list.innerHTML=this.enemyDrops.map((d,i)=>{const it=Data.findItem(d.itemId);return`<span style="background:var(--bg-panel);padding:.2rem .4rem;border-radius:3px;display:flex;align-items:center;gap:.3rem">${it?.icon||'?'} ${it?.name||d.itemId} <span style="color:var(--gold)">${d.chance}%</span><span style="cursor:pointer;color:var(--red)" onclick="Editor.removeDrop(${i})">×</span></span>`}).join('')},
+    filterDropItems(query){
+        const sel=$('#enemy-drop-select');if(!sel)return;
+        const q=query.toLowerCase().trim();
+        const allItems=[...Data.weapons,...Data.armors,...Data.items];
+        const filtered=q?allItems.filter(i=>(i.name||'').toLowerCase().includes(q)||(i.id||'').toLowerCase().includes(q)):allItems;
+        sel.innerHTML='<option value="">-- Seleccionar --</option>'+filtered.slice(0,50).map(i=>`<option value="${i.id}">${i.icon||'📦'} ${i.name}</option>`).join('');
+    },
+    filterIngredientItems(query){
+        const sel=$('#recipe-ingredient-select');if(!sel)return;
+        const q=query.toLowerCase().trim();
+        const allItems=[...Data.weapons,...Data.armors,...Data.items];
+        const filtered=q?allItems.filter(i=>(i.name||'').toLowerCase().includes(q)||(i.id||'').toLowerCase().includes(q)):allItems;
+        sel.innerHTML='<option value="">-- Seleccionar --</option>'+filtered.slice(0,50).map(i=>`<option value="${i.id}">${i.icon||'📦'} ${i.name}</option>`).join('');
+    },
+    filterResultItems(query){
+        const sel=$('#recipe-result');if(!sel)return;
+        const q=query.toLowerCase().trim();
+        const allItems=[...Data.weapons,...Data.armors,...Data.items];
+        const filtered=q?allItems.filter(i=>(i.name||'').toLowerCase().includes(q)||(i.id||'').toLowerCase().includes(q)):allItems;
+        sel.innerHTML='<option value="">-- Seleccionar --</option>'+filtered.slice(0,50).map(i=>`<option value="${i.id}">${i.icon||'📦'} ${i.name}</option>`).join('');
+    },
+    saveRegion(){const id=$('#region-id').value||genId('reg');if(id.startsWith('plg_')){toast('Regiones del plugin son de solo lectura','error');return}const narratives=$('#region-narratives').value.split('\n').filter(n=>n.trim());const connections=Array.from($$('#region-connections input:checked')).map(c=>c.value);const r={id,name:$('#region-name').value,icon:$('#region-icon').value||'🗺️',type:$('#region-type').value,desc:$('#region-desc').value||'',distance:parseInt($('#region-distance').value)||0,reqEncounters:parseInt($('#region-reqEncounters').value)||0,connections,narratives};if(!r.name){toast('Falta nombre','error');return}const i=Data.regions.findIndex(x=>x.id===r.id);if(i>=0)Data.regions[i]=r;else Data.regions.push(r);Data.save();this.renderRegions();this.updateSelects();this.clear('region');toast('Guardado','success')},
+    editRegion(id){const r=Data.find('regions',id);if(!r)return;$('#region-id').value=r.id;$('#region-name').value=r.name;$('#region-icon').value=r.icon||'';$('#region-type').value=r.type||'danger';$('#region-desc').value=r.desc||'';$('#region-distance').value=r.distance||0;$('#region-reqEncounters').value=r.reqEncounters||0;$('#region-narratives').value=(r.narratives||[]).join('\n');setTimeout(()=>{$$('#region-connections input').forEach(c=>c.checked=(r.connections||[]).includes(c.value))},50)},
+    deleteRegion(id){if(!confirm('¿Eliminar?'))return;Data.regions=Data.regions.filter(r=>r.id!==id);Data.save();this.renderRegions();this.updateSelects();toast('Eliminado','info')},
+    saveRace(){const r={id:$('#race-id').value||genId('race'),name:$('#race-name').value,icon:$('#race-icon').value||'👤',sprite:$('#race-sprite').value||'',combatType:$('#race-combatType').value||'warrior',bonus:{health:parseInt($('#race-hp').value)||0,armor:parseInt($('#race-armor').value)||0,speed:parseInt($('#race-speed').value)||10,precision:parseInt($('#race-precision').value)||0,damage:parseInt($('#race-damage').value)||0},desc:$('#race-desc').value||''};if(!r.name){toast('Falta nombre','error');return}const i=Data.races.findIndex(x=>x.id===r.id);if(i>=0)Data.races[i]=r;else Data.races.push(r);Data.save();this.renderRaces();this.clear('race');toast('Guardado','success')},
+    editRace(id){const r=Data.find('races',id);if(!r)return;$('#race-id').value=r.id;$('#race-name').value=r.name;$('#race-icon').value=r.icon||'';$('#race-sprite').value=r.sprite||'';$('#race-combatType').value=r.combatType||'warrior';$('#race-hp').value=r.bonus?.health||'';$('#race-armor').value=r.bonus?.armor||'';$('#race-speed').value=r.bonus?.speed||'';$('#race-precision').value=r.bonus?.precision||'';$('#race-damage').value=r.bonus?.damage||'';$('#race-desc').value=r.desc||''},
+    deleteRace(id){if(!confirm('¿Eliminar?'))return;Data.races=Data.races.filter(r=>r.id!==id);Data.save();this.renderRaces();toast('Eliminado','info')},
+    saveWeapon(){const id=$('#weapon-id').value||genId('w');
+        // Items del plugin: solo guardar sprite personalizado
+        if(id.startsWith('plg_')){
+            const sprite=$('#weapon-sprite').value||'';
+            if(sprite){Data.pluginSprites[id]=sprite;Data.save();toast('Sprite guardado','success')}
+            else{delete Data.pluginSprites[id];Data.save();toast('Sprite removido','info')}
+            // Aplicar al item en memoria
+            const item=Data.weapons.find(w=>w.id===id);if(item)item.sprite=sprite;
+            this.renderWeapons();return;
+        }
+        const w={id,name:$('#weapon-name').value,damage:$('#weapon-damage').value||'1d4',weight:parseInt($('#weapon-weight').value)||0,icon:$('#weapon-icon').value||'⚔️',sprite:$('#weapon-sprite').value||'',rarity:$('#weapon-rarity').value,value:parseInt($('#weapon-value').value)||10,magic:$('#weapon-magic').value==='true',manaBonus:parseInt($('#weapon-manaBonus').value)||0,effect:$('#weapon-effect').value||null,desc:$('#weapon-desc').value||''};if(!w.name){toast('Falta nombre','error');return}const i=Data.weapons.findIndex(x=>x.id===w.id);if(i>=0)Data.weapons[i]=w;else Data.weapons.push(w);Data.save();this.renderWeapons();this.updateSelects();this.clear('weapon');toast('Guardado','success')},
+    saveArmor(){const id=$('#armor-id').value||genId('a');
+        if(id.startsWith('plg_')){
+            const sprite=$('#armor-sprite').value||'';
+            if(sprite){Data.pluginSprites[id]=sprite;Data.save();toast('Sprite guardado','success')}
+            else{delete Data.pluginSprites[id];Data.save();toast('Sprite removido','info')}
+            const item=Data.armors.find(a=>a.id===id);if(item)item.sprite=sprite;
+            this.renderArmors();return;
+        }
+        const a={id,name:$('#armor-name').value,defense:parseInt($('#armor-defense').value)||0,weight:parseInt($('#armor-weight').value)||0,icon:$('#armor-icon').value||'🛡️',sprite:$('#armor-sprite').value||'',rarity:$('#armor-rarity').value,value:parseInt($('#armor-value').value)||10,magic:$('#armor-magic').value==='true',manaBonus:parseInt($('#armor-manaBonus').value)||0,desc:$('#armor-desc').value||''};if(!a.name){toast('Falta nombre','error');return}const i=Data.armors.findIndex(x=>x.id===a.id);if(i>=0)Data.armors[i]=a;else Data.armors.push(a);Data.save();this.renderArmors();this.updateSelects();this.clear('armor');toast('Guardado','success')},
+    saveItem(){
+        const id=$('#item-id').value||genId('i');
+        if(id.startsWith('plg_')){
+            const sprite=$('#item-sprite').value||'';
+            if(sprite){Data.pluginSprites[id]=sprite;Data.save();toast('Sprite guardado','success')}
+            else{delete Data.pluginSprites[id];Data.save();toast('Sprite removido','info')}
+            const item=Data.items.find(i=>i.id===id);if(item)item.sprite=sprite;
+            this.renderItems();return;
+        }
+        const type=$('#item-type').value;
+        const it={
+            id,
+            name:$('#item-name').value,
+            type:type,
+            icon:$('#item-icon').value||'📦',
+            sprite:$('#item-sprite').value||'',
+            value:parseInt($('#item-value').value)||10,
+            rarity:$('#item-rarity').value,
+            desc:$('#item-desc').value||''
+        };
+        // Type-specific fields
+        if(type==='potion'){
+            it.potionType=$('#item-potion-type').value;
+            it.effect=$('#item-effect').value||'1d8';
+        }else if(type==='food'){
+            it.foodValue=parseInt($('#item-food-value').value)||1;
+        }else if(type==='antidote'){
+            it.cures=$('#item-antidote-cures').value;
+        }else if(type==='scroll'){
+            it.spellId=$('#item-scroll-spell').value;
+        }else if(type==='backpack'){
+            it.slots=parseInt($('#item-backpack-slots').value)||5;
+        }
+        if(!it.name){toast('Falta nombre','error');return}
+        const i=Data.items.findIndex(x=>x.id===it.id);
+        if(i>=0)Data.items[i]=it;else Data.items.push(it);
+        Data.save();this.renderItems();this.updateSelects();this.clear('item');toast('Guardado','success')
+    },
+    saveEnemy(){const id=$('#enemy-id').value||genId('e');
+        if(id.startsWith('plg_')){
+            const sprite=$('#enemy-sprite').value||'';
+            if(sprite){Data.pluginSprites[id]=sprite;Data.save();toast('Sprite guardado','success')}
+            else{delete Data.pluginSprites[id];Data.save();toast('Sprite removido','info')}
+            const item=Data.enemies.find(e=>e.id===id);if(item)item.sprite=sprite;
+            this.renderEnemies();return;
+        }
+        const regions=Array.from($$('#enemy-regions input:checked')).map(c=>c.value);if(regions.length===0){toast('Selecciona región','error');return}const canGroup=$('#enemy-canGroup').value==='true';const e={id,name:$('#enemy-name').value,health:parseInt($('#enemy-health').value)||20,damage:$('#enemy-damage').value||'1d6',difficulty:parseInt($('#enemy-difficulty').value)||10,armor:parseInt($('#enemy-armor').value)||0,speed:parseInt($('#enemy-speed').value)||10,icon:$('#enemy-icon').value||'👹',sprite:$('#enemy-sprite').value||'',effect:$('#enemy-effect').value||null,usesMana:$('#enemy-usesMana').value==='true',weaponId:$('#enemy-weaponId').value||null,armorId:$('#enemy-armorId').value||null,loot:[parseInt($('#enemy-loot-min').value)||5,parseInt($('#enemy-loot-max').value)||20],regions,drops:this.enemyDrops||[],desc:$('#enemy-desc').value||'',canGroup,groupMin:parseInt($('#enemy-groupMin').value)||2,groupMax:parseInt($('#enemy-groupMax').value)||4,groupChance:parseInt($('#enemy-groupChance').value)||30};if(!e.name){toast('Falta nombre','error');return}const i=Data.enemies.findIndex(x=>x.id===e.id);if(i>=0)Data.enemies[i]=e;else Data.enemies.push(e);Data.save();this.renderEnemies();this.clear('enemy');toast('Guardado','success')},
+    editEnemy(id){const e=Data.find('enemies',id);if(!e)return;$('#enemy-id').value=e.id;$('#enemy-name').value=e.name;$('#enemy-health').value=e.health||'';$('#enemy-damage').value=e.damage||'';$('#enemy-difficulty').value=e.difficulty||'';$('#enemy-armor').value=e.armor||'';$('#enemy-speed').value=e.speed||'';$('#enemy-icon').value=e.icon||'';$('#enemy-sprite').value=e.sprite||'';$('#enemy-effect').value=e.effect||'';$('#enemy-weaponId').value=e.weaponId||'';$('#enemy-armorId').value=e.armorId||'';$('#enemy-loot-min').value=e.loot?.[0]||'';$('#enemy-loot-max').value=e.loot?.[1]||'';$('#enemy-desc').value=e.desc||'';$('#enemy-canGroup').value=e.canGroup?'true':'false';$('#enemy-groupMin').value=e.groupMin||'';$('#enemy-groupMax').value=e.groupMax||'';$('#enemy-groupChance').value=e.groupChance||'';this.enemyDrops=(e.drops||[]).map(d=>typeof d==='string'?{itemId:d,chance:20}:d);this.renderDropsList();setTimeout(()=>{$$('#enemy-regions input').forEach(c=>c.checked=(e.regions||[]).includes(c.value))},50)},
+    savePet(){const id=$('#pet-id').value||genId('p');
+        if(id.startsWith('plg_')){
+            const sprite=$('#pet-sprite').value||'';
+            if(sprite){Data.pluginSprites[id]=sprite;Data.save();toast('Sprite guardado','success')}
+            else{delete Data.pluginSprites[id];Data.save();toast('Sprite removido','info')}
+            const item=Data.pets.find(p=>p.id===id);if(item)item.sprite=sprite;
+            this.renderPets();return;
+        }
+        const regions=Array.from($$('#pet-regions input:checked')).map(c=>c.value);const p={id,name:$('#pet-name').value,health:parseInt($('#pet-health').value)||20,damage:$('#pet-damage').value||'1d4',speed:parseInt($('#pet-speed').value)||12,difficulty:parseInt($('#pet-difficulty').value)||24,icon:$('#pet-icon').value||'🐺',sprite:$('#pet-sprite').value||'',regions,desc:$('#pet-desc').value||''};if(!p.name){toast('Falta nombre','error');return}const i=Data.pets.findIndex(x=>x.id===p.id);if(i>=0)Data.pets[i]=p;else Data.pets.push(p);Data.save();this.renderPets();this.clear('pet');toast('Guardado','success')},
+    editPet(id){const p=Data.find('pets',id);if(!p)return;$('#pet-id').value=p.id;$('#pet-name').value=p.name;$('#pet-health').value=p.health||'';$('#pet-damage').value=p.damage||'';$('#pet-speed').value=p.speed||'';$('#pet-difficulty').value=p.difficulty||'';$('#pet-icon').value=p.icon||'';$('#pet-sprite').value=p.sprite||'';$('#pet-desc').value=p.desc||'';setTimeout(()=>$$('#pet-regions input').forEach(c=>c.checked=(p.regions||[]).includes(c.value)),50)},
+    saveNpc(){const sells=Array.from($$('#npc-sells input:checked')).map(c=>c.value);const n={id:$('#npc-id').value||genId('n'),name:$('#npc-name').value,role:$('#npc-role').value,icon:$('#npc-icon').value||'🧔',sprite:$('#npc-sprite').value||'',region:$('#npc-region').value,dialogue:$('#npc-dialogue').value||'',sells};if(!n.name){toast('Falta nombre','error');return}const i=Data.npcs.findIndex(x=>x.id===n.id);if(i>=0)Data.npcs[i]=n;else Data.npcs.push(n);Data.save();this.renderNpcs();this.clear('npc');toast('Guardado','success')},
+    editNpc(id){const n=Data.find('npcs',id);if(!n)return;$('#npc-id').value=n.id;$('#npc-name').value=n.name;$('#npc-role').value=n.role||'merchant';$('#npc-icon').value=n.icon||'';$('#npc-sprite').value=n.sprite||'';$('#npc-region').value=n.region||'';$('#npc-dialogue').value=n.dialogue||'';setTimeout(()=>$$('#npc-sells input').forEach(c=>c.checked=(n.sells||[]).includes(c.value)),50)},
+    saveRecipe(){
+        const id=$('#recipe-id').value||genId('r');
+        if(id.startsWith('plg_')){toast('Recetas del plugin son de solo lectura','error');return}
+        const ingredients=this.recipeIngredients;
+        if(ingredients.length<1){toast('Mínimo 1 ingrediente','error');return}
+        const r={id,name:$('#recipe-name').value,icon:$('#recipe-icon').value||'🔨',result:$('#recipe-result').value,ingredients:[...ingredients],desc:$('#recipe-desc').value||''};
+        if(!r.name||!r.result){toast('Falta nombre o resultado','error');return}
+        const i=Data.recipes.findIndex(x=>x.id===r.id);
+        if(i>=0)Data.recipes[i]=r;else Data.recipes.push(r);
+        Data.save();this.renderRecipes();this.clear('recipe');this.recipeIngredients=[];this.renderIngredientsList();toast('Guardado','success')
+    },
+    editRecipe(id){const r=Data.find('recipes',id);if(!r)return;$('#recipe-id').value=r.id;$('#recipe-name').value=r.name;$('#recipe-icon').value=r.icon||'';$('#recipe-result').value=r.result||'';$('#recipe-desc').value=r.desc||'';this.recipeIngredients=[...(r.ingredients||[])];this.renderIngredientsList()},
+    deleteRecipe(id){if(id.startsWith('plg_')){toast('No se puede eliminar','error');return}if(!confirm('¿Eliminar?'))return;Data.recipes=Data.recipes.filter(r=>r.id!==id);Data.save();this.renderRecipes();toast('Eliminado','info')},
+    edit(t,p,id){const it=Data.find(t,id);if(!it)return;Object.keys(it).forEach(k=>{const e=$(`#${p}-${k}`);if(e)e.value=it[k]||''})},
+    del(t,id){if(!confirm('¿Eliminar?'))return;Data[t]=Data[t].filter(x=>x.id!==id);Data.save();this.renderAll();toast('Eliminado','info')},
+    renderAll(){this.renderRegions();this.renderRaces();this.renderWeapons();this.renderArmors();this.renderItems();this.renderEnemies();this.renderPets();this.renderNpcs();this.renderRecipes();this.renderSpells();this.updateSelects()},
+    renderRegions(){$('#regions-list').innerHTML=Data.regions.map(r=>`<div class="item-card${r.fromPlugin?' plugin-item':''}" onclick="Editor.editRegion('${r.id}')"><span class="item-card-icon">${r.icon}${r.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats"><span class="item-id">${r.id}</span> ${r.type==='safe'?'🏠':'⚠️'} Dist:${r.distance||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRegion('${r.id}')">✏️</button>${r.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRegion('${r.id}')">🗑️</button>`}</div></div>`).join('')},
+    renderRaces(){$('#races-list').innerHTML=Data.races.map(r=>`<div class="item-card" onclick="Editor.editRace('${r.id}')"><span class="item-card-icon">${sprite(r)}</span><div class="item-card-info"><div class="item-card-name">${r.name}${r.usesMana?' 💙':''}</div><div class="item-card-stats"><span class="item-id">${r.id}</span> ⚡${r.bonus?.speed||10}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRace('${r.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRace('${r.id}')">🗑️</button></div></div>`).join('')},
+    renderWeapons(){$('#weapons-list').innerHTML=Data.weapons.map(w=>`<div class="item-card${w.fromPlugin?' plugin-item':''}" onclick="Editor.edit('weapons','weapon','${w.id}')"><span class="item-card-icon">${sprite(w)}${w.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${w.name}${w.magic?' ✨':''}</div><div class="item-card-stats"><span class="item-id">${w.id}</span> ${w.damage} ⚖️${w.weight||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('weapons','weapon','${w.id}')">✏️</button>${w.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('weapons','${w.id}')">🗑️</button>`}</div></div>`).join('')},
+    renderArmors(){$('#armors-list').innerHTML=Data.armors.map(a=>`<div class="item-card${a.fromPlugin?' plugin-item':''}" onclick="Editor.edit('armors','armor','${a.id}')"><span class="item-card-icon">${sprite(a)}${a.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${a.name}</div><div class="item-card-stats"><span class="item-id">${a.id}</span> Def:${a.defense} ⚖️${a.weight||0}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('armors','armor','${a.id}')">✏️</button>${a.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('armors','${a.id}')">🗑️</button>`}</div></div>`).join('')},
+    renderItems(){$('#items-list').innerHTML=Data.items.map(i=>`<div class="item-card${i.fromPlugin?' plugin-item':''}" onclick="Editor.edit('items','item','${i.id}')"><span class="item-card-icon">${sprite(i)}${i.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${i.name}</div><div class="item-card-stats"><span class="item-id">${i.id}</span> ${i.type||''}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.edit('items','item','${i.id}')">✏️</button>${i.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('items','${i.id}')">🗑️</button>`}</div></div>`).join('')},
+    renderEnemies(){$('#enemies-list').innerHTML=Data.enemies.map(e=>{const w=e.weaponId?Data.find('weapons',e.weaponId):null;const a=e.armorId?Data.find('armors',e.armorId):null;const equip=(w?`⚔️${w.icon}`:'')+(a?`🛡️${a.icon}`:'');return`<div class="item-card${e.fromPlugin?' plugin-item':''}" onclick="Editor.editEnemy('${e.id}')"><span class="item-card-icon">${sprite(e)}${e.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${e.name}</div><div class="item-card-stats"><span class="item-id">${e.id}</span> HP:${e.health} ${equip}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editEnemy('${e.id}')">✏️</button>${e.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('enemies','${e.id}')">🗑️</button>`}</div></div>`}).join('')},
+    renderPets(){$('#pets-list').innerHTML=Data.pets.map(p=>`<div class="item-card${p.fromPlugin?' plugin-item':''}" onclick="Editor.editPet('${p.id}')"><span class="item-card-icon">${sprite(p)}${p.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${p.name}</div><div class="item-card-stats"><span class="item-id">${p.id}</span> ⚡${p.speed||12}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editPet('${p.id}')">✏️</button>${p.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('pets','${p.id}')">🗑️</button>`}</div></div>`).join('')},
+    renderNpcs(){const roles={merchant:'Comerciante',blacksmith:'Herrero',alchemist:'Alquimista',innkeeper:'Tabernero',healer:'Curandero',guard:'Guardia',villager:'Aldeano'};$('#npcs-list').innerHTML=Data.npcs.map(n=>`<div class="item-card" onclick="Editor.editNpc('${n.id}')"><span class="item-card-icon">${sprite(n)}</span><div class="item-card-info"><div class="item-card-name">${n.name}</div><div class="item-card-stats">${roles[n.role]||n.role}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editNpc('${n.id}')">✏️</button><button class="icon-btn delete" onclick="event.stopPropagation();Editor.del('npcs','${n.id}')">🗑️</button></div></div>`).join('')},
+    renderRecipes(){$('#recipes-list').innerHTML=(Data.recipes||[]).map(r=>{const result=Data.findItem(r.result);const ingNames=(r.ingredients||[]).map(i=>{const it=Data.findItem(i.id||i);return it?it.icon:'?'}).join('+');return`<div class="item-card${r.fromPlugin?' plugin-item':''}" onclick="Editor.editRecipe('${r.id}')"><span class="item-card-icon">${r.icon||'🔨'}${r.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${r.name}</div><div class="item-card-stats"><span class="item-id">${r.id}</span> ${ingNames}→${result?result.icon:''}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editRecipe('${r.id}')">✏️</button>${r.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteRecipe('${r.id}')">🗑️</button>`}</div></div>`}).join('')},
+    // Spells management
+    saveSpell(){const id=$('#spell-id').value||genId('sp');if(id.startsWith('plg_')){toast('Hechizos del plugin son de solo lectura','error');return}const s={id,name:$('#spell-name').value,damage:$('#spell-damage').value||'1d6',cost:parseInt($('#spell-cost').value)||2,icon:$('#spell-icon').value||'✨',effect:$('#spell-effect').value||null,desc:$('#spell-desc').value||''};if(!s.name){toast('Falta nombre','error');return}const i=(Data.spells||[]).findIndex(x=>x.id===s.id);if(i>=0)Data.spells[i]=s;else{if(!Data.spells)Data.spells=[];Data.spells.push(s)}Data.save();this.renderSpells();this.updateSelects();this.clear('spell');toast('Guardado','success')},
+    editSpell(id){const s=Data.findSpell(id);if(!s)return;$('#spell-id').value=s.id;$('#spell-name').value=s.name;$('#spell-damage').value=s.damage||'';$('#spell-cost').value=s.cost||'';$('#spell-icon').value=s.icon||'';$('#spell-effect').value=s.effect||'';$('#spell-desc').value=s.desc||''},
+    deleteSpell(id){if(id.startsWith('plg_')){toast('No se puede eliminar','error');return}if(!confirm('¿Eliminar?'))return;Data.spells=(Data.spells||[]).filter(s=>s.id!==id);Data.save();this.renderSpells();this.updateSelects();toast('Eliminado','info')},
+    renderSpells(){const list=$('#spells-list');if(!list)return;list.innerHTML=(Data.spells||[]).map(s=>`<div class="item-card${s.fromPlugin?' plugin-item':''}" onclick="Editor.editSpell('${s.id}')"><span class="item-card-icon">${s.icon||'✨'}${s.fromPlugin?'<span class="plugin-badge">🔌</span>':''}</span><div class="item-card-info"><div class="item-card-name">${s.name}</div><div class="item-card-stats"><span class="item-id">${s.id}</span> ${s.damage} 💙${s.cost}</div></div><div class="item-card-actions"><button class="icon-btn" onclick="event.stopPropagation();Editor.editSpell('${s.id}')">✏️</button>${s.fromPlugin?'':`<button class="icon-btn delete" onclick="event.stopPropagation();Editor.deleteSpell('${s.id}')">🗑️</button>`}</div></div>`).join('')},
+    updateSelects(){
+        const dangerRegions=Data.regions.filter(r=>r.type==='danger');
+        const regHtml=dangerRegions.map(r=>`<label><input type="checkbox" value="${r.id}"> ${r.icon} ${r.name}</label>`).join('');
+        $('#enemy-regions').innerHTML=regHtml;$('#pet-regions').innerHTML=regHtml;
+        const safeRegions=Data.regions.filter(r=>r.type==='safe');
+        $('#npc-region').innerHTML=safeRegions.map(r=>`<option value="${r.id}">${r.icon} ${r.name}</option>`).join('');
+        // Region connections multi-select (all regions)
+        const allRegionsHtml=Data.regions.map(r=>`<label><input type="checkbox" value="${r.id}"> ${r.icon} ${r.name}</label>`).join('');
+        const regConEl=$('#region-connections');
+        if(regConEl)regConEl.innerHTML=allRegionsHtml;
+        const allItems=[...Data.weapons,...Data.armors,...Data.items];
+        const itemsHtml=allItems.map(it=>`<label><input type="checkbox" value="${it.id}"> ${it.icon||'📦'} ${it.name}</label>`).join('');
+        $('#npc-sells').innerHTML=itemsHtml;
+        // Enemy drop select (new system with probability) - inicializar con opción vacía
+        const dropSel=$('#enemy-drop-select');
+        if(dropSel)dropSel.innerHTML='<option value="">-- Busca y selecciona --</option>'+allItems.slice(0,30).map(it=>`<option value="${it.id}">${it.icon||'📦'} ${it.name}</option>`).join('');
+        // Enemy weapon/armor selects
+        $('#enemy-weaponId').innerHTML='<option value="">Sin arma (usa daño base)</option>'+Data.weapons.map(w=>`<option value="${w.id}">${w.icon} ${w.name} (${w.damage})${w.magic?' ✨':''}</option>`).join('');
+        $('#enemy-armorId').innerHTML='<option value="">Sin armadura (usa armadura base)</option>'+Data.armors.map(a=>`<option value="${a.id}">${a.icon} ${a.name} (Def:${a.defense})</option>`).join('');
+        // Recipe selects
+        $('#recipe-result').innerHTML=allItems.map(it=>`<option value="${it.id}">${it.icon||'📦'} ${it.name}</option>`).join('');
+        $('#recipe-ingredient-select').innerHTML=allItems.map(it=>`<option value="${it.id}">${it.icon||'📦'} ${it.name}</option>`).join('');
+        // Spell select for scrolls
+        const spellSel=$('#item-scroll-spell');
+        if(spellSel)spellSel.innerHTML=(Data.spells||[]).map(s=>`<option value="${s.id}">${s.icon} ${s.name} (${s.cost} maná)</option>`).join('');
+    },
+    // Item type change handler
+    onItemTypeChange(){
+        const type=$('#item-type').value;
+        ['potion','food','antidote','scroll','escape','backpack','misc'].forEach(t=>{
+            const el=$(`#item-${t}-fields`);
+            if(el)el.style.display=t===type?'block':'none';
+        });
+    },
+    // Recipe ingredients management
+    recipeIngredients:[],
+    addIngredient(){
+        const sel=$('#recipe-ingredient-select');
+        const id=sel.value;
+        if(!id)return;
+        const it=Data.findItem(id);
+        if(!it)return;
+        const qtyInput=$('#recipe-ingredient-qty');
+        const qty=parseInt(qtyInput?.value)||1;
+        this.recipeIngredients.push({id:id,qty:qty});
+        if(qtyInput)qtyInput.value='1';
+        this.renderIngredientsList();
+    },
+    removeIngredient(index){
+        this.recipeIngredients.splice(index,1);
+        this.renderIngredientsList();
+    },
+    renderIngredientsList(){
+        const list=$('#recipe-ingredients-list');
+        list.innerHTML=this.recipeIngredients.map((ing,i)=>{
+            const itemId=ing.id||ing;
+            const qty=ing.qty||1;
+            const it=Data.findItem(itemId);
+            return`<span style="background:var(--bg-lighter);padding:.15rem .4rem;border-radius:4px;font-size:.65rem;display:inline-flex;align-items:center;gap:.2rem">${it?it.icon:'?'} ${it?it.name:itemId}${qty>1?' x'+qty:''} <button onclick="Editor.removeIngredient(${i})" style="background:none;border:none;color:var(--red);cursor:pointer;padding:0;font-size:.7rem">×</button></span>`;
+        }).join('');
+    }
+};
+
+document.addEventListener('DOMContentLoaded',()=>{
+    domReady=true;
+    Data.load();Editor.renderAll();FB.init();
+    $$('.nav-btn').forEach(b=>b.addEventListener('click',()=>{$$('.nav-btn').forEach(x=>x.classList.remove('active'));$$('.tab-content').forEach(x=>x.classList.remove('active'));b.classList.add('active');$(`#tab-${b.dataset.tab}`).classList.add('active')}));
+    $$('.editor-tab').forEach(t=>t.addEventListener('click',()=>{$$('.editor-tab').forEach(x=>x.classList.remove('active'));$$('.editor-section').forEach(x=>x.classList.remove('active'));t.classList.add('active');$(`#editor-${t.dataset.editor}`).classList.add('active');Editor.updateSelects()}));
+    $$('.modal-close').forEach(b=>b.addEventListener('click',()=>closeModal(b.dataset.close)));
+    $$('.modal-overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('active')}));
+    $('#weaponSlot').addEventListener('click',()=>{if(!G.p||!G.region)return;if(G.combat||G.region.type!=='safe'){toast('Solo zona segura','error');return}if(G.p.weapon?.uid)Inv.detail(G.p.weapon,'eq-weapon')});
+    $('#armorSlot').addEventListener('click',()=>{if(!G.p||!G.region)return;if(G.combat||G.region.type!=='safe'){toast('Solo zona segura','error');return}if(G.p.armor?.uid)Inv.detail(G.p.armor,'eq-armor')});
+});
+</script>
+<!-- Sistema de Plugins -->
+<script src="rpg-plugins.js"></script>
+<script>
+// Función de respaldo (solo se usa si rpg-plugins.js no cargó correctamente)
+var _fallbackLoadPluginItems = function(){
+    if(typeof Plugins==='undefined' || !Plugins.specialItems) return;
+    
+    var keys = Object.keys(Plugins.specialItems);
+    var added = 0;
+    
+    keys.forEach(function(key){
+        var item = Plugins.specialItems[key];
+        if(!item || !item.id) return;
+        
+        var copy = {
+            id: item.id,
+            name: item.name,
+            icon: item.icon,
+            value: item.value || 0,
+            rarity: item.rarity || 'common',
+            desc: item.desc || '',
+            fromPlugin: true
+        };
+        
+        if(item.damage){
+            copy.damage = item.damage;
+            copy.weight = item.weight || 0;
+            copy.effect = item.effect || '';
+            if(!Data.weapons.find(function(w){return w.id===item.id})){
+                Data.weapons.push(copy);
+                added++;
+            }
+        }
+        else if(typeof item.defense === 'number'){
+            copy.defense = item.defense;
+            copy.weight = item.weight || 0;
+            if(!Data.armors.find(function(a){return a.id===item.id})){
+                Data.armors.push(copy);
+                added++;
+            }
+        }
+        else {
+            copy.type = item.type || 'misc';
+            copy.effect = item.effect || '0';
+            if(!Data.items.find(function(i){return i.id===item.id})){
+                Data.items.push(copy);
+                added++;
+            }
+        }
+    });
+    
+    if(added > 0){
+        console.log('🔌 Plugins fallback: +' + added + ' items agregados');
+        if(typeof Editor !== 'undefined'){
+            Editor.renderWeapons();
+            Editor.renderArmors();
+            Editor.renderItems();
+            Editor.updateSelects();
+        }
+    }
+};
+
+// Solo usar fallback si no existe loadPluginItems del plugin
+if(typeof loadPluginItems !== 'function'){
+    var loadPluginItems = _fallbackLoadPluginItems;
+}
+
+// Hook de velocidad
+if(typeof Plugins!=='undefined'){
+    var origSpeed=Game.speed;
+    Game.speed=function(){
+        var spd=origSpeed.call(this);
+        if(G.p){
+            (G.p.inv||[]).forEach(function(item){
+                var special=Plugins.specialItems[item.id];
+                if(special&&special.speedBonus)spd+=special.speedBonus;
+            });
+        }
+        return spd;
+    };
+}
+
+// Cargar plugins después de Firebase (fallback)
+window.addEventListener('load', function(){
+    setTimeout(loadPluginItems, 1500);
+});
+</script>
+</body>
+</html>
