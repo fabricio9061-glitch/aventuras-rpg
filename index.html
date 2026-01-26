@@ -260,6 +260,7 @@
         .spawn-tag .remove{cursor:pointer;color:var(--red-bright);margin-left:.2rem}
         .spawn-row input[type="range"]{-webkit-appearance:none;height:6px;background:var(--bg-light);border-radius:3px;cursor:pointer}
         .spawn-row input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:var(--gold);border-radius:50%;cursor:pointer}
+        .spawn-row img{image-rendering:pixelated;border-radius:4px;background:var(--bg-panel)}
         .spawn-list{max-height:300px;overflow-y:auto}
         .spawn-preview{margin-top:.4rem;padding:.4rem;background:var(--bg-panel);border-radius:4px;font-size:.65rem}
         .spawn-preview-bar{height:8px;background:var(--bg-dark);border-radius:4px;overflow:hidden;display:flex;margin-top:.2rem}
@@ -1062,7 +1063,11 @@ const GameEffects={
 };
 const effectName=type=>{const e=GameEffects.get(type);return e?e.name:type};
 
-const sprite=i=>i?.sprite?`<img src="${i.sprite}">`:(i?.icon||'📦');
+const sprite=(i,size=null)=>{
+    const s=i?.sprite||(Data.pluginSprites&&Data.pluginSprites[i?.id]);
+    const style=size?`width:${size}px;height:${size}px;object-fit:contain;vertical-align:middle`:'';
+    return s?`<img src="${s}" style="${style}">`:(i?.icon||'📦');
+};
 const genId=p=>`${p}_${Date.now()}_${Math.random().toString(36).substr(2,5)}`;
 const toast=(m,t='info')=>{const e=document.createElement('div');e.className=`toast ${t}`;e.textContent=m;$('#toastContainer').appendChild(e);setTimeout(()=>e.remove(),3000)};
 const openModal=id=>$(`#${id}`).classList.add('active'),closeModal=id=>$(`#${id}`).classList.remove('active'),closeAllModals=()=>$$('.modal-overlay').forEach(m=>m.classList.remove('active'));
@@ -2849,7 +2854,7 @@ const Editor={
     renderRegionSpawns(){
         const list=$('#region-spawns-list');if(!list)return;
         const preview=$('#region-spawn-preview');
-        const icons={enemy:'👹',pet:'🐺',npc:'🧔'};
+        const typeIcons={enemy:'👹',pet:'🐺',npc:'🧔'};
         const colors=['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#34495e','#c0392b','#2980b9','#27ae60','#d35400'];
         const total=this.regionSpawns.reduce((a,s)=>a+s.weight,0)||1;
         
@@ -2872,19 +2877,21 @@ const Editor={
             const diff=entity?.difficulty||'?';
             const hp=entity?.health||'?';
             const effectIcon=entity?.effect?` ⚡${effectName(entity.effect)}`:'';
-            return`<div class="spawn-row" style="display:flex;align-items:center;gap:.4rem;padding:.3rem;background:var(--bg-dark);border-radius:4px;margin-bottom:.2rem;border-left:3px solid ${color}">
-                <span style="font-size:.9rem">${icons[s.type]} ${entity?.icon||'?'}</span>
-                <span style="flex:1;font-size:.7rem"><strong>${entity?.name||s.entityId}</strong>${effectIcon}<br><span style="color:var(--text-dim)">🎯${diff} ❤️${hp}</span></span>
-                <input type="range" min="1" max="100" value="${s.weight}" style="width:60px" onchange="Editor.updateSpawnWeight(${s.originalIdx},this.value)" oninput="this.nextElementSibling.textContent=this.value">
-                <span style="width:25px;text-align:right;font-size:.7rem;color:var(--gold)">${s.weight}</span>
-                <span style="width:35px;text-align:right;font-size:.65rem;color:${color}">${pct}%</span>
-                <span class="remove" onclick="Editor.removeRegionSpawn(${s.originalIdx})" style="cursor:pointer;color:var(--red-bright)">✕</span>
+            const spriteHtml=sprite(entity,32);
+            return`<div class="spawn-row" style="display:flex;align-items:center;gap:.5rem;padding:.4rem;background:var(--bg-dark);border-radius:4px;margin-bottom:.3rem;border-left:4px solid ${color}">
+                <span style="min-width:32px;text-align:center">${spriteHtml}</span>
+                <span style="flex:1;font-size:.75rem"><strong>${entity?.name||s.entityId}</strong>${effectIcon}<br><span style="color:var(--text-dim);font-size:.65rem">🎯${diff} ❤️${hp}</span></span>
+                <input type="range" min="1" max="100" value="${s.weight}" style="width:70px" onchange="Editor.updateSpawnWeight(${s.originalIdx},this.value)" oninput="this.nextElementSibling.textContent=this.value">
+                <span style="width:28px;text-align:right;font-size:.75rem;color:var(--gold);font-weight:bold">${s.weight}</span>
+                <span style="width:45px;text-align:right;font-size:.7rem;color:${color};font-weight:bold">${pct}%</span>
+                <span class="remove" onclick="Editor.removeRegionSpawn(${s.originalIdx})" style="cursor:pointer;color:var(--red-bright);font-size:1rem">✕</span>
             </div>`;
         }).join('');
         
-        // Render preview bar
+        // Render preview bar with mini sprites
         if(preview){
             let bars='';
+            let legend='';
             sorted.forEach((s,i)=>{
                 const pct=(s.weight/total*100);
                 let entity;
@@ -2892,9 +2899,11 @@ const Editor={
                 else if(s.type==='pet')entity=Data.find('pets',s.entityId);
                 else entity=Data.find('npcs',s.entityId);
                 bars+=`<span style="width:${pct}%;background:${colors[i%colors.length]}" title="${entity?.name||s.entityId}: ${pct.toFixed(1)}%"></span>`;
+                legend+=`<span style="display:inline-flex;align-items:center;gap:.2rem;margin-right:.5rem">${sprite(entity,16)} <span style="color:${colors[i%colors.length]};font-size:.6rem">${pct.toFixed(0)}%</span></span>`;
             });
-            preview.innerHTML=`<strong>Distribución visual:</strong><div class="spawn-preview-bar">${bars}</div>
-            <div style="margin-top:.3rem;font-size:.6rem;color:var(--text-dim)">Total: ${this.regionSpawns.length} criaturas | Suma pesos: ${total}</div>`;
+            preview.innerHTML=`<strong>Distribución:</strong><div class="spawn-preview-bar">${bars}</div>
+            <div style="margin-top:.3rem">${legend}</div>
+            <div style="margin-top:.2rem;font-size:.55rem;color:var(--text-dim)">Total: ${this.regionSpawns.length} criaturas | Suma pesos: ${total}</div>`;
         }
     },
     updateSpawnWeight(idx,value){
