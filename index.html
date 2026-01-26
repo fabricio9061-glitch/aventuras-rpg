@@ -668,7 +668,7 @@
                     <div class="form-group"><label>ID</label><input type="text" id="region-id"></div>
                     <div class="form-group"><label>Nombre</label><input type="text" id="region-name"></div>
                     <div class="form-group"><label>Icono</label><input type="text" id="region-icon" maxlength="2"></div>
-                    <div class="form-group"><label>Tipo</label><select id="region-type"><option value="safe">Segura</option><option value="danger">Peligrosa</option></select></div>
+                    <div class="form-group"><label>Tipo</label><select id="region-type" onchange="Editor.onRegionTypeChange()"><option value="safe">Segura</option><option value="danger">Peligrosa</option></select></div>
                     <div class="form-group"><label>Distancia</label><input type="number" id="region-distance" min="0" placeholder="0"></div>
                     <div class="form-group"><label>Encuentros requeridos</label><input type="number" id="region-reqEncounters" min="0" placeholder="0"></div>
                 </div>
@@ -2782,33 +2782,52 @@ const Editor={
             return saved?{...auto,weight:saved.weight}:auto;
         });
         
+        // Actualizar selector de spawns según tipo de región
+        const spawnTypeSelect=$('#spawn-type');
+        if(r.type==='safe'){
+            spawnTypeSelect.innerHTML='<option value="pet">🐺 Mascota</option><option value="npc">🧔 NPC</option>';
+            spawnTypeSelect.value='pet';
+        }else{
+            spawnTypeSelect.innerHTML='<option value="enemy">👹 Enemigo</option><option value="pet">🐺 Mascota</option><option value="npc">🧔 NPC</option>';
+            spawnTypeSelect.value='enemy';
+        }
+        this.updateSpawnSelect();
+        
         this.renderRegionEvents();this.renderRegionSpawns();this.renderRegionConditions();
         setTimeout(()=>{$$('#region-connections input').forEach(c=>c.checked=(r.connections||[]).includes(c.value))},50)
     },
     // Auto-generar spawns basados en enemigos/mascotas que tienen esta región
     generateSpawnsFromData(regionId){
         const spawns=[];
-        // Buscar enemigos que tienen esta región
-        (Data.enemies||[]).forEach(e=>{
-            if((e.regions||[]).includes(regionId)){
-                // Calcular peso basado en dificultad (más fácil = más común)
-                const baseWeight=Math.max(10,100-((e.difficulty||10)*5));
-                // Ajustar por si puede agruparse (más común si agrupa)
-                const groupBonus=e.canGroup?(e.groupChance||0)/2:0;
-                const weight=Math.min(100,Math.max(10,Math.round(baseWeight+groupBonus)));
-                spawns.push({type:'enemy',entityId:e.id,weight});
-            }
-        });
-        // Buscar mascotas que tienen esta región
+        const region=Data.find('regions',regionId);
+        const isSafe=region?.type==='safe';
+        
+        // En regiones SEGURAS no aparecen enemigos, solo mascotas y NPCs
+        if(!isSafe){
+            // Buscar enemigos que tienen esta región (solo en regiones peligrosas)
+            (Data.enemies||[]).forEach(e=>{
+                if((e.regions||[]).includes(regionId)){
+                    // Calcular peso basado en dificultad (más fácil = más común)
+                    const baseWeight=Math.max(10,100-((e.difficulty||10)*5));
+                    // Ajustar por si puede agruparse (más común si agrupa)
+                    const groupBonus=e.canGroup?(e.groupChance||0)/2:0;
+                    const weight=Math.min(100,Math.max(10,Math.round(baseWeight+groupBonus)));
+                    spawns.push({type:'enemy',entityId:e.id,weight});
+                }
+            });
+        }
+        
+        // Buscar mascotas que tienen esta región (en ambos tipos)
         (Data.pets||[]).forEach(p=>{
             if((p.regions||[]).includes(regionId)){
                 const weight=Math.max(10,Math.round(60-((p.difficulty||20)/2)));
                 spawns.push({type:'pet',entityId:p.id,weight});
             }
         });
+        
         // Ordenar por peso descendente (más común primero)
         spawns.sort((a,b)=>b.weight-a.weight);
-        console.log(`[SpawnGen] Región "${regionId}": ${spawns.length} criaturas detectadas`,spawns.map(s=>s.entityId));
+        console.log(`[SpawnGen] Región "${regionId}" (${isSafe?'SEGURA':'peligrosa'}): ${spawns.length} criaturas detectadas`,spawns.map(s=>s.entityId));
         return spawns;
     },
     deleteRegion(id){if(!confirm('¿Eliminar?'))return;Data.regions=Data.regions.filter(r=>r.id!==id);Data.save();this.renderRegions();this.updateSelects();toast('Eliminado','info')},
@@ -2844,19 +2863,70 @@ const Editor={
         const type=$('#spawn-type').value;
         const entityId=$('#spawn-entity').value;
         const weight=parseInt($('#spawn-weight').value)||50;
+        const isSafe=$('#region-type').value==='safe';
+        
         if(!entityId)return;
+        
+        // Bloquear enemigos en regiones seguras
+        if(isSafe && type==='enemy'){
+            toast('❌ Las regiones seguras no pueden tener enemigos','error');
+            return;
+        }
+        
         // Check if already exists
         if(this.regionSpawns.find(s=>s.entityId===entityId&&s.type===type)){toast('Ya existe','error');return}
         this.regionSpawns.push({type,entityId,weight});
         this.renderRegionSpawns();
     },
     removeRegionSpawn(idx){this.regionSpawns.splice(idx,1);this.renderRegionSpawns()},
+    // Handler para cambio de tipo de región
+    onRegionTypeChange(){
+        const type=$('#region-type').value;
+        const spawnTypeSelect=$('#spawn-type');
+        
+        if(type==='safe'){
+            // Filtrar enemigos de la lista (regiones seguras no tienen enemigos)
+            const enemyCount=this.regionSpawns.filter(s=>s.type==='enemy').length;
+            if(enemyCount>0){
+                this.regionSpawns=this.regionSpawns.filter(s=>s.type!=='enemy');
+                toast(`⚠️ ${enemyCount} enemigos removidos (región segura)`,'info');
+            }
+            // También limpiar condiciones que afecten enemigos
+            this.regionConditions=[];
+            // Deshabilitar opción de enemigos en el selector
+            if(spawnTypeSelect){
+                spawnTypeSelect.innerHTML='<option value="pet">🐺 Mascota</option><option value="npc">🧔 NPC</option>';
+                spawnTypeSelect.value='pet';
+            }
+        }else{
+            // Restaurar selector completo para regiones peligrosas
+            if(spawnTypeSelect){
+                spawnTypeSelect.innerHTML='<option value="enemy">👹 Enemigo</option><option value="pet">🐺 Mascota</option><option value="npc">🧔 NPC</option>';
+                spawnTypeSelect.value='enemy';
+            }
+        }
+        this.updateSpawnSelect();
+        this.renderRegionSpawns();
+        this.renderRegionConditions();
+    },
     renderRegionSpawns(){
         const list=$('#region-spawns-list');if(!list)return;
         const preview=$('#region-spawn-preview');
+        const isSafe=$('#region-type').value==='safe';
         const typeIcons={enemy:'👹',pet:'🐺',npc:'🧔'};
         const colors=['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#34495e','#c0392b','#2980b9','#27ae60','#d35400'];
         const total=this.regionSpawns.reduce((a,s)=>a+s.weight,0)||1;
+        
+        // Mensaje especial para regiones seguras
+        if(isSafe){
+            const pets=this.regionSpawns.filter(s=>s.type==='pet');
+            if(pets.length===0){
+                list.innerHTML='<div style="padding:.5rem;text-align:center;color:var(--green-bright);font-size:.7rem">🏘️ <strong>Región Segura</strong><br>No aparecen enemigos aquí. Solo puedes añadir mascotas domables.</div>';
+                if(preview)preview.innerHTML='';
+                return;
+            }
+            // Si hay mascotas, continuar mostrándolas
+        }
         
         if(this.regionSpawns.length===0){
             list.innerHTML='<div style="padding:.5rem;text-align:center;color:var(--text-dim);font-size:.7rem">🔍 No hay criaturas asignadas a esta región.<br>Usa <strong>🔄 Auto-detectar</strong> para cargar enemigos/mascotas que tengan esta región en su configuración.</div>';
