@@ -2771,16 +2771,17 @@ const Editor={
         this.regionEvents=[...(r.events||[])];
         this.regionConditions=[...(r.conditions||[])];
         
-        // SIEMPRE auto-generar spawns desde enemigos/mascotas que tienen esta región
-        // Combinar con spawns guardados (para preservar pesos personalizados)
-        const autoSpawns=this.generateSpawnsFromData(r.id);
-        const savedSpawns=r.spawns||[];
-        
-        // Merge: usar peso guardado si existe, sino usar el auto-generado
-        this.regionSpawns=autoSpawns.map(auto=>{
-            const saved=savedSpawns.find(s=>s.entityId===auto.entityId&&s.type===auto.type);
-            return saved?{...auto,weight:saved.weight}:auto;
-        });
+        // RESPETAR spawns guardados - solo auto-generar si NUNCA se han configurado
+        // r.spawns === undefined → nunca configurado → auto-generar
+        // r.spawns === [] → usuario borró todo → mantener vacío
+        // r.spawns === [...] → usuario configuró → usar esos
+        if(r.spawns !== undefined){
+            // Usar spawns guardados tal cual
+            this.regionSpawns=[...r.spawns];
+        }else{
+            // Primera vez: auto-generar desde enemigos/mascotas
+            this.regionSpawns=this.generateSpawnsFromData(r.id);
+        }
         
         // Actualizar selector de spawns según tipo de región
         const spawnTypeSelect=$('#spawn-type');
@@ -2985,9 +2986,13 @@ const Editor={
     regenerateSpawns(){
         const regionId=$('#region-id').value;
         if(!regionId){toast('Selecciona una región primero','error');return}
+        // Confirmar si ya hay criaturas configuradas
+        if(this.regionSpawns.length>0){
+            if(!confirm('⚠️ Esto sobrescribirá las criaturas actuales.\n¿Regenerar desde los datos de enemigos/mascotas?'))return;
+        }
         this.regionSpawns=this.generateSpawnsFromData(regionId);
         this.renderRegionSpawns();
-        toast(`Auto-detectados ${this.regionSpawns.length} criaturas`,'success');
+        toast(`🔄 Auto-detectados ${this.regionSpawns.length} criaturas`,'success');
     },
     clearSpawns(){
         if(this.regionSpawns.length===0)return;
