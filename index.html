@@ -203,7 +203,8 @@
         .inv-slot{aspect-ratio:1;background:var(--bg-dark);border:1px solid var(--border);border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s;padding:.15rem}
         .inv-slot:hover{border-color:var(--gold-dim);transform:scale(1.05)}
         .inv-slot.empty{cursor:default}.inv-slot.empty:hover{transform:none;border-color:var(--border)}
-        .inv-slot-icon{font-size:1.4rem}.inv-slot-icon img{width:32px;height:32px;object-fit:contain}
+        .inv-slot-icon{font-size:1.4rem;position:relative}.inv-slot-icon img{width:32px;height:32px;object-fit:contain}
+        .inv-qty{position:absolute;bottom:-2px;right:-2px;background:var(--gold);color:var(--bg-dark);font-size:.5rem;font-weight:bold;padding:0 .2rem;border-radius:3px;min-width:14px;text-align:center}
         .inv-slot-name{font-size:.5rem;text-align:center;color:var(--text-dim);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:100%}
         .rarity-common{border-color:#555}.rarity-rare{border-color:var(--blue-bright)}.rarity-epic{border-color:var(--purple)}.rarity-legendary{border-color:var(--gold-bright);box-shadow:0 0 8px rgba(255,215,0,.4)}
         
@@ -1263,7 +1264,7 @@ const Data={
         {id:'coin_copper',name:'Moneda de Cobre',type:'currency',currencyType:'copper',icon:'🥉',value:1,rarity:'common',stackable:true},
         {id:'coin_silver',name:'Moneda de Plata',type:'currency',currencyType:'silver',icon:'🥈',value:100,rarity:'uncommon',stackable:true},
         {id:'coin_gold',name:'Moneda de Oro',type:'currency',currencyType:'gold',icon:'🥇',value:10000,rarity:'rare',stackable:true},
-        {id:'i1',name:'Poción menor',type:'potion',effect:'1d8',icon:'🧪',value:10,rarity:'common'},{id:'i2',name:'Antídoto',type:'antidote',icon:'💊',value:15,rarity:'common'},{id:'i3',name:'Bomba humo',type:'escape',icon:'💨',value:25,rarity:'common'},{id:'i4',name:'Carne',type:'food',effect:'1d4',icon:'🥩',value:5,rarity:'common'},{id:'i5',name:'Poción mayor',type:'potion',effect:'2d8',icon:'🧪',value:35,rarity:'rare'},{id:'i6',name:'Queso',type:'food',effect:'1d3',icon:'🧀',foodValue:3,value:3,rarity:'common',desc:'Atrae ratas.'}],
+        {id:'i1',name:'Poción menor',type:'potion',effect:'1d8',icon:'🧪',value:10,rarity:'common'},{id:'i2',name:'Antídoto',type:'antidote',icon:'💊',value:15,rarity:'common'},{id:'i3',name:'Bomba humo',type:'escape',icon:'💨',value:25,rarity:'common'},{id:'i4',name:'Carne',type:'food',effect:'1d4',icon:'🥩',value:5,rarity:'common',foodValue:4},{id:'i5',name:'Poción mayor',type:'potion',effect:'2d8',icon:'🧪',value:35,rarity:'rare'},{id:'i6',name:'Queso',type:'food',effect:'1d3',icon:'🧀',foodValue:3,value:3,rarity:'common',desc:'Atrae ratas.'}],
     enemies:[
         {id:'e1',name:'Rata',health:8,damage:'1d4',difficulty:6,armor:0,speed:12,icon:'🐀',loot:[5,10],drops:['i1'],regions:['mazmorra','camino'],canGroup:true,groupMin:2,groupMax:5,groupChance:50,desc:'Ratas gigantes.'},
         {id:'e2',name:'Goblin',health:12,damage:'1d6',difficulty:8,armor:0,speed:11,icon:'👺',loot:[8,15],drops:['i1','w1'],regions:['bosque','mazmorra','camino'],canGroup:true,groupMin:2,groupMax:4,groupChance:35,desc:'Goblins hostiles.',weaponId:'w1'},
@@ -1623,6 +1624,20 @@ const Regions={
 const Game={
     selectedRace:null,
     init(){if(!this.load())this.showCreate()},
+    // Crear inventario inicial: 25 cobre, 1 poción, 3 panes
+    createStartingInventory(){
+        const inv=[];
+        // 25 Monedas de cobre (apiladas)
+        const copper=Data.find('items','coin_copper');
+        if(copper)inv.push({...copper,uid:genId('i'),qty:25});
+        // 1 Poción de salud menor
+        const potion=Data.find('items','i1');
+        if(potion)inv.push({...potion,uid:genId('i')});
+        // 3 Panes (del plugin, apilados)
+        const bread=Data.find('items','plg_food_bread');
+        if(bread)inv.push({...bread,uid:genId('i'),qty:3});
+        return inv;
+    },
     showCreate(){
         $('#authScreen').classList.add('hidden');
         $('#authScreen').style.display='none';
@@ -1680,9 +1695,9 @@ const Game={
             food:20,
             speed:baseSpeed,
             weapon,armor,
-            inv:[{...Data.items[0],uid:genId('i')}],
+            inv:Game.createStartingInventory(),
             maxSlots:10,
-            copper:25,silver:0,gold:0,
+            copper:0,silver:0,gold:0,
             effects:[],pet:null,defending:false,
             spells:spells,
             maxSpells:3
@@ -2365,8 +2380,8 @@ const Combat={
 
 const Inv={
     open(){if(!G.p)return;this.render();openModal('inventoryModal')},
-    render(){if(!G.p)return;$('#inventoryInfo').textContent=`${G.p.inv.length}/${G.p.maxSlots}`;const g=$('#inventoryGrid');g.innerHTML='';G.p.inv.forEach(it=>{const s=document.createElement('div');s.className=`inv-slot rarity-${it.rarity||'common'}`;s.innerHTML=`<div class="inv-slot-icon">${sprite(it)}</div><div class="inv-slot-name">${it.name}</div>`;s.onclick=()=>this.detail(it,'inv');g.appendChild(s)});for(let i=G.p.inv.length;i<G.p.maxSlots;i++){const s=document.createElement('div');s.className='inv-slot empty';s.innerHTML='<div class="inv-slot-name" style="color:var(--text-dim)">vacío</div>';g.appendChild(s)}},
-    detail(it,ctx){G.item=it;$('#detailIcon').innerHTML=sprite(it);$('#detailName').textContent=it.name;$('#detailType').textContent=it.damage?'Arma':it.defense!==undefined?'Armadura':it.type||'Item';$('#detailDesc').textContent=it.desc||'Sin descripción.';let st='';if(it.damage)st+=`<div class="item-stat-box"><div class="item-stat-label">Daño</div><div class="item-stat-value">${it.damage}</div></div>`;if(it.defense!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Defensa</div><div class="item-stat-value">${it.defense}</div></div>`;if(it.weight!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Peso</div><div class="item-stat-value">${it.weight}</div></div>`;if(it.effect&&(it.type==='potion'||it.type==='food'))st+=`<div class="item-stat-box"><div class="item-stat-label">Cura</div><div class="item-stat-value">${it.effect}</div></div>`;if(it.manaBonus)st+=`<div class="item-stat-box"><div class="item-stat-label">+Maná</div><div class="item-stat-value">${it.manaBonus}</div></div>`;if(it.spellId){const sp=Data.findSpell(it.spellId);st+=`<div class="item-stat-box"><div class="item-stat-label">Enseña</div><div class="item-stat-value">${sp?sp.name:'?'}</div></div>`}if(it.value)st+=`<div class="item-stat-box"><div class="item-stat-label">Valor</div><div class="item-stat-value">${it.value}MP</div></div>`;$('#detailStats').innerHTML=st;const canEq=!G.combat&&G.region.type==='safe';let acts='';if(ctx.startsWith('eq-')){if(canEq)acts=`<button class="btn btn-danger" onclick="Inv.unequip('${ctx.split('-')[1]}')">❌ Quitar</button>`;else acts='<span style="color:var(--text-dim)">Solo zona segura</span>'}else{if(it.damage&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('weapon')">⚔️ Equipar</button>`;if(it.defense!==undefined&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('armor')">🛡️ Equipar</button>`;if(it.type==='potion'||it.type==='food')acts+=`<button class="btn btn-primary" onclick="Inv.use()">✨ Usar</button>`;if(it.type==='antidote')acts+=`<button class="btn btn-primary" onclick="Inv.use()">💊 Usar</button>`;if(it.type==='scroll')acts+=`<button class="btn btn-primary" onclick="Inv.use()">📜 Aprender</button>`;if(it.type==='escape'&&G.combat)acts+=`<button class="btn btn-primary" onclick="Inv.use()">💨 Usar</button>`;if(it.type==='backpack')acts+=`<button class="btn btn-primary" onclick="Inv.use()">🎒 Usar</button>`}acts+=`<button class="btn" onclick="closeModal('itemDetailModal')">Cerrar</button>`;$('#detailActions').innerHTML=acts;openModal('itemDetailModal')},
+    render(){if(!G.p)return;$('#inventoryInfo').textContent=`${G.p.inv.length}/${G.p.maxSlots}`;const g=$('#inventoryGrid');g.innerHTML='';G.p.inv.forEach(it=>{const s=document.createElement('div');s.className=`inv-slot rarity-${it.rarity||'common'}`;const qtyBadge=(it.qty&&it.qty>1)?`<span class="inv-qty">×${it.qty}</span>`:'';s.innerHTML=`<div class="inv-slot-icon">${sprite(it)}${qtyBadge}</div><div class="inv-slot-name">${it.name}</div>`;s.onclick=()=>this.detail(it,'inv');g.appendChild(s)});for(let i=G.p.inv.length;i<G.p.maxSlots;i++){const s=document.createElement('div');s.className='inv-slot empty';s.innerHTML='<div class="inv-slot-name" style="color:var(--text-dim)">vacío</div>';g.appendChild(s)}},
+    detail(it,ctx){G.item=it;$('#detailIcon').innerHTML=sprite(it);$('#detailName').textContent=it.name+(it.qty&&it.qty>1?` (×${it.qty})`:'');$('#detailType').textContent=it.damage?'Arma':it.defense!==undefined?'Armadura':it.type||'Item';$('#detailDesc').textContent=it.desc||'Sin descripción.';let st='';if(it.qty&&it.qty>1)st+=`<div class="item-stat-box"><div class="item-stat-label">Cantidad</div><div class="item-stat-value">${it.qty}</div></div>`;if(it.damage)st+=`<div class="item-stat-box"><div class="item-stat-label">Daño</div><div class="item-stat-value">${it.damage}</div></div>`;if(it.defense!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Defensa</div><div class="item-stat-value">${it.defense}</div></div>`;if(it.weight!==undefined)st+=`<div class="item-stat-box"><div class="item-stat-label">Peso</div><div class="item-stat-value">${it.weight}</div></div>`;if(it.effect&&(it.type==='potion'||it.type==='food'))st+=`<div class="item-stat-box"><div class="item-stat-label">Cura</div><div class="item-stat-value">${it.effect}</div></div>`;if(it.foodValue)st+=`<div class="item-stat-box"><div class="item-stat-label">Comida</div><div class="item-stat-value">+${it.foodValue}🍖</div></div>`;if(it.manaBonus)st+=`<div class="item-stat-box"><div class="item-stat-label">+Maná</div><div class="item-stat-value">${it.manaBonus}</div></div>`;if(it.spellId){const sp=Data.findSpell(it.spellId);st+=`<div class="item-stat-box"><div class="item-stat-label">Enseña</div><div class="item-stat-value">${sp?sp.name:'?'}</div></div>`}if(it.value)st+=`<div class="item-stat-box"><div class="item-stat-label">Valor</div><div class="item-stat-value">${it.value}🥉</div></div>`;$('#detailStats').innerHTML=st;const canEq=!G.combat&&G.region.type==='safe';let acts='';if(ctx.startsWith('eq-')){if(canEq)acts=`<button class="btn btn-danger" onclick="Inv.unequip('${ctx.split('-')[1]}')">❌ Quitar</button>`;else acts='<span style="color:var(--text-dim)">Solo zona segura</span>'}else{if(it.damage&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('weapon')">⚔️ Equipar</button>`;if(it.defense!==undefined&&canEq)acts+=`<button class="btn btn-primary" onclick="Inv.equip('armor')">🛡️ Equipar</button>`;if(it.type==='potion'||it.type==='food')acts+=`<button class="btn btn-primary" onclick="Inv.use()">✨ Usar</button>`;if(it.type==='antidote')acts+=`<button class="btn btn-primary" onclick="Inv.use()">💊 Usar</button>`;if(it.type==='scroll')acts+=`<button class="btn btn-primary" onclick="Inv.use()">📜 Aprender</button>`;if(it.type==='escape'&&G.combat)acts+=`<button class="btn btn-primary" onclick="Inv.use()">💨 Usar</button>`;if(it.type==='backpack')acts+=`<button class="btn btn-primary" onclick="Inv.use()">🎒 Usar</button>`;if(it.type==='currency')acts+=`<span style="color:var(--gold)">💰 Moneda</span>`}acts+=`<button class="btn" onclick="closeModal('itemDetailModal')">Cerrar</button>`;$('#detailActions').innerHTML=acts;openModal('itemDetailModal')},
     equip(slot){
         const it=G.item;if(!it?.uid)return;
         // Verificar restricciones de mago/guerrero para armas
@@ -2438,7 +2453,12 @@ const Inv={
             Story.add(`+${s} espacios de inventario.`,'system');
         }
         
-        G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);
+        // Manejar items apilados (qty)
+        if(it.qty && it.qty > 1){
+            it.qty--;
+        }else{
+            G.p.inv=G.p.inv.filter(i=>i.uid!==it.uid);
+        }
         Game.updateUI();Game.autoSave();
         if(G.combat){Combat.updateUI();Combat.advanceToNextActor()}
     }
