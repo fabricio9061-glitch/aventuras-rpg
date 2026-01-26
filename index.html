@@ -258,6 +258,9 @@
         .spawn-tag{display:inline-flex;align-items:center;gap:.2rem;padding:.15rem .4rem;background:var(--bg-light);border:1px solid var(--border);border-radius:3px;font-size:.65rem}
         .spawn-tag .weight{color:var(--gold);font-weight:bold}
         .spawn-tag .remove{cursor:pointer;color:var(--red-bright);margin-left:.2rem}
+        .spawn-row input[type="range"]{-webkit-appearance:none;height:6px;background:var(--bg-light);border-radius:3px;cursor:pointer}
+        .spawn-row input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:12px;height:12px;background:var(--gold);border-radius:50%;cursor:pointer}
+        .spawn-list{max-height:300px;overflow-y:auto}
         .spawn-preview{margin-top:.4rem;padding:.4rem;background:var(--bg-panel);border-radius:4px;font-size:.65rem}
         .spawn-preview-bar{height:8px;background:var(--bg-dark);border-radius:4px;overflow:hidden;display:flex;margin-top:.2rem}
         .spawn-preview-bar span{height:100%}
@@ -698,7 +701,7 @@
                 <details class="editor-details">
                     <summary>👹 Criaturas de la Región</summary>
                     <div class="spawn-panel">
-                        <p style="font-size:.65rem;color:var(--text-dim);margin-bottom:.4rem">Define qué criaturas aparecen y con qué probabilidad. Mayor peso = más común.</p>
+                        <p style="font-size:.65rem;color:var(--text-dim);margin-bottom:.4rem">Define qué criaturas aparecen y con qué probabilidad. Mayor peso = más común. Los sliders permiten ajustar la probabilidad.</p>
                         <div class="form-grid">
                             <div class="form-group"><label>Tipo</label><select id="spawn-type" onchange="Editor.updateSpawnSelect()">
                                 <option value="enemy">👹 Enemigo</option>
@@ -708,7 +711,11 @@
                             <div class="form-group"><label>Criatura</label><select id="spawn-entity"></select></div>
                             <div class="form-group"><label>Peso (1-100)</label><input type="number" id="spawn-weight" min="1" max="100" value="50"></div>
                         </div>
-                        <button class="btn btn-sm" onclick="Editor.addRegionSpawn()">➕ Añadir Criatura</button>
+                        <div style="display:flex;gap:.3rem;flex-wrap:wrap;margin-bottom:.4rem">
+                            <button class="btn btn-sm" onclick="Editor.addRegionSpawn()">➕ Añadir</button>
+                            <button class="btn btn-sm" onclick="Editor.regenerateSpawns()" title="Regenerar desde enemigos/mascotas que tienen esta región">🔄 Auto-detectar</button>
+                            <button class="btn btn-sm" onclick="Editor.clearSpawns()" title="Limpiar lista">🗑️ Limpiar</button>
+                        </div>
                         <div id="region-spawns-list" class="spawn-list"></div>
                         <div id="region-spawn-preview" class="spawn-preview"></div>
                     </div>
@@ -2757,10 +2764,47 @@ const Editor={
         const r=Data.find('regions',id);if(!r)return;
         $('#region-id').value=r.id;$('#region-name').value=r.name;$('#region-icon').value=r.icon||'';$('#region-type').value=r.type||'danger';$('#region-desc').value=r.desc||'';$('#region-distance').value=r.distance||0;$('#region-reqEncounters').value=r.reqEncounters||0;$('#region-narratives').value=(r.narratives||[]).join('\n');
         this.regionEvents=[...(r.events||[])];
-        this.regionSpawns=[...(r.spawns||[])];
         this.regionConditions=[...(r.conditions||[])];
+        
+        // SIEMPRE auto-generar spawns desde enemigos/mascotas que tienen esta región
+        // Combinar con spawns guardados (para preservar pesos personalizados)
+        const autoSpawns=this.generateSpawnsFromData(r.id);
+        const savedSpawns=r.spawns||[];
+        
+        // Merge: usar peso guardado si existe, sino usar el auto-generado
+        this.regionSpawns=autoSpawns.map(auto=>{
+            const saved=savedSpawns.find(s=>s.entityId===auto.entityId&&s.type===auto.type);
+            return saved?{...auto,weight:saved.weight}:auto;
+        });
+        
         this.renderRegionEvents();this.renderRegionSpawns();this.renderRegionConditions();
         setTimeout(()=>{$$('#region-connections input').forEach(c=>c.checked=(r.connections||[]).includes(c.value))},50)
+    },
+    // Auto-generar spawns basados en enemigos/mascotas que tienen esta región
+    generateSpawnsFromData(regionId){
+        const spawns=[];
+        // Buscar enemigos que tienen esta región
+        (Data.enemies||[]).forEach(e=>{
+            if((e.regions||[]).includes(regionId)){
+                // Calcular peso basado en dificultad (más fácil = más común)
+                const baseWeight=Math.max(10,100-((e.difficulty||10)*5));
+                // Ajustar por si puede agruparse (más común si agrupa)
+                const groupBonus=e.canGroup?(e.groupChance||0)/2:0;
+                const weight=Math.min(100,Math.max(10,Math.round(baseWeight+groupBonus)));
+                spawns.push({type:'enemy',entityId:e.id,weight});
+            }
+        });
+        // Buscar mascotas que tienen esta región
+        (Data.pets||[]).forEach(p=>{
+            if((p.regions||[]).includes(regionId)){
+                const weight=Math.max(10,Math.round(60-((p.difficulty||20)/2)));
+                spawns.push({type:'pet',entityId:p.id,weight});
+            }
+        });
+        // Ordenar por peso descendente (más común primero)
+        spawns.sort((a,b)=>b.weight-a.weight);
+        console.log(`[SpawnGen] Región "${regionId}": ${spawns.length} criaturas detectadas`,spawns.map(s=>s.entityId));
+        return spawns;
     },
     deleteRegion(id){if(!confirm('¿Eliminar?'))return;Data.regions=Data.regions.filter(r=>r.id!==id);Data.save();this.renderRegions();this.updateSelects();toast('Eliminado','info')},
     // Region Events Management
@@ -2806,35 +2850,71 @@ const Editor={
         const list=$('#region-spawns-list');if(!list)return;
         const preview=$('#region-spawn-preview');
         const icons={enemy:'👹',pet:'🐺',npc:'🧔'};
-        list.innerHTML=this.regionSpawns.map((s,i)=>{
+        const colors=['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#34495e','#c0392b','#2980b9','#27ae60','#d35400'];
+        const total=this.regionSpawns.reduce((a,s)=>a+s.weight,0)||1;
+        
+        if(this.regionSpawns.length===0){
+            list.innerHTML='<div style="padding:.5rem;text-align:center;color:var(--text-dim);font-size:.7rem">🔍 No hay criaturas asignadas a esta región.<br>Usa <strong>🔄 Auto-detectar</strong> para cargar enemigos/mascotas que tengan esta región en su configuración.</div>';
+            if(preview)preview.innerHTML='';
+            return;
+        }
+        
+        // Ordenar por peso (más común primero)
+        const sorted=[...this.regionSpawns].map((s,i)=>({...s,originalIdx:i})).sort((a,b)=>b.weight-a.weight);
+        
+        list.innerHTML=sorted.map((s,displayIdx)=>{
             let entity;
             if(s.type==='enemy')entity=Data.find('enemies',s.entityId);
             else if(s.type==='pet')entity=Data.find('pets',s.entityId);
             else entity=Data.find('npcs',s.entityId);
-            return`<span class="spawn-tag">${icons[s.type]} ${entity?.icon||'?'} ${entity?.name||s.entityId} <span class="weight">×${s.weight}</span> <span class="remove" onclick="Editor.removeRegionSpawn(${i})">✕</span></span>`;
+            const pct=(s.weight/total*100).toFixed(1);
+            const color=colors[displayIdx%colors.length];
+            const diff=entity?.difficulty||'?';
+            const hp=entity?.health||'?';
+            const effectIcon=entity?.effect?` ⚡${effectName(entity.effect)}`:'';
+            return`<div class="spawn-row" style="display:flex;align-items:center;gap:.4rem;padding:.3rem;background:var(--bg-dark);border-radius:4px;margin-bottom:.2rem;border-left:3px solid ${color}">
+                <span style="font-size:.9rem">${icons[s.type]} ${entity?.icon||'?'}</span>
+                <span style="flex:1;font-size:.7rem"><strong>${entity?.name||s.entityId}</strong>${effectIcon}<br><span style="color:var(--text-dim)">🎯${diff} ❤️${hp}</span></span>
+                <input type="range" min="1" max="100" value="${s.weight}" style="width:60px" onchange="Editor.updateSpawnWeight(${s.originalIdx},this.value)" oninput="this.nextElementSibling.textContent=this.value">
+                <span style="width:25px;text-align:right;font-size:.7rem;color:var(--gold)">${s.weight}</span>
+                <span style="width:35px;text-align:right;font-size:.65rem;color:${color}">${pct}%</span>
+                <span class="remove" onclick="Editor.removeRegionSpawn(${s.originalIdx})" style="cursor:pointer;color:var(--red-bright)">✕</span>
+            </div>`;
         }).join('');
+        
         // Render preview bar
-        if(preview&&this.regionSpawns.length>0){
-            const total=this.regionSpawns.reduce((a,s)=>a+s.weight,0);
-            const colors=['#e74c3c','#3498db','#2ecc71','#f39c12','#9b59b6','#1abc9c','#e67e22','#34495e'];
+        if(preview){
             let bars='';
-            this.regionSpawns.forEach((s,i)=>{
-                const pct=(s.weight/total*100).toFixed(1);
+            sorted.forEach((s,i)=>{
+                const pct=(s.weight/total*100);
                 let entity;
                 if(s.type==='enemy')entity=Data.find('enemies',s.entityId);
                 else if(s.type==='pet')entity=Data.find('pets',s.entityId);
                 else entity=Data.find('npcs',s.entityId);
-                bars+=`<span style="width:${pct}%;background:${colors[i%colors.length]}" title="${entity?.name||s.entityId}: ${pct}%"></span>`;
+                bars+=`<span style="width:${pct}%;background:${colors[i%colors.length]}" title="${entity?.name||s.entityId}: ${pct.toFixed(1)}%"></span>`;
             });
-            preview.innerHTML=`<strong>Distribución de probabilidades:</strong><div class="spawn-preview-bar">${bars}</div><div style="margin-top:.2rem">${this.regionSpawns.map((s,i)=>{
-                let entity;
-                if(s.type==='enemy')entity=Data.find('enemies',s.entityId);
-                else if(s.type==='pet')entity=Data.find('pets',s.entityId);
-                else entity=Data.find('npcs',s.entityId);
-                const pct=(s.weight/total*100).toFixed(1);
-                return`<span style="color:${colors[i%colors.length]}">${entity?.icon||'?'} ${pct}%</span>`;
-            }).join(' ')}</div>`;
-        }else if(preview){preview.innerHTML=''}
+            preview.innerHTML=`<strong>Distribución visual:</strong><div class="spawn-preview-bar">${bars}</div>
+            <div style="margin-top:.3rem;font-size:.6rem;color:var(--text-dim)">Total: ${this.regionSpawns.length} criaturas | Suma pesos: ${total}</div>`;
+        }
+    },
+    updateSpawnWeight(idx,value){
+        if(this.regionSpawns[idx]){
+            this.regionSpawns[idx].weight=parseInt(value)||1;
+            this.renderRegionSpawns();
+        }
+    },
+    regenerateSpawns(){
+        const regionId=$('#region-id').value;
+        if(!regionId){toast('Selecciona una región primero','error');return}
+        this.regionSpawns=this.generateSpawnsFromData(regionId);
+        this.renderRegionSpawns();
+        toast(`Auto-detectados ${this.regionSpawns.length} criaturas`,'success');
+    },
+    clearSpawns(){
+        if(this.regionSpawns.length===0)return;
+        if(!confirm('¿Limpiar todas las criaturas?'))return;
+        this.regionSpawns=[];
+        this.renderRegionSpawns();
     },
     // Region Conditions Management
     addRegionCondition(){
