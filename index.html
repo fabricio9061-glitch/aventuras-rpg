@@ -498,6 +498,7 @@
                 <div class="race-grid" id="raceGrid"></div>
             </div>
             <button class="create-btn" onclick="Game.createChar()">⚔️ Comenzar Aventura</button>
+            <button class="btn" onclick="Auth.logout()" style="margin-top:.5rem;width:100%;background:transparent;border:1px solid var(--border)">🔙 Cambiar cuenta / Cerrar sesión</button>
         </div>
     </div>
 
@@ -1858,12 +1859,29 @@ const Game={
         $('#statWeight').textContent=Game.weight();
         $('#weaponIcon').innerHTML=sprite(p.weapon);$('#weaponName').textContent=p.weapon?.name||'Puños';$('#weaponStats').textContent=`${p.weapon?.damage||'1d2'} ⚖️${p.weapon?.weight||0}`;
         $('#armorIcon').innerHTML=sprite(p.armor);$('#armorName').textContent=p.armor?.name||'Sin armadura';$('#armorStats').textContent=`Def:${p.armor?.defense||0} ⚖️${p.armor?.weight||0}`;
-        $('#goldAmount').textContent=p.gold||0;$('#silverAmount').textContent=p.silver||0;$('#copperAmount').textContent=p.copper||0;
+        // Contar monedas del inventario
+        const invCoins=this.countInventoryCoins();
+        $('#goldAmount').textContent=(p.gold||0)+invCoins.gold;
+        $('#silverAmount').textContent=(p.silver||0)+invCoins.silver;
+        $('#copperAmount').textContent=(p.copper||0)+invCoins.copper;
         const canEq=!G.combat&&G.region.type==='safe';
         $('#weaponSlot').classList.toggle('disabled',!canEq);$('#armorSlot').classList.toggle('disabled',!canEq);
         // Toggle combat mode classes
         $('#charPanel').classList.toggle('in-combat',G.combat);
         $('#actionsPanel').classList.toggle('in-combat',G.combat);
+    },
+    countInventoryCoins(){
+        let gold=0,silver=0,copper=0;
+        if(!G.p?.inv)return{gold,silver,copper};
+        G.p.inv.forEach(i=>{
+            if(i.type==='currency'){
+                const qty=i.qty||1;
+                if(i.currencyType==='gold')gold+=qty;
+                else if(i.currencyType==='silver')silver+=qty;
+                else if(i.currencyType==='copper')copper+=qty;
+            }
+        });
+        return{gold,silver,copper};
     },
     armor(){if(!G.p)return 0;return(G.p.armor?.defense||0)+(G.p.race?.bonus?.armor||0)},
     weight(){if(!G.p)return 0;return(G.p.weapon?.weight||0)+(G.p.armor?.weight||0)},
