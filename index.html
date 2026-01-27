@@ -498,7 +498,6 @@
                 <div class="race-grid" id="raceGrid"></div>
             </div>
             <button class="create-btn" onclick="Game.createChar()">⚔️ Comenzar Aventura</button>
-            <button class="btn" onclick="Auth.logout()" style="margin-top:.5rem;width:100%;background:transparent;border:1px solid var(--border)">🔙 Cambiar cuenta / Cerrar sesión</button>
         </div>
     </div>
 
@@ -1487,22 +1486,28 @@ const FB={db:null,ok:false,init(){
             const shouldRemember=localStorage.getItem('rpg_remember')==='1';
             if(u&&shouldRemember){
                 // Solo auto-login si el usuario marcó "Recordar sesión"
-                u.getIdToken(true).then(()=>{Auth.user=u;Auth.onAuth()}).catch(e=>{
+                u.getIdToken(true).then(()=>{
+                    Auth.user=u;
+                    Auth.onAuth();
+                }).catch(e=>{
                     Auth.user=null;
-                    firebase.auth().signOut().then(()=>{
-                        $('#authScreen').classList.remove('hidden');
-                        $('#authScreen').style.display='flex';
-                    });
-                });
-            }else{
-                // No recordar: cerrar sesión existente y mostrar login
-                if(u&&!shouldRemember){
                     firebase.auth().signOut();
-                }
-                if(!Auth.user){
                     $('#authScreen').classList.remove('hidden');
                     $('#authScreen').style.display='flex';
+                    $('#charCreate').classList.add('hidden');
+                    $('#charCreate').style.display='none';
+                });
+            }else{
+                // No recordar o no hay usuario: mostrar login
+                Auth.user=null;
+                if(u){
+                    // Hay sesión de firebase pero no queremos recordar - cerrar
+                    firebase.auth().signOut();
                 }
+                $('#authScreen').classList.remove('hidden');
+                $('#authScreen').style.display='flex';
+                $('#charCreate').classList.add('hidden');
+                $('#charCreate').style.display='none';
             }
         });
     }catch(e){console.error('Firebase init:',e)}
@@ -1706,7 +1711,16 @@ const Regions={
 
 const Game={
     selectedRace:null,
-    init(){if(!this.load())this.showCreate()},
+    init(){
+        // Verificar autenticación antes de iniciar
+        if(!Auth.user){
+            $('#authScreen').classList.remove('hidden');
+            $('#authScreen').style.display='flex';
+            $('#charCreate').classList.add('hidden');
+            return;
+        }
+        if(!this.load())this.showCreate();
+    },
     // Crear inventario inicial: 25 cobre, 1 poción, 3 panes
     createStartingInventory(){
         const inv=[];
@@ -1730,6 +1744,13 @@ const Game={
         return inv;
     },
     showCreate(){
+        // Verificar autenticación antes de mostrar crear personaje
+        if(!Auth.user){
+            $('#authScreen').classList.remove('hidden');
+            $('#authScreen').style.display='flex';
+            $('#charCreate').classList.add('hidden');
+            return;
+        }
         $('#authScreen').classList.add('hidden');
         $('#authScreen').style.display='none';
         const el=$('#charCreate');
@@ -1743,6 +1764,13 @@ const Game={
         $$('.race-option').forEach(o=>o.classList.toggle('selected',o.dataset.id===id));
     },
     createChar(){
+        // Verificar autenticación
+        if(!Auth.user){
+            $('#authScreen').classList.remove('hidden');
+            $('#authScreen').style.display='flex';
+            $('#charCreate').classList.add('hidden');
+            return;
+        }
         const name=$('#heroName').value.trim()||pick(['Aldric','Brynn','Cedric','Dara','Freya','Kira','Theron']);
         const race=this.selectedRace||pick(Data.races);
         $('#charCreate').classList.add('hidden');
