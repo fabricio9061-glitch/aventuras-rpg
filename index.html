@@ -1328,10 +1328,37 @@ const Data={
         const s=localStorage.getItem('rpg_data');
         if(s)try{
             const d=JSON.parse(s);
+            // Guardar arrays base ANTES de sobrescribir
+            const baseItems=[...this.items];
+            const baseWeapons=[...this.weapons];
+            const baseArmors=[...this.armors];
+            const baseEnemies=[...this.enemies];
+            const basePets=[...this.pets];
+            const baseRegions=[...this.regions];
+            const baseSpells=[...(this.spells||[])];
+            
+            // Cargar datos guardados
             Object.keys(d).forEach(k=>{if(this[k]!==undefined)this[k]=d[k]});
+            
+            // Restaurar items base que no estén en los datos cargados
+            const mergeBase=(target, base)=>{
+                base.forEach(item=>{
+                    if(!target.find(x=>x.id===item.id)){
+                        target.push(item);
+                    }
+                });
+            };
+            mergeBase(this.items, baseItems);
+            mergeBase(this.weapons, baseWeapons);
+            mergeBase(this.armors, baseArmors);
+            mergeBase(this.enemies, baseEnemies);
+            mergeBase(this.pets, basePets);
+            mergeBase(this.regions, baseRegions);
+            mergeBase(this.spells||[], baseSpells);
+            
             if(!this.pluginSprites)this.pluginSprites={};
             if(!this.pluginMods)this.pluginMods={};
-        }catch(e){}
+        }catch(e){console.error('Data.load error:',e)}
     },
     applyPluginMods(){
         // Aplicar modificaciones guardadas a items del plugin
