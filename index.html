@@ -661,6 +661,7 @@
                 <button class="editor-tab" data-editor="npcs">🧔 NPCs</button>
                 <button class="editor-tab" data-editor="spells">✨ Hechizos</button>
                 <button class="editor-tab" data-editor="recipes">🔨 Recetas</button>
+                <button class="btn btn-danger" onclick="clearFirebaseData()" style="margin-left:auto;font-size:.6rem;padding:.2rem .4rem" title="Resetear datos del Editor a valores por defecto">🗑️ Reset Editor</button>
             </div>
             
             <div class="editor-section active" id="editor-regions">
@@ -1382,7 +1383,31 @@ const Data={
 };
 
 let domReady=false;
-const clearAll=()=>{localStorage.clear();try{firebase.auth().signOut()}catch(e){}location.reload()};
+const clearAll=()=>{
+    localStorage.clear();
+    // También limpiar datos de Firebase
+    if(FB.db&&FB.ok){
+        FB.db.ref('gameData').remove().then(()=>{
+            console.log('Firebase gameData cleared');
+        }).catch(e=>console.error('Error clearing Firebase:',e));
+    }
+    try{firebase.auth().signOut()}catch(e){}
+    location.reload();
+};
+const clearFirebaseData=()=>{
+    if(!confirm('¿Limpiar datos del Editor en Firebase?\nEsto reseteará items, enemigos, regiones, etc. al estado por defecto.'))return;
+    if(FB.db){
+        FB.db.ref('gameData').remove().then(()=>{
+            localStorage.removeItem('rpg_data');
+            toast('Datos del Editor reseteados','success');
+            location.reload();
+        }).catch(e=>{toast('Error: '+e.message,'error')});
+    }else{
+        localStorage.removeItem('rpg_data');
+        toast('Datos locales limpiados','success');
+        location.reload();
+    }
+};
 
 const Auth={
     user:null,
@@ -1487,7 +1512,37 @@ load(){
         const d=s.val();
         if(d){
             console.log('Firebase data loaded:',Object.keys(d));
-            Object.keys(d).forEach(k=>{if(Data[k])Data[k]=d[k]});
+            // MERGE en lugar de sobrescribir - preservar items base
+            const mergeArrays=(target, source)=>{
+                if(!source||!Array.isArray(source))return;
+                // Añadir items del source que no existen en target
+                source.forEach(item=>{
+                    if(item.id && !target.find(x=>x.id===item.id)){
+                        target.push(item);
+                    }
+                });
+                // Actualizar items existentes (excepto los base)
+                source.forEach(srcItem=>{
+                    if(!srcItem.id)return;
+                    const idx=target.findIndex(x=>x.id===srcItem.id);
+                    if(idx>=0 && srcItem.id.startsWith('plg_')){
+                        // Solo actualizar items de plugin, no base
+                        target[idx]=srcItem;
+                    }
+                });
+            };
+            
+            // Cargar datos simples
+            if(d.pluginSprites)Data.pluginSprites=d.pluginSprites;
+            if(d.pluginMods)Data.pluginMods=d.pluginMods;
+            if(d.npcs)Data.npcs=d.npcs;
+            if(d.recipes)Data.recipes=d.recipes;
+            if(d.races)Data.races=d.races;
+            
+            // NO sobrescribir arrays - los items base deben permanecer
+            // Solo aplicar pluginMods después
+            Data.applyPluginMods();
+            
             // Cargar plugins DESPUÉS de Firebase
             if(typeof loadPluginItems === 'function') loadPluginItems();
             Editor.renderAll();
@@ -1654,15 +1709,23 @@ const Game={
     // Crear inventario inicial: 25 cobre, 1 poción, 3 panes
     createStartingInventory(){
         const inv=[];
+        
+        // Fallbacks por si los items no existen en Data
+        const defaultCopper={id:'coin_copper',name:'Moneda de Cobre',type:'currency',currencyType:'copper',icon:'🥉',value:1,rarity:'common',stackable:true};
+        const defaultPotion={id:'i1',name:'Poción menor',type:'potion',effect:'1d8',icon:'🧪',value:10,rarity:'common'};
+        const defaultBread={id:'i7',name:'Pan',type:'food',icon:'🍞',value:5,rarity:'common',foodValue:3};
+        
         // 25 Monedas de cobre (apiladas)
-        const copper=Data.find('items','coin_copper');
-        if(copper)inv.push({...copper,uid:genId('i'),qty:25});
+        const copper=Data.find('items','coin_copper')||defaultCopper;
+        inv.push({...copper,uid:genId('i'),qty:25});
+        
         // 1 Poción de salud menor
-        const potion=Data.find('items','i1');
-        if(potion)inv.push({...potion,uid:genId('i')});
+        const potion=Data.find('items','i1')||defaultPotion;
+        inv.push({...potion,uid:genId('i')});
+        
         // 3 Panes (apilados)
-        const bread=Data.find('items','i7');
-        if(bread)inv.push({...bread,uid:genId('i'),qty:3});
+        const bread=Data.find('items','i7')||defaultBread;
+        inv.push({...bread,uid:genId('i'),qty:3});
         return inv;
     },
     showCreate(){
